@@ -1,4 +1,5 @@
 # import libraries
+# Copyright by Juho Aaltonen 2022
 from __future__ import division, print_function
 
 import argparse
