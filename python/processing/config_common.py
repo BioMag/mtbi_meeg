@@ -58,20 +58,20 @@ elif host == 'nbe-065' and user == 'hkoivikk':
     figures_dir = '/m/home/home0/09/hkoivikk/unix/biomag-tbi/figures'
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
-elif host == 'sirius' and user == 'heikkiv' :
+elif host == 'sirius' and user == 'heikkiv' : #TODO: should we overwrite old stuff or not?
     # Verna's workstation in BioMag
-    raw_data_dir = '/net/theta/fishpool/projects/FABEEG/childEEG_data/bids/'
-    processed_data_dir = '/net/theta/fishpool/projects/FABEEG/childEEG_data/bids/derivatives/'
-    reports_dir = os.path.join('/net/theta/fishpool/projects/FABEEG/childEEG_data/reports',user)
-    figures_dir = os.path.join('/net/theta/fishpool/projects/FABEEG/childEEG_data/figures',user)
+    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
+    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/processed/'
+    reports_dir = os.path.join('/net/theta/fishpool/projects/tbi_meg/reports/',user)
+    figures_dir = os.path.join('/net/theta/fishpool/projects/tbi_meg/figures/',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
 elif host == 'psi' and user == 'kuusia1' :
-    # Verna's workstation in BioMag
-    raw_data_dir = '/net/theta/fishpool/projects/FABEEG/childEEG_data/bids/'
-    processed_data_dir = '/net/theta/fishpool/projects/FABEEG/childEEG_data/bids/derivatives/'
-    reports_dir = os.path.join('/net/theta/fishpool/projects/FABEEG/childEEG_data/reports',user)
-    figures_dir = os.path.join('/net/theta/fishpool/projects/FABEEG/childEEG_data/figures',user)
+    # Ainos's workstation in BioMag
+    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
+    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/processed/'
+    reports_dir = os.path.join('/net/theta/fishpool/projects/tbi_meg/reports/',user)
+    figures_dir = os.path.join('/net/theta/fishpool/projects/tbi_meg/figures/',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
 else:
@@ -91,7 +91,7 @@ matplotlib.use(matplotlib_backend)
 ###############################################################################
 
 # All subjects for which there is some form of data available
-all_subjects = list(range(1, 45))
+all_subjects = list(range(1, 45)) #TODO: check this! 
 
 # Tasks performed in the scanner
 tasks = ['emptyroom', 'eyesopen', 'eyesclosed', 'pasat']
