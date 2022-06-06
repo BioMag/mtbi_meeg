@@ -1,29 +1,36 @@
 # mTBI-EEG
 
-Git repo building on the BioMag pipelines for analyzing the EEG data of mTBI patients
-
+Git repo building on the BioMag pipelines for analyzing the EEG data of mTBI patients.
+Preprocessing and analysis are currently on separate folders.
 
 
 ## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+The preprocessing pipeline is organized as follows:
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+1. Check your system with check_system.py
+2. Configure user settings in ```config_common.py``` & ```config_eeg.py```
+3. Using ```python -m doit``` while in eeg/ -directory, run the preprocessing of all files
+    - ```01_freqfilt.py``` applies frequency filtering
+    - ```02_ica.py``` removes ocular artefacts with independent component analysis
+    - ```03_psds.py``` computes the PSDs over all channels and saves them as h5 files
 
-## Add your files
+> NOTE: these can be also ran separately for each individual!
+
+## Git stuff
 
 -  [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
 -  [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
 
 ```
-cd existing_repo
-git remote add origin https://version.aalto.fi/gitlab/heikkiv7/mtbi-eeg.git
-git branch -M main
-git push -uf origin main
+cd ~/mtbi-eeg
+git branch configurations
+git push
 ```
+It is **strongly recommended** to work on separate branches which are later merged to main by the owner of the repo.  
+Merge requests are handled together!
 
-
-## Collaborate with your team
+## Collaboration
 
 -  [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
 -  [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
