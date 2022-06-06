@@ -66,6 +66,14 @@ elif host == 'sirius' and user == 'heikkiv' :
     figures_dir = os.path.join('/net/theta/fishpool/projects/FABEEG/childEEG_data/figures',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
+elif host == 'psi' and user == 'kuusia1' :
+    # Verna's workstation in BioMag
+    raw_data_dir = '/net/theta/fishpool/projects/FABEEG/childEEG_data/bids/'
+    processed_data_dir = '/net/theta/fishpool/projects/FABEEG/childEEG_data/bids/derivatives/'
+    reports_dir = os.path.join('/net/theta/fishpool/projects/FABEEG/childEEG_data/reports',user)
+    figures_dir = os.path.join('/net/theta/fishpool/projects/FABEEG/childEEG_data/figures',user)
+    n_jobs = 4
+    matplotlib_backend = 'Qt5Agg'
 else:
     raise ValueError(f'Please enter the details of your system ({user}@{host}) in config_common.py')
 
