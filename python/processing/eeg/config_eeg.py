@@ -20,7 +20,7 @@ from config_common import (raw_data_dir, processed_data_dir, figures_dir,
 # later on. Lowpass filter below 100Hz to get rid of the signal produced by
 # the cHPI coils. Notch filters at 50Hz and 100Hz to get rid of powerline.
 fmin = 1
-fmax = 100
+fmax = 40
 fnotch = [50, 100]
 
 # Computation of the PSDs
@@ -41,6 +41,7 @@ subjects = [subject for subject in all_subjects if subject not in bad_subjects]
 
 # Bad MEG channels for each subject.
 # Manually marked by Marijn van Vliet.
+# TODO: these need to be updated based on Hanna's excel!
 bads = {
     1: ['EEG016', 'EEG017', 'EEG004'],
     2: ['EEG003', 'EEG013', 'EEG022', 'EEG027', 'EEG028', 'EEG033', 'EEG060', 'EEG063'],
@@ -101,23 +102,23 @@ fname.add('raw_data_dir', raw_data_dir)
 fname.add('processed_data_dir', processed_data_dir)
 
 # Continuous data
-fname.add('raw', '{raw_data_dir}/sub-{subject:02d}/ses-01/meg/sub-{subject:02d}_ses-01_task-{task}_run-{run:02d}_meg.fif')
-fname.add('filt', '{processed_data_dir}/sub-{subject:02d}/ses-01/eeg/sub-{subject:02d}_ses-01_task-{task}_run-{run:02d}_filt.fif')
-fname.add('clean', '{processed_data_dir}/sub-{subject:02d}/ses-01/eeg/sub-{subject:02d}_ses-01_task-{task}_run-{run:02d}_clean.fif')
+fname.add('raw', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-{run}_meg.fif')
+fname.add('filt', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-{run}_filt.fif')
+fname.add('clean', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-{run}_clean.fif')
 
 # Files used during EOG and ECG artifact suppression
-fname.add('ica', '{processed_data_dir}/sub-{subject:02d}/ses-01/eeg/sub-{subject:02d}_ses-01_task-{task}_run-{run:02d}_ica.h5')
+fname.add('ica', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-{run}_ica.h5')
 
 # PSD files
-fname.add('psds', '{processed_data_dir}/sub-{subject:02d}/ses-01/eeg/sub-{subject:02d}_psds.h5')
+fname.add('psds', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_psds.h5')
 
 # Filenames for MNE reports
-fname.add('reports_dir', f'{reports_dir}/eeg')
-fname.add('report', '{reports_dir}/sub-{subject:02d}-report.h5')
-fname.add('report_html', '{reports_dir}/sub-{subject:02d}-report.html')
+fname.add('reports_dir', f'{reports_dir}')
+fname.add('report', '{reports_dir}/sub-{subject}-report.h5')
+fname.add('report_html', '{reports_dir}/sub-{subject}-report.html')
 
 # Filenames for figures
-fname.add('figures_dir', f'{figures_dir}/eeg')
+fname.add('figures_dir', f'{figures_dir}')
 fname.add('figure_psds', '{figures_dir}/psds.pdf')
 
 
@@ -136,7 +137,7 @@ def get_all_fnames(subject, kind, exclude=None):
 
     Parameters
     ----------
-    subject : int
+    subject : str
         The subject to get the names of the raw files for.
     kind : 'raw' | 'tsss' | 'filt' | 'eog_ecg_events' | 'ica'
         The kind of files to return the filenames for.
@@ -159,6 +160,7 @@ def get_all_fnames(subject, kind, exclude=None):
         raise TypeError('The `exclude` parameter should be None, str or list')
 
     all_fnames = list()
+    print('Looking for: ' + str(fname.raw(subject=subject)))
     for task in tasks:
         if task in exclude:
             continue
