@@ -42,6 +42,7 @@ subjects = [subject for subject in all_subjects if subject not in bad_subjects]
 # Bad MEG channels for each subject.
 # Manually marked by Marijn van Vliet.
 # TODO: these need to be updated based on Hanna's excel!
+# TODO: update dict to consider str subjects, e.g. '26P'
 bads = {
     1: ['EEG016', 'EEG017', 'EEG004'],
     2: ['EEG003', 'EEG013', 'EEG022', 'EEG027', 'EEG028', 'EEG033', 'EEG060', 'EEG063'],
