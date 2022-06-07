@@ -102,12 +102,12 @@ fname.add('raw_data_dir', raw_data_dir)
 fname.add('processed_data_dir', processed_data_dir)
 
 # Continuous data
-fname.add('raw', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-{run}_meg.fif')
-fname.add('filt', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-{run}_filt.fif')
-fname.add('clean', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-{run}_clean.fif')
+fname.add('raw', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-0{run}_proc-raw_meg.fif')
+fname.add('filt', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-0{run}_filt.fif')
+fname.add('clean', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-0{run}_clean.fif')
 
 # Files used during EOG and ECG artifact suppression
-fname.add('ica', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-{run}_ica.h5')
+fname.add('ica', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-0{run}_ica.h5')
 
 # PSD files
 fname.add('psds', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_psds.h5')
@@ -160,7 +160,7 @@ def get_all_fnames(subject, kind, exclude=None):
         raise TypeError('The `exclude` parameter should be None, str or list')
 
     all_fnames = list()
-    print('Looking for: ' + str(fname.raw(subject=subject)))
+    #print('Looking for: ' + str(fname.raw(subject=subject)))
     for task in tasks:
         if task in exclude:
             continue
@@ -176,7 +176,7 @@ def task_from_fname(fname):
     match = re.search(r'task-([^_]+)_run-(\d\d)', str(fname))
     task = match.group(1)
     run = int(match.group(2))
-    if task == 'pasat':
+    if task == 'PASAT':
         return f'{task}_run{run}'
     else:
         return task

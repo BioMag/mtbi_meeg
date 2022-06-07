@@ -62,16 +62,16 @@ elif host == 'sirius' and user == 'heikkiv' : #TODO: should we overwrite old stu
     # Verna's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
     processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/processed/'
-    reports_dir = os.path.join('/net/theta/fishpool/projects/tbi_meg/reports/',user)
-    figures_dir = os.path.join('/net/theta/fishpool/projects/tbi_meg/figures/',user)
+    reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/reports/',user)
+    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/figures/',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
 elif host == 'psi' and user == 'aino' :
     # Ainos's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
     processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/processed/'
-    reports_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/', user)
-    figures_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/',user)
+    reports_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/python/reports/', user)
+    figures_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/python/figures/',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
 else:
