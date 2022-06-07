@@ -27,8 +27,7 @@ if not os.path.exists(raw_data_dir):
 from config_common import processed_data_dir
 os.makedirs(processed_data_dir, exist_ok=True)
 
-# COMMENT: these are not needed for this project
-#
+# TODO: still use meg files? maybe for better pipeline?
 #from meg.config_meg import fname 
 #os.makedirs(fname.figures_dir, exist_ok=True)
 #os.makedirs(fname.reports_dir, exist_ok=True)
@@ -53,3 +52,4 @@ and
     cd meg
     python -m doit
 """)
+
