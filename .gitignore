@@ -1,11 +1,15 @@
 #Possible folders (ADD HERE)
-
+aino/
+heikkiv7/
+figures/
+reports/
 
 #Figs & data
 .pdf
 .png
 .h5
 .csv
+.xlsx
 *slurm*
 
 
