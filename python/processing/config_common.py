@@ -66,12 +66,12 @@ elif host == 'sirius' and user == 'heikkiv' : #TODO: should we overwrite old stu
     figures_dir = os.path.join('/net/theta/fishpool/projects/tbi_meg/figures/',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
-elif host == 'psi' and user == 'kuusia1' :
+elif host == 'psi' and user == 'aino' :
     # Ainos's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
     processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/processed/'
-    reports_dir = os.path.join('/net/theta/fishpool/projects/tbi_meg/reports/',user)
-    figures_dir = os.path.join('/net/theta/fishpool/projects/tbi_meg/figures/',user)
+    reports_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/', user)
+    figures_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
 else:
@@ -91,7 +91,12 @@ matplotlib.use(matplotlib_backend)
 ###############################################################################
 
 # All subjects for which there is some form of data available
-all_subjects = list(range(1, 45)) #TODO: check this! 
-
+all_subjects = os.listdir(raw_data_dir)
+for s in all_subjects:
+    s_path = os.path.join(raw_data_dir, s)
+    if not os.path.isdir(s_path):
+        all_subjects.remove(s) #TODO: check this! 
+all_subjects.remove('participants.tsv')  
+all_subjects = [x.replace('sub-', '') for x in all_subjects]
 # Tasks performed in the scanner
-tasks = ['emptyroom', 'eyesopen', 'eyesclosed', 'pasat']
+tasks = ['ec', 'eo', 'PASAT']
