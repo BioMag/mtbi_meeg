@@ -31,6 +31,7 @@ n_fft = 1024  # Higher number means more resolution at the lower frequencies
 # Parameters pertaining to the subjects
 
 # Subjects removed from the MEG analysis because of some problem
+# TODO: check these 
 bad_subjects = [
     24, 29,  # No EEG data present
 ]
