@@ -12,7 +12,7 @@ from config_eeg import get_all_fnames, fname, bads, fmin, fmax, fnotch
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('subject', type=int, help='The subject to process')
+parser.add_argument('subject', help='The subject to process')
 args = parser.parse_args()
 
 # Along the way, we collect figures for quality control
