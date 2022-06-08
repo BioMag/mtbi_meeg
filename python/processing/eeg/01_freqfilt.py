@@ -30,25 +30,25 @@ for raw_fname, filt_fname in zip(raw_fnames, filt_fnames):
     raw.pick_types(meg=False, eeg=True, eog=True, stim=True)
 
     # Mark bad channels that were manually annotated earlier.
-    raw.info['bads'] = bads[args.subject]
+    #raw.info['bads'] = bads[args.subject]
 
     # Add a plot of the power spectrum to the list of figures to be placed in
     # the HTML report.
-    figures['before_filt'].append(raw.plot_psd())
+    figures['before_filt'].append(raw.plot_psd(fmin=0, fmax=40))
 
     # Remove 50Hz power line noise (and the first harmonic: 100Hz)
-    filt = raw.notch_filter(fnotch, picks=['eeg', 'eog'])
-
+    filt = raw.copy().notch_filter(fnotch, picks=['eeg', 'eog'])
+    
     # Apply bandpass filter
-    filt = raw.filter(fmin, fmax, picks=['eeg', 'eog'])
+    filt = filt.filter(fmin, fmax, picks=['eeg', 'eog'])
 
     # Save the filtered data
-    filt_fname.parent.mkdir(parents=True, exist_ok=True)
-    filt.save(filt_fname, overwrite=True)
+    #filt_fname.parent.mkdir(parents=True, exist_ok=True)
+    #filt.save(filt_fname, overwrite=True)
 
     # Add a plot of the power spectrum of the filtered data to the list of
     # figures to be placed in the HTML report.
-    figures['after_filt'].append(filt.plot_psd())
+    figures['after_filt'].append(filt.plot_psd(fmin=0, fmax=40))
 
 # Write HTML report with the quality control figures
 with open_report(fname.report(subject=args.subject)) as report:
