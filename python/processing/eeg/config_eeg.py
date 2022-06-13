@@ -32,13 +32,15 @@ n_fft = 1024  # Higher number means more resolution at the lower frequencies
 
 # Subjects removed from the MEG analysis because of some problem
 # TODO: check these 
-bad_subjects = [
-    24, 29,  # No EEG data present
-]
-
+# bad_subjects = [
+#     24, 29,  # No EEG data present
+# ]
+bad_subjects= []
 # Analysis is performed on these subjects
 subjects = [subject for subject in all_subjects if subject not in bad_subjects]
 
+ecg_channel = 'ECG002'
+eog_channel = 'EOG001'
 # Bad MEG channels for each subject.
 # Manually marked by Marijn van Vliet.
 # TODO: these need to be updated based on Hanna's excel!
@@ -91,11 +93,12 @@ subjects = [subject for subject in all_subjects if subject not in bad_subjects]
 # }
 bads={}
 
+#Bad EEG channels for each subject and each task
 ec_bads = {
         '01C': ['EEG033', 'EEG025', 'EEG023'],
         '02C': [],
-        '03C': ['EEG044', 'EEG032'],
-        '04C': ['EEG026', 'EEG045', 'EEG027', 'EEG049', 'EEG018'],
+        '03C': ['EEG044'],
+        '04C': ['EEG026', 'EEG045', 'EEG027', 'EEG049'],
         '05C': ['EEG003', 'EEG010', 'EEG057'],
         '06C':['EEG001', 'EEG013', 'EEG020', 'EEG022', 'EEG027', 'EEG026', 'EEG023', 'EEG018', 'EEG019', 'EEG012', 'EEG011'],
         '07C': [],
@@ -122,7 +125,7 @@ ec_bads = {
         '28C':['EEG019', 'EEG056'],#first 30 s bad
         '29C':['EEG023', 'EEG033'],
         '30C':[],
-        '31C':['EEG001', 'EEG002', 'EEG013', 'EEG003', 'EEG007', 'EEG004', 'EEG014', 'EEG022', 'EEG023', 'EEG026', 'EEG027', 'EEG028', 'EEG032', 'EEG050'],
+        '31C':['EEG001', 'EEG002', 'EEG013', 'EEG032', 'EEG028', 'EEG027', 'EEG026', 'EEG023', 'EEG022', 'EEG050', 'EEG003'],
         '32C':['EEG003', 'EEG060'],
         '33C':['EEG001', 'EEG003', 'EEG020', 'EEG026', 'EEG028', 'EEG027', 'EEG056'],
         '34C':[],
@@ -166,42 +169,79 @@ ec_bads = {
         }#channels 11, 18, 19 were quite flat in general
 
 eo_bads = {
-    '01C':['EEG023', 'EEG025', 'EEG033'],
-    '02C':['EEG040'],
-    '03C':['EEG044'],
-    '04C':['EEG026', 'EEG036', 'EEG028', 'EEG027', 'EEG032', 'EEG045', 'EEG047', 'EEG043', 'EEG054', 'EEG049'],
-    '05C':['EEG003', 'EEG010', 'EEG057', 'EEG053', 'EEG062'],
-    '06C': ['EEG001', 'EEG013', 'EEG020', 'EEG022', 'EEG023', 'EEG026', 'EEG027'],
-    '07C':['EEG032', 'EEG041'],
-    '08C':['EEG003', 'EEG028'],#a lot of eye movements 
-    '09C':['EEG020'],
-    '10C':['EEG014'],
-    '11C':['EEG007', 'EEG004', 'EEG003', 'EEG008', 'EEG015', 'EEG029', 'EEG032'],
-    '12C':['EEG016', 'EEG008', 'EEG023', 'EEG033'],
-    '13C':['EEG042'],
-    '14C':['EEG003', 'EEG014', 'EEG023', 'EEG033'],
-    '15C':['EEG023', 'EEG033', 'EEG055'],
-    '16C':['EEG012', 'EEG043'],
-    '17C':['EEG003', 'EEG005', 'EEG017', 'EEG026', 'EEG023', 'EEG028', 'EEG027'],
-    '18C': ['EEG034'],
-    '19C':['EEG022', 'EEG043'],
-    '20C':['EEG012', 'EEG032', 'EEG044', 'EEG045', 'EEG059', 'EEG052', 'EEG058', 'EEG053', 'EEG054', 'EEG064'],
-    '21C':['EEG003', 'EEG010', 'EEG012', 'EEG019', 'EEG005', 'EEG007', 'EEG029', 'EEG030', 'EEG024', 'EEG042', 'EEG046', 'EEG059', 'EEG062', 'EEG053']
-    '22C':[], #very bad eeg
-    '23C':['EEG018', 'EEG027', 'EEG025', 'EEG037', 'EEG034'],
-    '24C':['EEG017', 'EEG013', 'EEG020', 'EEG003', 'EEG001', 'EEG027', 'EEG022', 'EEG029', 'EEG028', 'EEG047'],
-    '25C':['EEG013', 'EEG001', 'EEG002', 'EEG022', 'EEG023', 'EEG026', 'EEG027', 'EEG028', 'EEG048', 'EEG049'],
-    '26C':['EEG035', 'EEG034', 'EEG037', 'EEG042', 'EEG043', 'EEG048', 'EEG050', 'EEG047', 'EEG049', 'EEG056'],
-    '27C':['EEG033', 'EEG058'],
-    '28C': ['EEG019', 'EEG013', 'EEG028', 'EEG058'],
-    '29C':['EEG007', 'EEG018', 'EEG009', 'EEG023', 'EEG033', 'EEG032'],
-    '30C':[],
-    '31C':['EEG001', 'EEG002', 'EEG013', 'EEG003', 'EEG022', 'EEG023', 'EEG026', 'EEG027', 'EEG028', 'EEG032', 'EEG050'],
-    '32C':['EEG003', 'EEG060'],
-    '33C':['EEG001', 'EEG003', 'EEG020', 'EEG013', 'EEG026', 'EEG028', 'EEG027', 'EEG056'],
-    '34C':[],
-    '35C':['EEG013', 'EEG007', 'EEG008', 'EEG034', 'EEG032', 'EEG043', 'EEG047']
-    }
+        "01C": ['EEG023', 'EEG025', 'EEG033'],
+        '02C': ['EEG040'],
+        '03C': ['EEG044'],
+        '04C':['EEG026', 'EEG036', 'EEG028', 'EEG027', 'EEG032', 'EEG045', 'EEG047', 'EEG043', 'EEG054', 'EEG049'],
+        '05C':['EEG003', 'EEG010', 'EEG057', 'EEG053', 'EEG062'],
+        '06C': ['EEG001', 'EEG013', 'EEG020', 'EEG022', 'EEG023', 'EEG026', 'EEG027'],
+        '07C':['EEG032', 'EEG041'],
+        '08C':['EEG003', 'EEG028'],#a lot of eye movements 
+        '09C':['EEG020'],
+        '10C':['EEG014'],
+        '11C':['EEG007', 'EEG004', 'EEG003', 'EEG008', 'EEG015', 'EEG029', 'EEG032'],
+        '12C':['EEG016', 'EEG008', 'EEG023', 'EEG033'],
+        '13C':['EEG042'],
+        '14C':['EEG003', 'EEG014', 'EEG023', 'EEG033'],
+        '15C':['EEG023', 'EEG033', 'EEG055'],
+        '16C':['EEG012', 'EEG043'],
+        '17C':['EEG003', 'EEG005', 'EEG017', 'EEG026', 'EEG023', 'EEG028', 'EEG027'],
+        '18C': ['EEG034'],
+        '19C':['EEG022', 'EEG043'],
+        '20C':['EEG012', 'EEG032', 'EEG044', 'EEG045', 'EEG059', 'EEG052', 'EEG058', 'EEG053', 'EEG054', 'EEG064'],
+        '21C':['EEG003', 'EEG010', 'EEG012', 'EEG019', 'EEG005', 'EEG007', 'EEG029', 'EEG030', 'EEG024', 'EEG042', 'EEG046', 'EEG059', 'EEG062', 'EEG053'],
+        '22C':[], #very bad eeg
+        '23C':['EEG018', 'EEG027', 'EEG025', 'EEG037', 'EEG034'],
+        '24C':['EEG017', 'EEG013', 'EEG020', 'EEG003', 'EEG001', 'EEG027', 'EEG022', 'EEG029', 'EEG028', 'EEG047'],
+        '25C':['EEG013', 'EEG001', 'EEG002', 'EEG022', 'EEG023', 'EEG026', 'EEG027', 'EEG028', 'EEG048', 'EEG049'],
+        '26C':['EEG035', 'EEG034', 'EEG037', 'EEG042', 'EEG043', 'EEG048', 'EEG050', 'EEG047', 'EEG049', 'EEG056'],
+        '27C':['EEG033', 'EEG058'],
+        '28C': ['EEG019', 'EEG013', 'EEG028', 'EEG058'],
+        '29C':['EEG007', 'EEG018', 'EEG009', 'EEG023', 'EEG033', 'EEG032'],
+        '30C':[],
+        '31C':['EEG001', 'EEG002', 'EEG013', 'EEG003', 'EEG022', 'EEG023', 'EEG026', 'EEG027', 'EEG028', 'EEG032', 'EEG050'],
+        '32C':['EEG003', 'EEG060'],
+        '33C':['EEG001', 'EEG003', 'EEG020', 'EEG013', 'EEG026', 'EEG028', 'EEG027', 'EEG056'],
+        '34C':[],
+        '35C':['EEG013', 'EEG007', 'EEG008', 'EEG034', 'EEG032', 'EEG043', 'EEG047'],#ekg?
+        '36C':['EEG006', 'EEG003', 'EEG028'],
+        '37C': ['EEG017', 'EEG013', 'EEG005', 'EEG020', 'EEG003', 'EEG001', 'EEG027', 'EEG023', 'EEG022'],
+        '38C':['EEG001', 'EEG008', 'EEG015', 'EEG035', 'EEG023'],
+        '39C':['EEG018', 'EEG015', 'EEG002', 'EEG010', 'EEG009', 'EEG011'],
+        '40C':[],
+        '41C':['EEG064', 'EEG063', 'EEG062'],
+        '01P':['EEG004', 'EEG017'],
+        '02P':['EEG017', 'EEG003', 'EEG013', 'EEG022', 'EEG027', 'EEG061', 'EEG056'],
+        '03P':['EEG005', 'EEG013', 'EEG022', 'EEG023', 'EEG027', 'EEG032', 'EEG038'],
+        '04P':['EEG018', 'EEG003', 'EEG024', 'EEG032', 'EEG044', 'EEG055', 'EEG062'],
+        '05P':['EEG014', 'EEG032'],
+        '06P':['EEG013', 'EEG012', 'EEG022', 'EEG023', 'EEG026', 'EEG032'],
+        '07P':['EEG008'],
+        '08P':['EEG027', 'EEG024', 'EEG042'],
+        '09P':['EEG009', 'EEG035'],
+        '10P':[], #heart artefact
+        '11P':[],
+        '12P':[],
+        '13P':['EEG013', 'EEG038'],
+        '14P':['EEG018', 'EEG027', 'EEG043', 'EEG048'],
+        '15P':['EEG015', 'EEG014', 'EEG044', 'EEG056', 'EEG059', 'EEG060', 'EEG046', 'EEG063'],
+        '16P':['EEG016', 'EEG017', 'EEG032'],
+        '17P':['EEG017'],#001-007 "karvaisia"
+        '18P':['EEG017', 'EEG020', 'EEG001', 'EEG003', 'EEG026', 'EEG023', 'EEG022', 'EEG028', 'EEG047', 'EEG048'],
+        '19P':[], #a lot of blinking
+        '20P':['EEG014', 'EEG027', 'EEG061'],
+        '21P':['EEG052'], #a lot of eye movements
+        '22P':['EEG017', 'EEG019', 'EEG020', 'EEG018', 'EEG013', 'EEG022', 'EEG028', 'EEG041'],
+        '23P':[],
+        '24P':['EEG023', 'EEG033', 'EEG035'],
+        '25P':['EEG023', 'EEG033'], #001-007 "karvaisia"
+        '26P':[],
+        '27P':['EEG027'],
+        '28P':['EEG003'],
+        '29P':['EEG001', 'EEG003', 'EEG005', 'EEG019', 'EEG020', 'EEG026', 'EEG027', 'EEG022', 'EEG023', 'EEG048', 'EEG042'],
+        '30P':[], #"karvaisia kanavia"
+        '31P':['EEG003', 'EEG007', 'EEG027', 'EEG028', 'EEG045'] #a lot of blinking       
+        }
 pasat1_bads = {}
 pasat2_bads = {}
 ###############################################################################

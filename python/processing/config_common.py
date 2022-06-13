@@ -69,7 +69,7 @@ elif host == 'sirius' and user == 'heikkiv' : #TODO: should we overwrite old stu
 elif host == 'psi' and user == 'aino' :
     # Ainos's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
-    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/processed/'
+    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed/'
     reports_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/python/reports/', user)
     figures_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/python/figures/',user)
     n_jobs = 4

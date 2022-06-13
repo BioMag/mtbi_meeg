@@ -2,13 +2,17 @@
 Perform bandpass filtering and notch filtering to get rid of cHPI and powerline
 frequencies.
 """
+#import subprocess
+#subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.sh', shell=True)
 import argparse
 from collections import defaultdict
 
 from mne.io import read_raw_fif
 from mne import open_report
 
-from config_eeg import get_all_fnames, fname, bads, fmin, fmax, fnotch
+from config_eeg import get_all_fnames, fname, ec_bads, eo_bads, fmin, fmax, fnotch
+
+#TODO: fix 35C channels
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)
@@ -27,28 +31,37 @@ for raw_fname, filt_fname in zip(raw_fnames, filt_fnames):
     raw = read_raw_fif(raw_fname, preload=True)
 
     # Remove MEG channels. This is the EEG pipeline after all.
-    raw.pick_types(meg=False, eeg=True, eog=True, stim=True)
+    raw.pick_types(meg=False, eeg=True, eog=True, stim=True, ecg=True)
 
     # Mark bad channels that were manually annotated earlier.
-    #raw.info['bads'] = bads[args.subject]
+    raw_str = str(raw_fname)
+    if 'task-ec' in raw_str:
+        raw.info['bads'] = ec_bads[args.subject]
+    elif 'task-eo' in raw_str:
+        raw.info['bads'] = eo_bads[args.subject]
 
+    
     # Add a plot of the power spectrum to the list of figures to be placed in
     # the HTML report.
-    figures['before_filt'].append(raw.plot_psd(fmin=0, fmax=40))
+    raw_plot = raw.plot_psd(fmin=0, fmax=40, show=False)
+    figures['before_filt'].append(raw_plot)
 
     # Remove 50Hz power line noise (and the first harmonic: 100Hz)
-    filt = raw.copy().notch_filter(fnotch, picks=['eeg', 'eog'])
+    filt = raw.notch_filter(fnotch, picks=['eeg', 'eog', 'ecg'])
     
     # Apply bandpass filter
-    filt = filt.filter(fmin, fmax, picks=['eeg', 'eog'])
+    filt = filt.filter(fmin, fmax, picks=['eeg', 'eog', 'ecg'])
 
     # Save the filtered data
-    #filt_fname.parent.mkdir(parents=True, exist_ok=True)
-    #filt.save(filt_fname, overwrite=True)
+    filt_fname.parent.mkdir(parents=True, exist_ok=True)
+    filt.save(filt_fname, overwrite=True)
 
     # Add a plot of the power spectrum of the filtered data to the list of
     # figures to be placed in the HTML report.
-    figures['after_filt'].append(filt.plot_psd(fmin=0, fmax=40))
+    filt_plot = filt.plot_psd(fmin=0, fmax=40, show=False)
+    figures['after_filt'].append(filt_plot)
+    
+    raw.close()
 
 # Write HTML report with the quality control figures
 with open_report(fname.report(subject=args.subject)) as report:
