@@ -24,7 +24,8 @@ fmax = 40
 fnotch = [50, 100]
 
 # Computation of the PSDs
-n_fft = 1024  # Higher number means more resolution at the lower frequencies
+n_fft = 2048  # Higher number means more resolution at the lower frequencies
+#1024?4096?
 
 
 ###############################################################################

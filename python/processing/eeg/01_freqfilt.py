@@ -24,22 +24,34 @@ figures = defaultdict(list)
 
 # Not all subjects have files for all conditions. These functions grab the
 # files that do exist for the subject.
-raw_fnames = get_all_fnames(args.subject, kind='raw')
-filt_fnames = get_all_fnames(args.subject, kind='filt')
+exclude = ['emptyroom', 'PASAT'] #these don't have eye blinks.
+# bad_subjects = ['01P', '02P', '03P', '04P', '05P', '06P', '07P']#these ica need to be done manually
+all_fnames = zip(
+    get_all_fnames(args.subject, kind='filt', exclude=exclude),
+    get_all_fnames(args.subject, kind='raw', exclude=exclude),
+)
+# raw_fnames = get_all_fnames(args.subject, kind='raw')
+# filt_fnames = get_all_fnames(args.subject, kind='filt')
 
-for raw_fname, filt_fname in zip(raw_fnames, filt_fnames):
+for raw_fname, filt_fname in all_fnames:
     raw = read_raw_fif(raw_fname, preload=True)
-
-    # Remove MEG channels. This is the EEG pipeline after all.
-    raw.pick_types(meg=False, eeg=True, eog=True, stim=True, ecg=True)
-
+    
     # Mark bad channels that were manually annotated earlier.
     raw_str = str(raw_fname)
     if 'task-ec' in raw_str:
         raw.info['bads'] = ec_bads[args.subject]
     elif 'task-eo' in raw_str:
         raw.info['bads'] = eo_bads[args.subject]
-
+    
+    # Remove MEG channels. This is the EEG pipeline after all.
+    raw.pick_types(meg=False, eeg=True, eog=True, stim=True, ecg=True, exclude=[])
+    
+    # Plot segment of raw data
+    figures['raw_segment'].append(raw.plot(n_channels=30, show=False))
+    
+    # Interpolate bad channels
+    raw.interpolate_bads()
+    figures['interpolated_segment'].append(raw.plot(n_channels=30, show=False))
     
     # Add a plot of the power spectrum to the list of figures to be placed in
     # the HTML report.
@@ -75,6 +87,18 @@ with open_report(fname.report(subject=args.subject)) as report:
         figures['after_filt'],
         section='freq filter',
         title='After frequency filtering',
+        replace=True,
+    )
+    report.add_slider_to_section(
+        figures['raw_segment'],
+        section='freq filter',
+        title='Before interpolation',
+        replace=True,
+    )
+    report.add_slider_to_section(
+        figures['interpolated_segment'],
+        section='freq filter',
+        title='After interpolation',
         replace=True,
     )
     report.save(fname.report_html(subject=args.subject),

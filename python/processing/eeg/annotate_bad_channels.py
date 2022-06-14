@@ -24,7 +24,7 @@ args = parser.parse_args()
 
 raw = mne.io.read_raw_fif(fname.raw(subject=args.subject, task=tasks[1], run=1), preload=True)
 #raw.info['bads'] = bads[args.subject]
-raw.pick_types(meg=False, eeg=True, eog=True)
+raw.pick_types(meg=False, eeg=True, eog=True, ecg=True)
 raw.filter(1, 100)
 raw.notch_filter([50, 100])
 raw.plot(scalings=dict(eog=100E-6, eeg=50E-6))
