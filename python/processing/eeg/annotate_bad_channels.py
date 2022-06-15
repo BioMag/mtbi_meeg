@@ -15,15 +15,16 @@ import argparse
 import mne
 
 from config_eeg import fname, bads
+from config_common import tasks
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('subject', type=int, help='The subject to process')
+parser.add_argument('subject', help='The subject to process')
 args = parser.parse_args()
 
-raw = mne.io.read_raw_fif(fname.raw(subject=args.subject, task='pasat', run=1), preload=True)
-raw.info['bads'] = bads[args.subject]
-raw.pick_types(meg=False, eeg=True, eog=True)
+raw = mne.io.read_raw_fif(fname.raw(subject=args.subject, task=tasks[1], run=1), preload=True)
+#raw.info['bads'] = bads[args.subject]
+raw.pick_types(meg=False, eeg=True, eog=True, ecg=True)
 raw.filter(1, 100)
 raw.notch_filter([50, 100])
 raw.plot(scalings=dict(eog=100E-6, eeg=50E-6))
