@@ -42,56 +42,6 @@ subjects = [subject for subject in all_subjects if subject not in bad_subjects]
 
 ecg_channel = 'ECG002'
 eog_channel = 'EOG001'
-# Bad MEG channels for each subject.
-# Manually marked by Marijn van Vliet.
-# TODO: these need to be updated based on Hanna's excel!
-# TODO: update dict to consider str subjects, e.g. '26P'
-# bads = {
-#     1: ['EEG016', 'EEG017', 'EEG004'],
-#     2: ['EEG003', 'EEG013', 'EEG022', 'EEG027', 'EEG028', 'EEG033', 'EEG060', 'EEG063'],
-#     3: ['EEG001', 'EEG005', 'EEG025', 'EEG030', 'EEG032', 'EEG037', 'EEG038', 'EEG027', 'EEG023', 'EEG022'],
-#     4: ['EEG032', 'EEG019', 'EEG018'],
-#     5: [],
-#     6: ['EEG013', 'EEG014', 'EEG032', 'EEG033', 'EEG026', 'EEG023', 'EEG022', 'EEG056'],
-#     7: ['EEG008'],
-#     8: ['EEG004', 'EEG007', 'EEG014', 'EEG016', 'EEG017', 'EEG020', 'EEG023', 'EEG024', 'EEG025', 'EEG027', 'EEG032', 'EEG033', 'EEG042', 'EEG063'],
-#     9: ['EEG009', 'EEG032', 'EEG024', 'EEG035', 'EEG006'],
-#     10: ['EEG004', 'EEG034', 'EEG036', 'EEG043'],
-#     11: ['EEG024', 'EEG032', 'EEG036'],
-#     12: ['EEG034', 'EEG035', 'EEG044', 'EEG062', 'EEG055'],
-#     13: [],
-#     14: ['EEG024', 'EEG043', 'EEG048'],
-#     15: ['EEG046', 'EEG044', 'EEG056', 'EEG059', 'EEG060', 'EEG063'],
-#     16: ['EEG017', 'EEG036', 'EEG025', 'EEG026'],
-#     17: ['EEG017', 'EEG016', 'EEG032', 'EEG036', 'EEG042', 'EEG024'],
-#     18: ['EEG017', 'EEG013', 'EEG009', 'EEG001', 'EEG002', 'EEG005', 'EEG006', 'EEG007', 'EEG003'],
-#     19: ['EEG016', 'EEG017', 'EEG020', 'EEG022', 'EEG023', 'EEG026', 'EEG032', 'EEG033', 'EEG048', 'EEG015', 'EEG021'],
-#     20: [],
-#     21: [],
-#     22: ['EEG014', 'EEG021', 'EEG035', 'EEG036', 'EEG020'],
-#     23: ['EEG017', 'EEG001', 'EEG028', 'EEG027', 'EEG020', 'EEG019', 'EEG029'],
-#     24: ['EEG016'],
-#     25: ['EEG025', 'EEG033', 'EEG026', 'EEG023'],
-#     26: ['EEG008', 'EEG036'],
-#     27: ['EEG024', 'EEG032'],
-#     28: ['EEG003'],
-#     29: ['EEG040'],
-#     30: [],
-#     31: ['EEG029', 'EEG032'],
-#     32: ['EEG016', 'EEG023', 'EEG033'],
-#     33: ['EEG007', 'EEG003', 'EEG036', 'EEG032'],
-#     34: ['EEG034', 'EEG035', 'EEG037', 'EEG050', 'EEG043', 'EEG042', 'EEG048', 'EEG054', 'EEG032', 'EEG033'],
-#     35: ['EEG032'],
-#     36: [],
-#     37: ['EEG020', 'EEG033', 'EEG023', 'EEG055', 'EEG014'],
-#     38: ['EEG016', 'EEG008', 'EEG023', 'EEG033', 'EEG032', 'EEG031', 'EEG006', 'EEG005'],
-#     39: ['EEG016', 'EEG023', 'EEG033', 'EEG063'],
-#     40: ['EEG032', 'EEG044'],
-#     41: ['EEG006', 'EEG032', 'EEG038', 'EEG028', 'EEG026', 'EEG024', 'EEG027', 'EEG043', 'EEG045', 'EEG056', 'EEG049', 'EEG048', 'EEG047', 'EEG063', 'EEG060', 'EEG062', 'EEG055'],
-#     42: ['EEG001', 'EEG024', 'EEG022', 'EEG023', 'EEG026', 'EEG027', 'EEG028', 'EEG020'],
-#     43: ['EEG010'],
-#     44: ['EEG016', 'EEG036'],
-# }
 bads={}
 
 #Bad EEG channels for each subject and each task
@@ -261,6 +211,12 @@ fname.add('processed_data_dir', processed_data_dir)
 fname.add('raw', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-0{run}_proc-raw_meg.fif')
 fname.add('filt', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-0{run}_filt.fif')
 fname.add('clean', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-0{run}_clean.fif')
+
+# Maxfilter
+fname.add('tsss', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-0{run}_proc-raw_meg_tsss.fif')
+fname.add('pos', '{megbids_dir}/{subject}_ses-{ses}_task-{task}_movecomp.pos')
+fname.add('tsss_log', '{megbids_dir}/{subject}_ses-{ses}_task-{task}_tsss_log.log')
+
 
 # Files used during EOG and ECG artifact suppression
 fname.add('ica', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-0{run}_ica.h5')
