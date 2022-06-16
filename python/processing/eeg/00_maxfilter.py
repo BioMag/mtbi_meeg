@@ -18,6 +18,9 @@ from config_eeg import get_all_fnames, fname
 #TODO: maxfilter each task, save to bidsified. IN PROGRESS
 mne.set_log_level('INFO')
 
+cross_talk = '/net/tera2/opt/neuromag/databases/ctc/ct_sparse.fif' #cross-talk correction data file
+calibration = '/net/tera2/opt/neuromag/databases/sss/sss_cal.dat' #calibration datafile
+
 #Handle commandline arguments
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('subject', help='The subject to process')
@@ -26,19 +29,18 @@ args = parser.parse_args()
 all_fnames = zip(
     get_all_fnames(args.subject, kind='raw'), #raw data
     get_all_fnames(args.subject, kind='tsss'), #maxfiltered data
-    get_all_fnames(args.subject, kind='pos'), #position file
     get_all_fnames(args.subject, kind='tsss_log'), #log files
 )
 
 
-for input_f, output_f, pos_f, log_f in all_fnames:
+#TODO: think if this is the most sensible way to do this or 
+#      should I just write bascscr instead?
+
+for input_f, output_f, log_f in all_fnames:
     
     # arguments given to maxfilter program. TODO: check these!
-    args = ['/neuro/bin/util/maxfilter', '-f', input_f, '-o', output_f, '-trans', \
-                 input_f, '-st', '16', \
-                 '-v','-autobad','on','-origin','fit',\
-                 '-in', '8', '-out', '3', '-frame','head', \
-                  '-hp', pos_f ]  
+    args = ['/neuro/bin/util/maxfilter', '-f', input_f, '-o', output_f, '-st', '-movecomp', \
+            '-trans', 'default', '-ctc', cross_talk, '-autobad','on', '-cal', calibration ]  
         
     
     #save the error log

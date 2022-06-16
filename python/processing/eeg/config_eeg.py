@@ -213,9 +213,9 @@ fname.add('filt', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_s
 fname.add('clean', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-0{run}_clean.fif')
 
 # Maxfilter
-fname.add('tsss', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-0{run}_proc-raw_meg_tsss.fif')
-fname.add('pos', '{megbids_dir}/{subject}_ses-{ses}_task-{task}_movecomp.pos')
-fname.add('tsss_log', '{megbids_dir}/{subject}_ses-{ses}_task-{task}_tsss_log.log')
+fname.add('tsss', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-0{run}_proc-raw_meg_mc_tsss.fif')
+#fname.add('pos', '{raw_data_dir}/{subject}_ses-{ses}_task-{task}_movecomp.pos') #is this really necessary?
+fname.add('tsss_log', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-0{run}_tsss_log.log')
 
 
 # Files used during EOG and ECG artifact suppression
