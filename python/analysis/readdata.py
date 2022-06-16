@@ -20,8 +20,8 @@ with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/subjects.txt
     subjects_file.close()
 
 # Define which files to read for each subject
-bandpower_file_names = ['ec_1', 'ec_2', 'ec_3', 'eo_1', 'eo_2', 'eo_3']
-subjects_and_tasks = [(x,y) for x in subjects for y in [bandpower_file_names[0]]]
+tasks = ['ec_1', 'ec_2', 'ec_3', 'eo_1', 'eo_2', 'eo_3']
+subjects_and_tasks = [(x,y) for x in subjects for y in [tasks[0], tasks[1]]]
 
 # Create a two dimensional list to which the data will be saved
 data_vectors = []
@@ -51,12 +51,18 @@ for pair in subjects_and_tasks:
 # Convert 'data_vectors' (2D list) to 2D numpy array
 data_matrix = np.array(data_vectors)
 
+# Create indices for dataframe
+indices = []
+for i in subjects_and_tasks:
+    i = i[0].rstrip()+'_'+i[1]
+    indices.append(i)
+
 # Convert numpy array to dataframe
-data_frame = pd.DataFrame(data_matrix, subjects)   
+data_frame = pd.DataFrame(data_matrix, indices)   
 
 # Add column 'Group'
 groups = []
-for subject in subjects:
+for subject in indices:
     if 'P' in subject:
         groups.append(1)
     elif 'C' in subject:
