@@ -27,24 +27,26 @@ args = parser.parse_args()
 f_bands = [(1,3), (3,5.2), (5.2,7.6), (7.6,10.2), (10.2, 13), (13,16),
            (16,19.2), (19.2,22.6), (22.6,26.2), (26.2,30), (30,34), (34,38.2), (38.2,42.6)]
 
+# A list for corruprted or missing psds files
 corrupted_psds_files = []
-# TODO: add try-except 
+
 try:
     subject_psds = fname.psds(subject=args.subject)
     
     f = h5py.File(subject_psds, 'r')
-    keys = list(f.keys())
-    dataset = f[keys[0]]
-    data_keys = list(dataset)
+    psds_keys = list(f.keys())
+    psds_data = f[psds_keys[0]]
+    data_keys = list(psds_data)
     data = dict()
+    
     # Add the data for each PSD to the dictionary 'data'
     # TODO: Modify this part before processing the pasat data
     for i in range(6):
         dict_key = data_keys[i].removeprefix('key_')
-        data[dict_key]=np.array(dataset[data_keys[i]])
+        data[dict_key]=np.array(psds_data[data_keys[i]])
     
-    freqs = np.array(dataset['key_freqs'])
-    info_keys = list(dataset['key_info'])
+    freqs = np.array(psds_data['key_freqs'])
+    info_keys = list(psds_data['key_info'])
     
     f.close()
     
@@ -72,9 +74,10 @@ except:
     print("Psds file corrupted or missing")
     corrupted_psds_files.append(args.subject)
     
-with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/psds_corrupted_or_missing.txt', 'w') as file:
+with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/psds_corrupted_or_missing.txt', 'a') as file:
     for bad_file in corrupted_psds_files:
         file.write(bad_file+'\n')
+    file.close()
 
 
 

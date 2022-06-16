@@ -43,11 +43,11 @@ for psds_fname, clean_fname in all_fnames:
     raw = read_raw_fif(fname.clean(subject=args.subject, task=task, run=1),
                        preload=True)
     raw.info['bads']=[]
-    clean_1 = raw.copy().crop(tmin=30, tmax=90)
+    clean_1 = raw.copy().crop(tmin=20, tmax=80)
     psds[task+'_1'], freqs = psd_welch(clean_1, fmax=fmax, n_fft=n_fft, picks=['eeg'])
-    clean_2 = raw.copy().crop(tmin=120, tmax=180)
+    clean_2 = raw.copy().crop(tmin=80, tmax=140)
     psds[task+'_2'], freqs = psd_welch(clean_2, fmax=fmax, n_fft=n_fft, picks=['eeg'])
-    clean_3 = raw.copy().crop(tmin=210, tmax=270)
+    clean_3 = raw.copy().crop(tmin=140, tmax=200)
     psds[task+'_3'], freqs = psd_welch(clean_3, fmax=fmax, n_fft=n_fft, picks=['eeg'])
     
     
@@ -93,7 +93,7 @@ for ax, ch_idx in axes:
         # ax.plot(psds['freqs'], psds['pasat_run2'][ch_idx], color='C3'),
     ]
 fig.legend(handles)
-fig.close()
+
 with open_report(fname.report(subject=args.subject)) as report:
     report.add_figs_to_section(fig, 'PSDs', section='PSDs', replace=True)
     report.save(fname.report_html(subject=args.subject),

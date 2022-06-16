@@ -131,6 +131,7 @@ ec_bads = {
         '33C':['EEG001', 'EEG003', 'EEG020', 'EEG026', 'EEG028', 'EEG027', 'EEG056'],
         '34C':[],
         '35C':['EEG006', 'EEG003', 'EEG028'],
+        '36C':['EEG003', 'EEG006'],
         '37C':['EEG003', 'EEG001', 'EEG017', 'EEG013', 'EEG005', 'EEG020', 'EEG014', 'EEG022', 'EEG023', 'EEG027', 'EEG028'],
         '38C':['EEG019', 'EEG022', 'EEG023'],
         '39C':['EEG018', 'EEG011', 'EEG010'],
@@ -267,6 +268,9 @@ fname.add('ica', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_se
 
 # PSD files
 fname.add('psds', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_psds.h5')
+
+# Band power files
+fname.add('bandpower', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_bandpower.csv')
 
 # Filenames for MNE reports
 fname.add('reports_dir', f'{reports_dir}')

@@ -1,0 +1,18 @@
+04C ec:ECG vähän kummallinen
+05C eo:EOG ei ehkä poistanut kaikkia huonoja
+08C ec:EOG&ec:EOG ei ole poistanut mitään?
+09P eo:ECG näyttää vähän huonolta
+12P ec:ECG ei ole poistanut juuri mitään?
+16C eo:ECG ?
+17C ec:ECG ei ole poistanut juuri mitään
+18C ec:ECG ei ole poistanut juuri mitään
+19P ec:EOG, eo:ECG ei näytä poistaneen kaikkia huonoja, eo:EOG ei ole poistanut mitään?
+21C eo:EOG ei näytä poistaneen kaikkia huonoja
+22C huono subject
+23P eo:EOG ei näytä poistaneen huonoja
+24P vähän huonosti näyttää poistaneen
+25C eo:ECG vähän kummallinen
+29C ec:ECG&EO:ECG vähän huonosti poistanut
+30P eo:EOG ei näytä poistaneen kaikkia huonoja
+31C eo ei hyvä
+35C ECG:t vähän huonoja
