@@ -61,6 +61,9 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
         print('Not able to find ecg components')
         bads_ecg = []
         scores_ecg = []
+        # ECG artefact removal for subjects who don't have ECG data
+        bads_ecg, scores_ecg = ica.find_bads_ecg(raw_filt, method = 'correlation', threshold='auto')
+        # ValueError: Unable to generate artificial ECG channel - is this even possible at all for EEG?
     # Mark the EOG components for removal
     ica.exclude = bads_eog + bads_ecg
     ica.save(ica_fname, overwrite=True) 
