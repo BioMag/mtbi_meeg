@@ -27,7 +27,7 @@ args = parser.parse_args()
 # The frequency bands
 # f_bands = [(1,3), (3,5.2), (5.2,7.6), (7.6,10.2), (10.2, 13), (13,16),
 #           (16,19.2), (19.2,22.6), (22.6,26.2), (26.2,30), (30,34), (34,38.2), (38.2,42.6)]
-f_bands_2 = [(x, x+1) for x in range(1,41)]
+f_bands_2 = [(x, x+1) for x in range(1,40)]
 
 # A list for corruprted or missing psds files
 corrupted_psds_files = []

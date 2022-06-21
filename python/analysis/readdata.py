@@ -25,7 +25,7 @@ with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/subjects.txt
 
 # Define which files to read for each subject
 tasks = ['ec_1', 'ec_2', 'ec_3', 'eo_1', 'eo_2', 'eo_3']
-chosen_tasks = tasks#[tasks[0], tasks[1], tasks[2]] # Choose tasks
+chosen_tasks = [tasks[0]] # Choose tasks
 subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks]
 
 # Create a two dimensional list to which the data will be saved
@@ -41,7 +41,7 @@ averages_controls = [[],[],[] ] # all, frontal, occipital
 averages_patients= [[],[],[] ] # all, frontal, occipital
 averages_problem = []
 
-plot_tasks = True
+plot_tasks = False
 plot_averages = False
 
 # Go through all the subjects
@@ -97,7 +97,7 @@ for pair in subjects_and_tasks:
 if plot_tasks:
     fig3, ax3 = plt.subplots()
     for index in range(len(chosen_tasks)):
-        ax3.plot([x for x in range(1,41)], plot_array[index], label=chosen_tasks[index])
+        ax3.plot([x for x in range(1,40)], plot_array[index], label=chosen_tasks[index])
     plt.title('Sub-'+chosen_subject+' Channel '+str(channel + 1))
     ax3.legend()
 
@@ -110,8 +110,8 @@ if plot_averages:
     patients_average = np.divide(patients_sum, 31)
     
     fig, ax = plt.subplots()
-    ax.plot([x for x in range(1,41)], controls_average, label='Controls')
-    ax.plot([x for x in range(1,41)], patients_average, label='Patients')
+    ax.plot([x for x in range(1,40)], controls_average, label='Controls')
+    ax.plot([x for x in range(1,40)], patients_average, label='Patients')
     ax.legend()
         
     # Plot region of interest
@@ -122,8 +122,8 @@ if plot_averages:
     patients_average_o = np.divide(patients_sum_o, 31)
     
     fig1, ax1 = plt.subplots()
-    ax1.plot([x for x in range(1,41)], controls_average_o, label='Controls')
-    ax1.plot([x for x in range(1,41)], patients_average_o, label='Patients')
+    ax1.plot([x for x in range(1,40)], controls_average_o, label='Controls')
+    ax1.plot([x for x in range(1,40)], patients_average_o, label='Patients')
     plt.title('Occipital lobe')
     ax1.legend()
     
@@ -134,8 +134,8 @@ if plot_averages:
     patients_average_f = np.divide(patients_sum_f, 31)
     
     fig2, ax2 = plt.subplots()
-    ax2.plot([x for x in range(1,41)], controls_average_f, label='Controls')
-    ax2.plot([x for x in range(1,41)], patients_average_f, label='Patients')
+    ax2.plot([x for x in range(1,40)], controls_average_f, label='Controls')
+    ax2.plot([x for x in range(1,40)], patients_average_f, label='Patients')
     plt.title('Frontal lobe')
     ax2.legend()
 
