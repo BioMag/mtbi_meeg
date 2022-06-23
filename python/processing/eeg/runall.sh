@@ -3,7 +3,7 @@
 
 while read LINE; do
     #echo ${LINE}
-    python3 03_psds.py $LINE
-done < subjects.txt
+    python3 00_maxfilter.py $LINE
+done < subjects_test.txt
 
 

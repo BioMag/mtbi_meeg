@@ -214,7 +214,7 @@ fname.add('clean', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_
 
 # Maxfilter
 fname.add('tsss', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-0{run}_proc-raw_meg_mc_tsss.fif')
-#fname.add('pos', '{raw_data_dir}/{subject}_ses-{ses}_task-{task}_movecomp.pos') #is this really necessary?
+fname.add('pos', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-0{run}_movecomp.pos') 
 fname.add('tsss_log', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-0{run}_tsss_log.log')
 
 
