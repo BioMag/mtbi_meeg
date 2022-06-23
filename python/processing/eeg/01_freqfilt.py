@@ -24,7 +24,7 @@ figures = defaultdict(list)
 
 # Not all subjects have files for all conditions. These functions grab the
 # files that do exist for the subject.
-exclude = ['emptyroom', 'PASAT'] #these don't have eye blinks.
+exclude = ['emptyroom', 'ec', 'eo'] #these don't have eye blinks.
 # bad_subjects = ['01P', '02P', '03P', '04P', '05P', '06P', '07P']#these ica need to be done manually
 all_fnames = zip(
     get_all_fnames(args.subject, kind='raw', exclude=exclude),
@@ -42,6 +42,7 @@ for raw_fname, filt_fname in all_fnames:
         raw.info['bads'] = ec_bads[args.subject]
     elif 'task-eo' in raw_str:
         raw.info['bads'] = eo_bads[args.subject]
+    # TODO: add pasat bads here (run 1 and 2??)
     
     # Remove MEG channels. This is the EEG pipeline after all.
     raw.pick_types(meg=False, eeg=True, eog=True, stim=True, ecg=True, exclude=[])
