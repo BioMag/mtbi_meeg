@@ -6,7 +6,7 @@ Created on Tue Jun 21 10:26:43 2022
 @author: aino
 
 Tests the performance of three models (logistic regression, linear discriminant 
-analysis and support vector machine) using leaveone out cross validation.
+analysis and support vector machine) using leave one out cross validation.
 """
 
 from sklearn.linear_model import LogisticRegression
@@ -15,11 +15,12 @@ from sklearn import svm
 from sklearn.model_selection import LeaveOneOut
 from readdata import data_frame
 
-
+# Get data
 X, y = data_frame.iloc[:,1:data_frame.shape[1]], data_frame.loc[:, 'Group']
 
-loo = LeaveOneOut()
+# Leave one out cross validation
 
+loo = LeaveOneOut()
 
 loo_lr = []
 loo_lda = []
@@ -28,16 +29,21 @@ split = loo.split(X)
 
 
 for train_index, test_index in split:
+    # Get training and testing sets
     X_train, X_test = X.iloc[train_index], X.iloc[test_index]
     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+    # Logistic regression
     clf = LogisticRegression(random_state=0).fit(X_train, y_train)
     loo_lr.append(clf.score(X_test, y_test))
+    # Linear discrimin ant analysis
     clf_2 = LinearDiscriminantAnalysis(solver='lsqr').fit(X_train, y_train)
     loo_lda.append(clf_2.score(X_test, y_test))
+    # Support vector machine
     clf_3 = svm.SVC()
     clf_3.fit(X_train, y_train)
     loo_svm.append(clf_3.score(X_test, y_test))
 
+# Calculate scores for each model
 if len(loo_lr) != 0:    
     loo_lr_score = sum(loo_lr)/len(loo_lr)
 if len(loo_lda) !=0:
