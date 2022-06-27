@@ -1,16 +1,21 @@
 """
 Perform bandpass filtering and notch filtering to get rid of cHPI and powerline
 frequencies.
+
+
+
+Running:
+import subprocess
+subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.sh', shell=True)
 """
-#import subprocess
-#subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.sh', shell=True)
+
 import argparse
 from collections import defaultdict
 
 from mne.io import read_raw_fif
 from mne import open_report
 
-from config_eeg import get_all_fnames, fname, ec_bads, eo_bads, fmin, fmax, fnotch
+from config_eeg import get_all_fnames, fname, ec_bads, eo_bads, pasat1_bads, pasat2_bads, fmin, fmax, fnotch
 
 #TODO: fix 35C channels
 
@@ -24,7 +29,7 @@ figures = defaultdict(list)
 
 # Not all subjects have files for all conditions. These functions grab the
 # files that do exist for the subject.
-exclude = ['emptyroom', 'ec', 'eo'] #these don't have eye blinks.
+exclude = ['emptyroom'] #these don't have eye blinks.
 # bad_subjects = ['01P', '02P', '03P', '04P', '05P', '06P', '07P']#these ica need to be done manually
 all_fnames = zip(
     get_all_fnames(args.subject, kind='raw', exclude=exclude),
@@ -42,7 +47,10 @@ for raw_fname, filt_fname in all_fnames:
         raw.info['bads'] = ec_bads[args.subject]
     elif 'task-eo' in raw_str:
         raw.info['bads'] = eo_bads[args.subject]
-    # TODO: add pasat bads here (run 1 and 2??)
+    elif 'task-PASAT' in raw_str and 'run-01' in raw_str:
+        raw.info['bads'] = pasat1_bads[args.subject]
+    elif 'task-PASAT' in raw_str and 'run-02' in raw_str:
+        raw.info['bads'] = pasat2_bads[args.subject]
     
     # Remove MEG channels. This is the EEG pipeline after all.
     raw.pick_types(meg=False, eeg=True, eog=True, stim=True, ecg=True, exclude=[])

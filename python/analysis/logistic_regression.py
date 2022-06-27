@@ -24,11 +24,6 @@ from readdata import data_frame
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Get data
-X, y = data_frame.iloc[:,1:data_frame.shape[1]], data_frame.loc[:, 'Group']
-
-
-
 
 def one_split():
     # Train test split
@@ -55,7 +50,19 @@ def one_split():
     nca_pipe.fit(X_train, y_train)
     print(nca_pipe.score(X_test, y_test))
 
+
 def plot_roc_curve(clf):
+    """
+    Plots ROC curves for a model
+    
+    Parameters
+    ----------
+    clf : STR
+        ('lr', 'lda', 'svm')
+
+    Returns ?
+    """
+    # Define classifier
     classifier = ''
     if clf == 'lr':
         classifier = LogisticRegression(random_state=0)
@@ -65,6 +72,7 @@ def plot_roc_curve(clf):
         classifier = LinearDiscriminantAnalysis(solver='lsqr')
     else:
         print("Wrong classifier")
+    # Stratified 10 fold cross validation
     skf = StratifiedKFold(n_splits=10)
     split = skf.split(X, y)   
     tprs = []
@@ -75,7 +83,7 @@ def plot_roc_curve(clf):
         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
         classifier.fit(X_train, y_train)
         #?pred = clf.predict(X_test).astype(int) 
-        
+        # Plot ROC curves for individual folds
         viz = RocCurveDisplay.from_estimator(classifier, X_test, y_test)
         interp_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
         interp_tpr[0] = 0.0
@@ -87,6 +95,7 @@ def plot_roc_curve(clf):
     mean_tpr[-1]=1.0
     mean_auc = auc(mean_fpr, mean_tpr) 
     std_auc = np.std(aucs)
+    # Plot mean ROC curve
     ax.plot(mean_fpr, mean_tpr, color='b', 
             label=r"Mean ROC (AUC =%0.2f $\pm$ %0.2f)" % (mean_auc, std_auc),
             lw=2, alpha = 0.8)  
@@ -100,7 +109,7 @@ def plot_roc_curve(clf):
 
     
 def stratified_k_fold_cv():
-    # Stratified K fold cross validation
+    # Stratified K fold cross validation, testing different models
     
     skf = StratifiedKFold(n_splits=5)
     split = skf.split(X, y)
@@ -147,7 +156,7 @@ def stratified_k_fold_cv():
         # # Random forest
         # clf_rf = RandomForestClassifier().fit(X_train, y_train)
         # stratified_accuracy_rf.append(clf_rf.score(X_test, y_test))
-
+    return stratified_accuracy_lr, stratified_accuracy_lda, stratified_accuracy_svm
 
 def pca_one_split():
     # Train test split
@@ -177,7 +186,10 @@ def pca_lr_stratified():
         clf_pca = LogisticRegression().fit(pca_x_train, y_train)
         pca_score = clf_pca.score(pca_x_test, y_test)
         pca_score_stratified.append(pca_score)
+        
 
+# Get data
+X, y = data_frame.iloc[:,1:data_frame.shape[1]], data_frame.loc[:, 'Group']
 
 # Choose a function to run
-plot_roc_curve('lr')
+a, b, c = stratified_k_fold_cv()

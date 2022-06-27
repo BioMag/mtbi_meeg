@@ -24,8 +24,9 @@ with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/subjects.txt
     # subjects = ['14P'] # Choose subjects manually
 
 # Define which files to read for each subject
-tasks = ['ec_1', 'ec_2', 'ec_3', 'eo_1', 'eo_2', 'eo_3']
-chosen_tasks = [tasks[0]] # Choose tasks
+tasks = ['ec_1', 'ec_2', 'ec_3', 'eo_1', 'eo_2', 'eo_3', 'PASAT_run1_1', 
+         'PASAT_run1_2', 'PASAT_run2_1', 'PASAT_run2_2']
+chosen_tasks = ['PASAT_run2_1'] # Choose tasks
 subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks]
 
 # Create a two dimensional list to which the data will be saved
@@ -155,9 +156,9 @@ data_frame = pd.DataFrame(data_matrix, indices)
 # Add column 'Group'
 groups = []
 for subject in indices:
-    if 'P' in subject:
+    if 'P' in subject[2]:
         groups.append(1)
-    elif 'C' in subject:
+    elif 'C' in subject[2]:
         groups.append(0)
     else:
         groups.append(2) # In case there is a problem

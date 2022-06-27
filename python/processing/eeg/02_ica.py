@@ -2,9 +2,13 @@
 Remove EOG artifacts through independant component analysis (ICA).
 No ECG artifacts are removed at the moment, since they are hard to detect based
 on just EEG data.
+
+
+Running: 
+import subprocess
+subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.sh', shell=True)
 """
-#import subprocess
-#subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.sh', shell=True)
+
 import argparse
 from collections import defaultdict
 
@@ -25,7 +29,7 @@ figures = defaultdict(list)
 
 # Not all subjects have files for all conditions. These functions grab the
 # files that do exist for the subject.
-exclude = ['emptyroom', 'PASAT'] #these don't have eye blinks.
+exclude = ['emptyroom', 'ec', 'eo'] #these don't have eye blinks.
 bad_subjects = ['01P', '02P', '03P', '04P', '05P', '06P', '07P']#these ica need to be done manually
 all_fnames = zip(
     get_all_fnames(args.subject, kind='filt', exclude=exclude),
@@ -61,9 +65,9 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
         print('Not able to find ecg components')
         bads_ecg = []
         scores_ecg = []
-        # ECG artefact removal for subjects who don't have ECG data
-        bads_ecg, scores_ecg = ica.find_bads_ecg(raw_filt, method = 'correlation', threshold='auto')
-        # ValueError: Unable to generate artificial ECG channel - is this even possible at all for EEG?
+        # # ECG artefact removal for subjects who don't have ECG data
+        # bads_ecg, scores_ecg = ica.find_bads_ecg(raw_filt, method = 'correlation', threshold='auto')
+        # # ValueError: Unable to generate artificial ECG channel - is this even possible at all for EEG?
     # Mark the EOG components for removal
     ica.exclude = bads_eog + bads_ecg
     ica.save(ica_fname, overwrite=True) 

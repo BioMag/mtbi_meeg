@@ -6,10 +6,12 @@ Created on Tue Jun 14 12:29:27 2022
 @author: aino
 
 Calculates log band power for each subject
+
+Running:
+import subprocess
+subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.sh', shell=True)
 """
-# Running:
-#import subprocess
-#subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.sh', shell=True)
+
 
 import argparse
 import h5py
@@ -42,11 +44,10 @@ try:
     data = dict()
     
     # Add the data for each PSD to the dictionary 'data'
-    # TODO: Modify this part before processing the pasat data
-    for i in range(6):
-        dict_key = data_keys[i].removeprefix('key_')
-        data[dict_key]=np.array(psds_data[data_keys[i]])
-    
+    for i in data_keys:
+        if 'eo' in i or 'ec' in i or 'PASAT' in i:
+            dict_key = i.removeprefix('key_')
+            data[dict_key]=np.array(psds_data[i])
     freqs = np.array(psds_data['key_freqs'])
     info_keys = list(psds_data['key_info'])
     

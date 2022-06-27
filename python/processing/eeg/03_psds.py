@@ -1,9 +1,11 @@
 """
 Compute the Power Spectral Density (PSD) for each channel.
 
+Running:
+import subprocess
+subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.sh', shell=True)
 """
-#import subprocess
-#subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.sh', shell=True)
+
 import argparse
 
 from mne.io import read_raw_fif
@@ -30,7 +32,7 @@ fmax = 40
 
 # Not all subjects have files for all conditions. These functions grab the
 # files that do exist for the subject.
-exclude = ['emptyroom', 'PASAT'] 
+exclude = ['emptyroom', 'ec', 'eo'] 
 bad_subjects = ['01P', '02P', '03P', '04P', '05P', '06P', '07P']#these ica need to be done manually
 all_fnames = zip(
     get_all_fnames(args.subject, kind='psds', exclude=exclude),
@@ -39,16 +41,21 @@ all_fnames = zip(
 
 for psds_fname, clean_fname in all_fnames:
     task = task_from_fname(clean_fname)
-        
-    raw = read_raw_fif(fname.clean(subject=args.subject, task=task, run=1),
+    run = 1
+    if '1' in task:
+        task_wo_run = task.removesuffix('_run1')
+    elif '2' in task:
+        task_wo_run = task.removesuffix('_run2')    
+        run = 2
+    raw = read_raw_fif(fname.clean(subject=args.subject, task=task_wo_run, run=run),
                        preload=True)
     raw.info['bads']=[]
-    clean_1 = raw.copy().crop(tmin=20, tmax=80)
+    clean_1 = raw.copy().crop(tmin=2, tmax=62)
     psds[task+'_1'], freqs = psd_welch(clean_1, fmax=fmax, n_fft=n_fft, picks=['eeg'])
-    clean_2 = raw.copy().crop(tmin=80, tmax=140)
+    clean_2 = raw.copy().crop(tmin=62, tmax=122)
     psds[task+'_2'], freqs = psd_welch(clean_2, fmax=fmax, n_fft=n_fft, picks=['eeg'])
-    clean_3 = raw.copy().crop(tmin=140, tmax=200)
-    psds[task+'_3'], freqs = psd_welch(clean_3, fmax=fmax, n_fft=n_fft, picks=['eeg'])
+    # clean_3 = raw.copy().crop(tmin=140, tmax=200)
+    # psds[task+'_3'], freqs = psd_welch(clean_3, fmax=fmax, n_fft=n_fft, picks=['eeg'])
     
     
     # Add some metadata to the file we are writing
@@ -66,14 +73,14 @@ layout = find_layout(info, exclude=[])
 def on_pick(ax, ch_idx):
     """Create a larger PSD plot for when one of the tiny PSD plots is
        clicked."""
-    ax.plot(psds['freqs'], psds['ec_1'][ch_idx], color='C0',
-            label='eyes closed')
-    ax.plot(psds['freqs'], psds['eo_1'][ch_idx], color='C1',
-            label='eyes open')
-    # ax.plot(psds['freqs'], psds['pasat_run1'][ch_idx], color='C2',
-    #         label='pasat run 1')
-    # ax.plot(psds['freqs'], psds['pasat_run2'][ch_idx], color='C3',
-    #         label='pasat run 2')
+    # ax.plot(psds['freqs'], psds['ec_1'][ch_idx], color='C0',
+    #         label='eyes closed')
+    # ax.plot(psds['freqs'], psds['eo_1'][ch_idx], color='C1',
+    #         label='eyes open')
+    ax.plot(psds['freqs'], psds['PASAT_run1_1'][ch_idx], color='C2',
+            label='pasat run 1')
+    ax.plot(psds['freqs'], psds['PASAT_run2_1'][ch_idx], color='C3',
+            label='pasat run 2')
     ax.legend()
     ax.set_xlabel('Frequency')
     ax.set_ylabel('PSD')
@@ -87,10 +94,10 @@ axes = iter_topography(info, layout, on_pick=on_pick, fig=fig,
 for ax, ch_idx in axes:
     #print(ax)
     handles = [
-        ax.plot(psds['freqs'], psds['ec_1'][ch_idx], color='C0'),
-        ax.plot(psds['freqs'], psds['eo_1'][ch_idx], color='C1'),
-        # ax.plot(psds['freqs'], psds['pasat_run1'][ch_idx], color='C2'),
-        # ax.plot(psds['freqs'], psds['pasat_run2'][ch_idx], color='C3'),
+        # ax.plot(psds['freqs'], psds['ec_1'][ch_idx], color='C0'),
+        # ax.plot(psds['freqs'], psds['eo_1'][ch_idx], color='C1'),
+        ax.plot(psds['freqs'], psds['PASAT_run1_1'][ch_idx], color='C2'),
+        ax.plot(psds['freqs'], psds['PASAT_run2_1'][ch_idx], color='C3'),
     ]
 fig.legend(handles)
 
