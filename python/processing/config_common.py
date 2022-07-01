@@ -61,11 +61,19 @@ elif host == 'nbe-065' and user == 'hkoivikk':
 elif host == 'sirius' and user == 'heikkiv' : #TODO: should we overwrite old stuff or not?
     # Verna's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
-    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/processed/'
+    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_sprocessed/'
     reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/reports/',user)
     figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/figures/',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
+elif host == 'ypsilon.biomag.hus.fi' and user == 'heikkiv':
+    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
+    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_sprocessed/'
+    reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/reports/',user)
+    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/resports/',user)
+    n_jobs = 4
+    matplotlib_backend = 'Qt5Agg'
+
 elif host == 'psi' and user == 'aino' :
     # Ainos's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
