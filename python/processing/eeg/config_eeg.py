@@ -81,6 +81,7 @@ ec_bads = {
         '33C':['EEG001', 'EEG003', 'EEG020', 'EEG026', 'EEG028', 'EEG027', 'EEG056'],
         '34C':[],
         '35C':['EEG006', 'EEG003', 'EEG028'],
+        '36C':['EEG003', 'EEG006'],
         '37C':['EEG003', 'EEG001', 'EEG017', 'EEG013', 'EEG005', 'EEG020', 'EEG014', 'EEG022', 'EEG023', 'EEG027', 'EEG028'],
         '38C':['EEG019', 'EEG022', 'EEG023'],
         '39C':['EEG018', 'EEG011', 'EEG010'],
@@ -193,8 +194,162 @@ eo_bads = {
         '30P':[], #"karvaisia kanavia"
         '31P':['EEG003', 'EEG007', 'EEG027', 'EEG028', 'EEG045'] #a lot of blinking       
         }
-pasat1_bads = {}
-pasat2_bads = {}
+pasat1_bads = {#pasats are shorter
+        '01C': ['EEG033', 'EEG025', 'EEG023'],
+        '02C': ['EEG016', 'EEG053', 'EEG054'],
+        '03C': ['EEG044'],
+        '04C': ['EEG049', 'EEG045', 'EEG043', 'EEG038'], #a lot of bad data
+        '05C': [],
+        '06C':['EEG001', 'EEG020', 'EEG027', 'EEG023', 'EEG022', 'EEG026'],
+        '07C': [],
+        '08C': ['EEG003'],
+        '09C': ['EEG027'],
+        '10C':[],
+        '11C': ['EEG029', 'EEG032'],#karvaisia kanavia 1-7, bad eog, weird ecg
+        '12C':['EEG016', 'EEG033', 'EEG027', 'EEG023'],
+        '13C':  ['EEG003', 'EEG007'],
+        '14C':['EEG033', 'EEG023', 'EEG063'],
+        '15C':['EEG023', 'EEG033', 'EEG055'],
+        '16C':[],
+        '17C': ['EEG005', 'EEG017', 'EEG020', 'EEG027', 'EEG028', 'EEG026', 'EEG023'],
+        '18C':[],
+        '19C':['EEG011', 'EEG043'],
+        '20C': ['EEG033', 'EEG044', 'EEG045', 'EEG059', 'EEG052'],
+        '21C':['EEG012', 'EEG010', 'EEG007', 'EEG003', 'EEG030', 'EEG029', 'EEG024', 'EEG046', 
+               'EEG059', 'EEG042', 'EEG062'],
+        '22C': [],#really bad eeg
+        '23C':['EEG003', 'EEG018', 'EEG025', 'EEG037', 'EEG027'],
+        '24C':['EEG001', 'EEG017', 'EEG013', 'EEG020', 'EEG022', 'EEG027', 'EEG029', 'EEG028'],
+        '25C':['EEG013', 'EEG001', 'EEG002', 'EEG017', 'EEG028', 'EEG027', 'EEG026', 'EEG023', 'EEG022'],
+        '26C':['EEG034', 'EEG035', 'EEG037', 'EEG042', 'EEG043', 'EEG048', 'EEG050'],
+        '27C':['EEG033', 'EEG063'],
+        '28C':['EEG019', 'EEG038'],
+        '29C':['EEG009', 'EEG023', 'EEG033'],
+        '30C':[],
+        '31C':['EEG017', 'EEG001', 'EEG002', 'EEG003', 'EEG032', 'EEG022', 'EEG023', 
+               'EEG027', 'EEG026', 'EEG028', 'EEG050'],#lot of blinks/otherwise quite bad data
+        '32C':['EEG003'],
+        '33C':['EEG001', 'EEG003', 'EEG020', 'EEG002', 'EEG026', 'EEG028', 'EEG027', 
+               'EEG022', 'EEG023', 'EEG056', 'EEG060'],
+        '34C':[],
+        '35C':['EEG013', 'EEG012', 'EEG034', 'EEG030', 'EEG043', 'EEG047'],#eog, ecg wrong labels
+        '36C':['EEG003', 'EEG006'],
+        '37C':['EEG005', 'EEG017', 'EEG013', 'EEG002', 'EEG001', 'EEG003', 'EEG023', 'EEG022', 'EEG027'],
+        '38C':[],
+        '39C':['EEG018'],
+        '40C':[],
+        '41C':[],
+        '01P':[],
+        '02P':['EEG003', 'EEG013', 'EEG017', 'EEG022', 'EEG027', 'EEG061'],
+        '03P':['EEG005', 'EEG001', 'EEG032', 'EEG027', 'EEG023', 'EEG022'],
+        '04P':['EEG018'],
+        '05P':[],
+        '06P':['EEG013', 'EEG022', 'EEG023', 'EEG026', 'EEG032', 'EEG056'],
+        '07P':[],
+        '08P':['EEG027', 'EEG042', 'EEG063'],#karvaisia kanavia
+        '09P':['EEG009', 'EEG035'],
+        '10P': ['EEG006'], #a lot of eye movement and heart artifacts
+        '11P':[],
+        '12P':[],
+        '13P': ['EEG038'],
+        '14P':['EEG018', 'EEG027', 'EEG043', 'EEG048'],
+        '15P':['EEG056', 'EEG059', 'EEG060', 'EEG044', 'EEG046', 'EEG057', 'EEG045', 'EEG063'],
+        '16P':[],
+        '17P':['EEG017'],#001-007 "karvaisia"
+        '18P':['EEG017', 'EEG020', 'EEG001', 'EEG026', 'EEG022', 'EEG027', 'EEG023', 
+               'EEG039', 'EEG028', 'EEG037', 'EEG047'],
+        '19P':[],
+        '20P':['EEG061'],
+        '21P':[],
+        '22P':['EEG001', 'EEG017', 'EEG019', 'EEG020', 'EEG013', 'EEG027', 'EEG028', 'EEG048'],
+        '23P':[],#karvaisia kanavia
+        '24P':['EEG023', 'EEG033', 'EEG032'],#karvaisia kanavia
+        '25P':['EEG003', 'EEG023', 'EEG033'],
+        '26P':['EEG003'],
+        '27P':['EEG027', 'EEG037', 'EEG049', 'EEG056'],
+        '28P':['EEG003', 'EEG007', 'EEG024'],
+        '29P':['EEG005', 'EEG001', 'EEG019', 'EEG020', 'EEG003', 'EEG022', 'EEG023', 
+               'EEG026', 'EEG027', 'EEG063'],
+        '30P':['EEG058'],
+        '31P':['EEG003', 'EEG011', 'EEG007', 'EEG027', 'EEG046'],
+    }
+pasat2_bads = {
+        '01C': ['EEG033', 'EEG025', 'EEG023'],
+        '02C': [],
+        '03C': ['EEG044'],
+        '04C': ['EEG026', 'EEG028', 'EEG038', 'EEG027', 'EEG045', 'EEG049', 'EEG043', 'EEG057', 'EEG064'], 
+        '05C': ['EEG010'],
+        '06C':['EEG001', 'EEG020', 'EEG022', 'EEG023', 'EEG026', 'EEG027', 'EEG028'],
+        '07C': [],
+        '08C': ['EEG003'],
+        '09C': ['EEG027'], #horrible eog!!
+        '10C':[],
+        '11C': ['EEG029'],#karvaisia kanavia 1-7, dead eog, weird ecg
+        '12C':['EEG016', 'EEG023', 'EEG033'],
+        '13C':  ['EEG003'],
+        '14C':['EEG023', 'EEG033'],
+        '15C':['EEG023', 'EEG033', 'EEG055'],
+        '16C':[],
+        '17C': ['EEG005', 'EEG017', 'EEG023', 'EEG026', 'EEG027', 'EEG028', 'EEG029'],
+        '18C':[],
+        '19C':['EEG043'],
+        '20C':  ['EEG033', 'EEG044', 'EEG045', 'EEG059'],
+        '21C': ['EEG003', 'EEG010', 'EEG012', 'EEG019', 'EEG007', 'EEG030', 'EEG029', 
+                'EEG039', 'EEG024', 'EEG046', 'EEG042', 'EEG059', 'EEG064', 'EEG062'],
+        '22C': [],#really bad eeg
+        '23C':['EEG018', 'EEG025', 'EEG027', 'EEG037'],
+        '24C':['EEG001', 'EEG013', 'EEG017', 'EEG027', 'EEG022', 'EEG028', 'EEG029', 'EEG047'],
+        '25C':['EEG013', 'EEG002', 'EEG001', 'EEG023', 'EEG026', 'EEG027', 'EEG028'],#two first seconds bad
+        '26C':['EEG018', 'EEG034', 'EEG035', 'EEG037', 'EEG042', 'EEG043', 'EEG048', 'EEG050', 'EEG049'],
+        '27C':['EEG003', 'EEG033'],
+        '28C':['EEG019'],
+        '29C':['EEG023', 'EEG033'],
+        '30C':[],
+        '31C':['EEG001', 'EEG002', 'EEG017', 'EEG022', 'EEG023', 'EEG026', 'EEG027', 
+               'EEG028', 'EEG032', 'EEG050'],
+        '32C':['EEG003'],
+        '33C':['EEG001', 'EEG003', 'EEG013', 'EEG020', 'EEG023', 'EEG026', 'EEG027', 
+               'EEG028', 'EEG022', 'EEG056'],
+        '34C':[],
+        '35C':['EEG013', 'EEG034'],#eog, ecg wrong labels
+        '36C':['EEG003', 'EEG006'],
+        '37C':['EEG005', 'EEG013', 'EEG017', 'EEG002', 'EEG022', 'EEG023', 'EEG027', 'EEG028'],
+        '38C':[],
+        '39C':[],
+        '40C':[],
+        '41C':['EEG014'],
+        '01P':[],
+        '02P':['EEG013', 'EEG017', 'EEG022', 'EEG027'],
+        '03P':['EEG003', 'EEG013', 'EEG032', 'EEG022', 'EEG023', 'EEG027'],
+        '04P':['EEG018'],
+        '05P':[],
+        '06P':['EEG013', 'EEG012', 'EEG022', 'EEG023', 'EEG026', 'EEG032'],
+        '07P':[],
+        '08P':['EEG027', 'EEG042'],#karvaisia kanavia
+        '09P':['EEG009', 'EEG018', 'EEG035'],
+        '10P':[], #a lot of eye movement and heart artifacts
+        '11P':[],
+        '12P':[],
+        '13P': ['EEG038'],
+        '14P':['EEG018', 'EEG027', 'EEG043', 'EEG048'],#a lot of eye artefacts
+        '15P':['EEG044', 'EEG056', 'EEG059', 'EEG060', 'EEG063'],
+        '16P':[],
+        '17P':['EEG017'],#karvaisia kanavia
+        '18P':['EEG020', 'EEG017', 'EEG026', 'EEG028', 'EEG022', 'EEG047'],
+        '19P':['EEG015'],
+        '20P':['EEG014', 'EEG061'],
+        '21P':[],
+        '22P':['EEG017', 'EEG019', 'EEG020', 'EEG022', 'EEG028', 'EEG048'],
+        '23P':[],
+        '24P':['EEG023', 'EEG033'],#a lot of eye artefacts
+        '25P':['EEG003', 'EEG023', 'EEG033'],
+        '26P':['EEG003'],
+        '27P':['EEG027', 'EEG056', 'EEG064', 'EEG061'],
+        '28P':['EEG003', 'EEG007', 'EEG028'],
+        '29P':['EEG001', 'EEG020', 'EEG005', 'EEG019', 'EEG022', 'EEG023', 'EEG026', 'EEG027'],
+        '30P':[],
+        '31P':['EEG003', 'EEG011'],
+    }
 ###############################################################################
 # Templates for filenames
 #
@@ -223,6 +378,9 @@ fname.add('ica', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_se
 
 # PSD files
 fname.add('psds', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_psds.h5')
+
+# Band power files
+fname.add('bandpower', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_bandpower.csv')
 
 # Filenames for MNE reports
 fname.add('reports_dir', f'{reports_dir}')

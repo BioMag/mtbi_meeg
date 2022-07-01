@@ -3,7 +3,7 @@
 
 while read LINE; do
     #echo ${LINE}
-    python3 00_maxfilter.py $LINE
+    python3 01_freqfilt.py $LINE
 done < subjects.txt
 
 
