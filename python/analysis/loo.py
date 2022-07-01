@@ -32,12 +32,15 @@ for train_index, test_index in split:
     # Get training and testing sets
     X_train, X_test = X.iloc[train_index], X.iloc[test_index]
     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+    
     # Logistic regression
     clf = LogisticRegression(random_state=0).fit(X_train, y_train)
     loo_lr.append(clf.score(X_test, y_test))
+    
     # Linear discrimin ant analysis
     clf_2 = LinearDiscriminantAnalysis(solver='lsqr').fit(X_train, y_train)
     loo_lda.append(clf_2.score(X_test, y_test))
+    
     # Support vector machine
     clf_3 = svm.SVC()
     clf_3.fit(X_train, y_train)

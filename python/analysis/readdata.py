@@ -29,8 +29,9 @@ tasks = ['ec_1', 'ec_2', 'ec_3', 'eo_1', 'eo_2', 'eo_3', 'PASAT_run1_1',
 chosen_tasks = ['PASAT_run2_1'] # Choose tasks
 subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks]
 
-# Create a two dimensional list to which the data will be saved
+# Create a two dimensional list (and a 3D list) to which the data will be saved
 data_vectors = []
+data_matrices = []
 
 # Choose one channel and subject to be plotted
 channel = 11
@@ -41,6 +42,8 @@ plot_array = []
 averages_controls = [[],[],[] ] # all, frontal, occipital
 averages_patients= [[],[],[] ] # all, frontal, occipital
 averages_problem = []
+tp_channels = []
+tp_freqs = []
 
 plot_tasks = False
 plot_averages = False
@@ -66,6 +69,13 @@ for pair in subjects_and_tasks:
     
     # Add the vector to 'data_vectors' (this is not in dB)
     data_vectors.append(f_bands_vector)
+    data_matrices.append(f_bands_array)
+    
+    # Total power 
+    tp_channel = np.sum(f_bands_array, axis=0)
+    tp_freq = np.sum(f_bands_array, axis=1)
+    tp_channels.append(tp_channel)
+    tp_freqs.append(tp_freq)
     
     # Convert the array to dB
     log_array = 10* np.log10(f_bands_array) 
@@ -91,9 +101,42 @@ for pair in subjects_and_tasks:
     else:
         averages_problem.append(subject)
     
-    
-    
-    
+"""
+Creating a data frame
+"""
+
+# Convert 'data_vectors' (2D list) to 2D numpy array
+data_matrix = np.array(data_vectors)
+
+# Create indices for dataframe
+indices = []
+for i in subjects_and_tasks:
+    i = i[0].rstrip()+'_'+i[1]
+    indices.append(i)
+
+# Convert numpy array to dataframe
+data_frame = pd.DataFrame(data_matrix, indices)   
+
+tp_c_dataframe = pd.DataFrame(tp_channels, indices)
+tp_f_dataframe = pd.DataFrame(tp_freqs, indices)
+
+# Add column 'Group'
+groups = []
+for subject in indices:
+    if 'P' in subject[2]:
+        groups.append(1)
+    elif 'C' in subject[2]:
+        groups.append(0)
+    else:
+        groups.append(2) # In case there is a problem
+data_frame.insert(0, 'Group', groups)
+tp_c_dataframe.insert(0, 'Group', groups)
+tp_f_dataframe.insert(0,'Group', groups)
+
+"""
+Plotting
+"""
+
 # Plot the chosen tasks for some subject and channel
 if plot_tasks:
     fig3, ax3 = plt.subplots()
@@ -105,16 +148,20 @@ if plot_tasks:
 
 # Calculate and plot grand average patients vs controls 
 if plot_averages:
-    controls_sum = np.sum(averages_controls[0], axis = 0)
-    controls_average = np.divide(controls_sum, 41)
-    patients_sum = np.sum(averages_patients[0], axis = 0)    
-    patients_average = np.divide(patients_sum, 31)
+    controls_total_power = np.sum(averages_controls[0], axis = 0)
+    controls_average = np.divide(controls_total_power, 41)
+    patients_total_power = np.sum(averages_patients[0], axis = 0)    
+    patients_average = np.divide(patients_total_power, 31)
     
     fig, ax = plt.subplots()
     ax.plot([x for x in range(1,40)], controls_average, label='Controls')
     ax.plot([x for x in range(1,40)], patients_average, label='Patients')
     ax.legend()
-        
+    
+    # fig11, ax11 = plt.subplots()
+    # ax11.plot([x for x in range(1,40)], controls_total_power, label= 'Controls')
+    # ax11.plot([x for x in range(1,40)], patients_total_power, label= 'Patients')
+    
     # Plot region of interest
     # Occipital lobe (channels 55-64)
     controls_sum_o = np.sum(averages_controls[1], axis = 0)
@@ -141,26 +188,8 @@ if plot_averages:
     ax2.legend()
 
 
-# Convert 'data_vectors' (2D list) to 2D numpy array
-data_matrix = np.array(data_vectors)
 
-# Create indices for dataframe
-indices = []
-for i in subjects_and_tasks:
-    i = i[0].rstrip()+'_'+i[1]
-    indices.append(i)
 
-# Convert numpy array to dataframe
-data_frame = pd.DataFrame(data_matrix, indices)   
 
-# Add column 'Group'
-groups = []
-for subject in indices:
-    if 'P' in subject[2]:
-        groups.append(1)
-    elif 'C' in subject[2]:
-        groups.append(0)
-    else:
-        groups.append(2) # In case there is a problem
-data_frame.insert(0, 'Group', groups)
+
 
