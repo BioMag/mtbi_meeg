@@ -181,7 +181,8 @@ if __name__ == "__main__":
     else:
         LOC = "BM"
     
-    selection_file = f"{args.location}_selection_{args.eyes}.csv"
+    #selection_file = f"{args.location}_select_{args.eyes}.csv"
+    selection_file = f"{args.location}_select.csv"
     df = pd.read_csv(selection_file, index_col = 0)
     file_selection = df.loc[f"pred{args.iter}"]
 
