@@ -6,7 +6,7 @@ Created on Wed Jun 15 11:48:59 2022
 @author: heikkiv
 
 Script that applies maxfiltering on the bidsified data.
-Does all tasks in a row. 
+Does all tasks in a row. Based on the script by Mia Liljeström.
 
 NOTE: needs to be ran on Maxfilter computer, either manually or via SSH connection.
 """
@@ -14,7 +14,7 @@ NOTE: needs to be ran on Maxfilter computer, either manually or via SSH connecti
 import subprocess
 import argparse
 import os
-from config_eeg import get_all_fnames, fname
+from config_eeg import get_all_fnames, fname, tasks
 
 #TODO: maxfilter each task, save to bidsified. IN PROGRESS
 #mne.set_log_level('INFO')
@@ -27,6 +27,8 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('subject', help='The subject to process')
 args = parser.parse_args()
 
+subject = args.subject
+
 all_fnames = zip(
     get_all_fnames(args.subject, kind='raw'), #raw data
     get_all_fnames(args.subject, kind='tsss'), #maxfiltered data
@@ -38,14 +40,16 @@ all_fnames = zip(
 #TODO: think if this is the most sensible way to do this or 
 #      should I just write bascscr instead?
 
-#TODO: another solution is to use MNE version; would that be better
+#TODO: another solution is to use MNE version; would that be better??
 print("Maxfiltering subject ", args.subject)
 
 for input_f, output_f, log_f, pos_f in all_fnames:
     
+    trans_f = fname.raw(subject=subject, task=tasks[0], run=1)
+    
     # arguments given to maxfilter program. TODO: check these!
     args = ['/neuro/bin/util/maxfilter', '-f', input_f, '-o', output_f, '-st', '-movecomp', \
-            '-autobad','on', '-trans', 'default', '-ctc', cross_talk, '-cal', calibration, \
+            '-autobad','on', '-trans', trans_f, '-ctc', cross_talk, '-cal', calibration, \
             '-hpicons','-origin','fit','-in', '8', '-out', '3', '-frame','head', '-hp', pos_f, '-force']  
         
     
