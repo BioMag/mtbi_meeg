@@ -33,7 +33,7 @@ fmax = 40
 
 # Not all subjects have files for all conditions. These functions grab the
 # files that do exist for the subject.
-exclude = ['emptyroom', 'PASAT'] 
+exclude = ['emptyroom'] 
 bad_subjects = ['01P', '02P', '03P', '04P', '05P', '06P', '07P']#these ica need to be done manually
 all_fnames = zip(
     get_all_fnames(args.subject, kind='psds', exclude=exclude),
@@ -55,12 +55,19 @@ for psds_fname, clean_fname in all_fnames:
                        preload=True)
     
     raw.info['bads']=[]
-    clean_1 = raw.copy().crop(tmin=30, tmax=90)
+    
+    if 'eo' in task or 'ec' in task:
+        clean_1 = raw.copy().crop(tmin=30, tmax=90)
+        clean_2 = raw.copy().crop(tmin=120, tmax=180)
+        clean_3 = raw.copy().crop(tmin=210, tmax=260)
+        psds[task+'_3'], freqs = psd_welch(clean_3, fmax=fmax, n_fft=n_fft, picks=['eeg'])
+
+    elif 'PASAT' in task:
+        clean_1 = raw.copy().crop(tmin=2, tmax=62)
+        clean_2 = raw.copy().crop(tmin=62, tmax=122)
+    
     psds[task+'_1'], freqs = psd_welch(clean_1, fmax=fmax, n_fft=n_fft, picks=['eeg'])
-    clean_2 = raw.copy().crop(tmin=120, tmax=180)
     psds[task+'_2'], freqs = psd_welch(clean_2, fmax=fmax, n_fft=n_fft, picks=['eeg'])
-    clean_3 = raw.copy().crop(tmin=210, tmax=260)
-    psds[task+'_3'], freqs = psd_welch(clean_3, fmax=fmax, n_fft=n_fft, picks=['eeg'])
     
     
     # Add some metadata to the file we are writing
@@ -82,10 +89,10 @@ def on_pick(ax, ch_idx):
             label='eyes closed')
     ax.plot(psds['freqs'], psds['eo_1'][ch_idx], color='C1',
             label='eyes open')
-    # ax.plot(psds['freqs'], psds['PASAT_run1_1'][ch_idx], color='C2',
-    #         label='pasat run 1')
-    # ax.plot(psds['freqs'], psds['PASAT_run2_1'][ch_idx], color='C3',
-    #         label='pasat run 2')
+    ax.plot(psds['freqs'], psds['PASAT_run1_1'][ch_idx], color='C2',
+            label='pasat run 1')
+    ax.plot(psds['freqs'], psds['PASAT_run2_1'][ch_idx], color='C3',
+            label='pasat run 2')
     ax.legend()
     ax.set_xlabel('Frequency')
     ax.set_ylabel('PSD')
@@ -101,11 +108,11 @@ for ax, ch_idx in axes:
     handles = [
         ax.plot(psds['freqs'], psds['ec_1'][ch_idx], color='C0'),
         ax.plot(psds['freqs'], psds['eo_1'][ch_idx], color='C1'),
-        # ax.plot(psds['freqs'], psds['PASAT_run1_1'][ch_idx], color='C2'),
-        # ax.plot(psds['freqs'], psds['PASAT_run2_1'][ch_idx], color='C3'),
+        ax.plot(psds['freqs'], psds['PASAT_run1_1'][ch_idx], color='C2'),
+        ax.plot(psds['freqs'], psds['PASAT_run2_1'][ch_idx], color='C3'),
     ]
 fig.legend(handles)
-fig.title(datetime)
+
 
 with open_report(fname.report(subject=args.subject)) as report:
     report.add_figs_to_section(fig, 'PSDs', section='PSDs', replace=True)

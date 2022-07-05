@@ -29,7 +29,7 @@ args = parser.parse_args()
 # For collecting figures for quality control
 figures = defaultdict(list)
 
-exclude = ['PASAT']
+exclude = []
 
 all_fnames = zip(get_all_fnames(args.subject, kind='filt', exclude=exclude),
                  get_all_fnames(args.subject, kind='ica', exclude=exclude),

@@ -14,9 +14,11 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn import svm
 from sklearn.model_selection import LeaveOneOut
 from readdata import data_frame
+from freq_waves import all_dataframe as bands_dataframe
 
 # Get data
-X, y = data_frame.iloc[:,1:data_frame.shape[1]], data_frame.loc[:, 'Group']
+data = bands_dataframe
+X, y = data.iloc[:,1:data.shape[1]], data.loc[:, 'Group']
 
 # Leave one out cross validation
 
@@ -25,6 +27,9 @@ loo = LeaveOneOut()
 loo_lr = []
 loo_lda = []
 loo_svm = []
+loo_lr_2 = []
+loo_lda_2 = []
+loo_svm_2 = []
 split = loo.split(X)
 
 
@@ -35,15 +40,18 @@ for train_index, test_index in split:
     
     # Logistic regression
     clf = LogisticRegression(random_state=0).fit(X_train, y_train)
+    loo_lr_2.append([clf.score(X_test, y_test), str(y_test.index)])
     loo_lr.append(clf.score(X_test, y_test))
     
-    # Linear discrimin ant analysis
+    # Linear discriminant analysis
     clf_2 = LinearDiscriminantAnalysis(solver='lsqr').fit(X_train, y_train)
+    loo_lda_2.append([clf_2.score(X_test, y_test), str(y_test.index)])
     loo_lda.append(clf_2.score(X_test, y_test))
     
     # Support vector machine
     clf_3 = svm.SVC()
     clf_3.fit(X_train, y_train)
+    loo_svm_2.append([clf_3.score(X_test, y_test), str(y_test.index)])
     loo_svm.append(clf_3.score(X_test, y_test))
 
 # Calculate scores for each model

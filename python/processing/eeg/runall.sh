@@ -3,7 +3,7 @@
 
 while read LINE; do
     #echo ${LINE}
-    python3 01_freqfilt.py $LINE
+    python3 04_bandpower.py $LINE
 done < subjects.txt
 
 

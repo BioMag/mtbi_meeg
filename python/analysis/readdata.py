@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from math import log
 
 # Get the list of subjects
-with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/subjects.txt', 'r') as subjects_file:
+with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/some_subjects.txt', 'r') as subjects_file:
     subjects = subjects_file.readlines()
     subjects_file.close()
     # subjects = ['14P'] # Choose subjects manually
@@ -26,7 +26,7 @@ with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/subjects.txt
 # Define which files to read for each subject
 tasks = ['ec_1', 'ec_2', 'ec_3', 'eo_1', 'eo_2', 'eo_3', 'PASAT_run1_1', 
          'PASAT_run1_2', 'PASAT_run2_1', 'PASAT_run2_2']
-chosen_tasks = ['PASAT_run2_1'] # Choose tasks
+chosen_tasks = ['PASAT_run2_1', 'PASAT_run2_2'] # Choose tasks
 subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks]
 
 # Create a two dimensional list (and a 3D list) to which the data will be saved
@@ -35,7 +35,7 @@ data_matrices = []
 
 # Choose one channel and subject to be plotted
 channel = 11
-chosen_subject = '24P'
+chosen_subject = '01C'
 plot_array = []
 
 # Lists for grand average and ROI
@@ -133,9 +133,14 @@ data_frame.insert(0, 'Group', groups)
 tp_c_dataframe.insert(0, 'Group', groups)
 tp_f_dataframe.insert(0,'Group', groups)
 
+
+
 """
 Plotting
 """
+controls = sum(groups)/len(chosen_tasks)
+patients = len(groups)/len(chosen_tasks)-controls
+
 
 # Plot the chosen tasks for some subject and channel
 if plot_tasks:
@@ -149,43 +154,37 @@ if plot_tasks:
 # Calculate and plot grand average patients vs controls 
 if plot_averages:
     controls_total_power = np.sum(averages_controls[0], axis = 0)
-    controls_average = np.divide(controls_total_power, 41)
+    controls_average = np.divide(controls_total_power, controls)
     patients_total_power = np.sum(averages_patients[0], axis = 0)    
-    patients_average = np.divide(patients_total_power, 31)
+    patients_average = np.divide(patients_total_power, patients)
     
-    fig, ax = plt.subplots()
-    ax.plot([x for x in range(1,40)], controls_average, label='Controls')
-    ax.plot([x for x in range(1,40)], patients_average, label='Patients')
-    ax.legend()
-    
-    # fig11, ax11 = plt.subplots()
-    # ax11.plot([x for x in range(1,40)], controls_total_power, label= 'Controls')
-    # ax11.plot([x for x in range(1,40)], patients_total_power, label= 'Patients')
+    fig, axes = plt.subplots(1,3)
+    axes[0].plot([x for x in range(1,40)], controls_average, label='Controls')
+    axes[0].plot([x for x in range(1,40)], patients_average, label='Patients')
+    axes[0].legend()
     
     # Plot region of interest
     # Occipital lobe (channels 55-64)
     controls_sum_o = np.sum(averages_controls[1], axis = 0)
-    controls_average_o = np.divide(controls_sum_o, 41)
+    controls_average_o = np.divide(controls_sum_o, controls)
     patients_sum_o = np.sum(averages_patients[1], axis = 0)    
-    patients_average_o = np.divide(patients_sum_o, 31)
+    patients_average_o = np.divide(patients_sum_o, patients)
     
-    fig1, ax1 = plt.subplots()
-    ax1.plot([x for x in range(1,40)], controls_average_o, label='Controls')
-    ax1.plot([x for x in range(1,40)], patients_average_o, label='Patients')
-    plt.title('Occipital lobe')
-    ax1.legend()
+    axes[1].plot([x for x in range(1,40)], controls_average_o, label='Controls')
+    axes[1].plot([x for x in range(1,40)], patients_average_o, label='Patients')
+    axes[1].title.set_text('Frontal lobe')
+    axes[1].legend()
     
     # Frontal lobe (channels 1-22 (?))
     controls_sum_f = np.sum(averages_controls[2], axis = 0)
-    controls_average_f = np.divide(controls_sum_f, 41)
+    controls_average_f = np.divide(controls_sum_f, controls)
     patients_sum_f = np.sum(averages_patients[2], axis = 0)    
-    patients_average_f = np.divide(patients_sum_f, 31)
+    patients_average_f = np.divide(patients_sum_f, patients)
     
-    fig2, ax2 = plt.subplots()
-    ax2.plot([x for x in range(1,40)], controls_average_f, label='Controls')
-    ax2.plot([x for x in range(1,40)], patients_average_f, label='Patients')
-    plt.title('Frontal lobe')
-    ax2.legend()
+    axes[2].plot([x for x in range(1,40)], controls_average_f, label='Controls')
+    axes[2].plot([x for x in range(1,40)], patients_average_f, label='Patients')
+    axes[2].title.set_text('Occipital lobe')
+    axes[2].legend()
 
 
 
