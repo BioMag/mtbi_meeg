@@ -73,7 +73,7 @@ for pair in subjects_and_tasks:
     
     # Total power 
     tp_channel = np.sum(f_bands_array, axis=0)
-    tp_freq = np.sum(f_bands_array, axis=1)
+    tp_freq = np.sum(f_bands_array) 
     tp_channels.append(tp_channel)
     tp_freqs.append(tp_freq)
     
