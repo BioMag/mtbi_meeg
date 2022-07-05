@@ -5,8 +5,10 @@ Created on Thu Jun 16 15:01:16 2022
 
 @author: aino
 
-Tests the performance of different models (mainly logistic regression, linear discriminant analysis 
-and support vector machine) using stratified k fold cross validation. Plots ROC curve for chosen model
+Tests the performance of different models (logistic regression (lr), linear discriminant analysis (lda),
+support vector machine (svm), neighborhood component analysis (nca), quadratic discriminant analysis (qda)
+and random forests (rf)) using stratified k fold cross validation. Plots confusion matrices for these models.
+Plots ROC curve for chosen model
 """
 
 from sklearn.linear_model import LogisticRegression
@@ -39,7 +41,7 @@ def main():
     test = 'roc' # How to test the models ('split', 'roc', 'cv')
     clfs = ['lda'] # List of models to test ('lr', 'lda', 'svm', 'nca', 'qda', 'rf') !!!IN THIS ORDER!!!
     pca = False
-    confusion_m = True # To plot a confusion matrix len(clfs) > 1
+    confusion_m = True 
     folds = 10
     
     
