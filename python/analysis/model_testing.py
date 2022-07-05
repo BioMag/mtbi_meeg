@@ -22,6 +22,7 @@ from sklearn.covariance import OAS
 import numpy as np
 from readdata import data_frame
 from freq_waves import all_dataframe as bands_dataframe
+from freq_waves import ctp_dataframe, gtp_dataframe
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -30,16 +31,16 @@ import math
 
 
 def main():
-    # Get data
-    data = data_frame
+    # Get data (ctp_dataframe, bands_dataframe, data_frame, gtp_dataframe)
+    data = ctp_dataframe
     X, y = data.iloc[:,1:data.shape[1]], data.loc[:, 'Group']
     
     # Choose parameters
-    test = 'cv' # How to test the models ('split', 'roc', 'cv')
-    clfs = ['lr','lda', 'svm'] # List of models to test ('lr', 'lda', 'svm', 'nca', 'qda', 'rf')
+    test = 'roc' # How to test the models ('split', 'roc', 'cv')
+    clfs = ['lda'] # List of models to test ('lr', 'lda', 'svm', 'nca', 'qda', 'rf') !!!IN THIS ORDER!!!
     pca = False
-    confusion_m = True
-    folds = 4
+    confusion_m = True # To plot a confusion matrix len(clfs) > 1
+    folds = 10
     
     
     if test == 'split':
@@ -58,7 +59,7 @@ def main():
 
 def one_split(clfs, X, y, confusion_m, pca):
     # Train test split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.25, random_state=13)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.25, random_state=20)
     classifiers = []
     # Dimensionality reduction with PCA
     if pca: 
@@ -92,8 +93,14 @@ def one_split(clfs, X, y, confusion_m, pca):
         nca_pipe = Pipeline([('nca', nca), ('knn', knn)])
         nca_pipe.fit(X_train, y_train)
         print(nca_pipe.score(X_test, y_test))
-    if confusion_m:
-        plot_confusion_matrices(len(clfs), classifiers, X_test, y_test, clfs)
+        # Random forest
+    if 'rf' in clfs:
+        clf_rf = RandomForestClassifier().fit(X_train, y_train)
+        classifiers.append(clf_rf)
+        print(clf_rf.feature_importances_)
+    # if confusion_m:
+    #     plot_confusion_matrices(len(clfs), classifiers, X_test, y_test, clfs)
+        
     
 
 def plot_confusion_matrices(dim, clfs, X_test, y_test, titles):
@@ -202,7 +209,7 @@ def stratified_k_fold_cv(clfs, X, y, folds, confusion_m, pca):
             
         # Linear discriminant analysis
         if 'lda' in clfs:
-            clf_2 = LinearDiscriminantAnalysis(solver='lsqr').fit(X_train, y_train)
+            clf_2 = LinearDiscriminantAnalysis(solver='svd').fit(X_train, y_train)
             stratified_accuracy_lda.append(clf_2.score(X_test, y_test))
             classifiers.append(clf_2)
              
@@ -220,20 +227,28 @@ def stratified_k_fold_cv(clfs, X, y, folds, confusion_m, pca):
             nca_pipe = Pipeline([('nca', nca), ('knn', knn)])
             nca_pipe.fit(X_train, y_train)
             stratified_accuracy_nca.append(nca_pipe.score(X_test, y_test))
+            classifiers.append(nca_pipe)
+            
         # Quadratic discriminant analysis
         if 'qda' in clfs:
             clf_qda = QuadraticDiscriminantAnalysis()
             clf_qda.fit(X_train, y_train)
             stratified_accuracy_qda.append(clf_qda.score(X_test, y_test))
+            classifiers.append(clf_qda)
+            
             ### Warning: variables are collinear (also with PCA)
         # Random forest
         if 'rf' in clfs:
             clf_rf = RandomForestClassifier().fit(X_train, y_train)
             stratified_accuracy_rf.append(clf_rf.score(X_test, y_test))
+            classifiers.append(clf_rf)
             
         # Plot confusion matrices
         if confusion_m:
-            plot_confusion_matrices(len(clfs), classifiers, X_test, y_test, clfs)
+            if len(clfs) >1:
+                plot_confusion_matrices(len(clfs), classifiers, X_test, y_test, clfs)
+            else:
+                plot_confusion_matrices(2, classifiers, X_test, y_test, clfs)
     # Return scores
     scores = []
     for i in [stratified_accuracy_lr, stratified_accuracy_lda, stratified_accuracy_svm, 

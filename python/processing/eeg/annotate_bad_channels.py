@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('subject', help='The subject to process')
 args = parser.parse_args()
 
-raw = mne.io.read_raw_fif(fname.raw(subject=args.subject, task=tasks[0], run=1), preload=True)
+raw = mne.io.read_raw_fif(fname.tsss(subject=args.subject, task=tasks[1], run=1), preload=True)
 #raw.info['bads'] = bads[args.subject]
 raw.pick_types(meg=True, eeg=True, eog=True, ecg=True)
 raw.filter(1, 100)
