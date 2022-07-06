@@ -1,8 +1,6 @@
-                   
 #!/bin/bash
 
-
-while read LINE; do
-    #echo ${LINE}
-    python3 ica_without_ecg_ch.py $LINE
-done < subjects_without_ecg.txt
+for sub in 10C 15P 31P 36C 37C
+do
+  python3 00_maxfilter.py $sub
+done
