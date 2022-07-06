@@ -33,7 +33,7 @@ exclude = []
 
 all_fnames = zip(get_all_fnames(args.subject, kind='filt', exclude=exclude),
                  get_all_fnames(args.subject, kind='ica', exclude=exclude),
-                 get_all_fnames(args.subject, kind='raw', exclude=exclude),
+                 get_all_fnames(args.subject, kind='tsss', exclude=exclude),
                  get_all_fnames(args.subject, kind='clean', exclude=exclude))
 
 for filt_fname, ica_fname, raw_fname, clean_fname in all_fnames:
