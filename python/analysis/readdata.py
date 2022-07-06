@@ -88,12 +88,19 @@ for pair in subjects_and_tasks:
     # Convert list to array    
     sub_bands_array = np.array(sub_bands_list) # n x m matrix (n = channels, m = frequency bands)
     
-    # Change the frequency bands
-    if change_bands:
-        wider_bands = []
-        for x, y in new_bands:
-            wider_bands.append(np.sum(np.array(sub_bands_array[x:y]), axis = 0))
-        sub_bands_array = wider_bands
+    # Vectorize 'f_bands'
+    f_bands_array = np.array(f_bands_list)
+    f_bands_vector = np.concatenate(f_bands_array)
+    
+    # Add the vector to 'data_vectors' (this is not in dB)
+    data_vectors.append(f_bands_vector)
+    data_matrices.append(f_bands_array)
+    
+    # Total power 
+    tp_channel = np.sum(f_bands_array, axis=0)
+    tp_freq = np.sum(f_bands_array) 
+    tp_channels.append(tp_channel)
+    tp_freqs.append(tp_freq)
     
     # Vectorize array
     sub_bands_vector = np.concatenate(sub_bands_array)
