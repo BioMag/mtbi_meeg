@@ -32,54 +32,24 @@ import math
 
 
 
-def main():
-    """
-    Choose parameters
-    
-    """
-    data = dataframe
-    X, y = data.iloc[:,1:data.shape[1]], data.loc[:, 'Group']
-    
-    # Choose parameters
-    test = 'cv' # How to test the models ('split', 'roc', 'cv')
-    clfs = ['lr','lda', 'svm', 'rf'] # List of models to test ('lr', 'lda', 'svm', 'nca', 'qda', 'rf') !!!IN THIS ORDER!!!
-    pca = False
-    confusion_m = True
-    feature_importance = False
-    folds = 7
-    
-    
-    
-    if test == 'split':
-        one_split(clfs, X, y, confusion_m, pca, feature_importance)
-    # Stratified k fold cross validation
-    elif test == 'cv':
-        scores = stratified_k_fold_cv(clfs, X, y, folds, confusion_m, pca, feature_importance)
-        print(scores)
-        for i in scores:
-            print(np.mean(i))
-    # Plots a ROC curve and uses stratified k fold cross validation (len(clfs)=1)
-    elif test == 'roc':
-        print(plot_roc_curve(clfs, X, y, folds))
-
-
 def one_split(clfs, X, y, confusion_m, pca, feature_importance):
     """
 
     Parameters
     ----------
     clfs : list
-        DESCRIPTION.
+        List of classifiers to train 
     X : dataframe
-        DESCRIPTION.
+        Vectoriced PSDs (features) of each subject (observation)
     y : series
-        DESCRIPTION.
-    confusion_m : TYPE
-        DESCRIPTION.
+        Classification labels (binary)
+    confusion_m : bool
+        If True, will plot confusion matrices
     pca : bool
-        DESCRIPTION.
+        If True, performs PCA before proceeding with the analysis
     feature_importance : bool
-        DESCRIPTION.
+        If True, will plot feature importances for RandomForest classifier.
+        Ignored for other cladsifiers.
 
     Returns
     -------
@@ -321,4 +291,30 @@ def stratified_k_fold_cv(clfs, X, y, folds, confusion_m, pca, feature_importance
 
         
 
-main()
+
+if __name__ == "__main__":
+
+    data = dataframe
+    X, y = data.iloc[:,1:data.shape[1]], data.loc[:, 'Group']
+    
+    # Choose parameters
+    test = 'cv' # How to test the models ('split', 'roc', 'cv')
+    clfs = ['lr','lda', 'svm', 'rf'] # List of models to test ('lr', 'lda', 'svm', 'nca', 'qda', 'rf') !!!IN THIS ORDER!!!
+    pca = False
+    confusion_m = True
+    feature_importance = False
+    folds = 10
+    
+    
+    
+    if test == 'split':
+        one_split(clfs, X, y, confusion_m, pca, feature_importance)
+    # Stratified k fold cross validation
+    elif test == 'cv':
+        scores = stratified_k_fold_cv(clfs, X, y, folds, confusion_m, pca, feature_importance)
+        print(scores)
+        for i in scores:
+            print(np.mean(i))
+    # Plots a ROC curve and uses stratified k fold cross validation (len(clfs)=1)
+    elif test == 'roc':
+        print(plot_roc_curve(clfs, X, y, folds))

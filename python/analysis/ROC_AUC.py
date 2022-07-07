@@ -1,6 +1,11 @@
-# Copyright by Verna Heikkinen 2022
-# 
-# Scrtpt for plotting ROC and computing AUC for mTBI classification results
+"""
+Copyright by Verna Heikkinen 2022
+ 
+Scrtpt for plotting ROC and computing AUC for mTBI classification results on EEG data
+
+Works from commandline:
+    %run ROC_AUC.py --band all --task eo --clf SVM
+"""
 #
 import os
 import numpy as np
@@ -12,45 +17,50 @@ from sklearn import preprocessing
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.pipeline import Pipeline, make_pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_curve, roc_auc_score, RocCurveDisplay, auc
 from sklearn.covariance import OAS
-from TBIMEG import load_subject, load_group, load_dataset, LOOCV_manager, CV_foldmanager
+from readdata import dataframe, tasks #TODO: would want to decide which tasks are used
 
 
-def CV_solver(solver, X, y):
+def Kfold_CV_solver(solver, X, y, folds):
     
-    folds = CV_foldmanager(y, cv_folds=10)
+    skf = StratifiedKFold(n_splits=folds, shuffle=True)
+    split = skf.split(X, y)
     
     tprs = [] #save results for plotting
     aucs = []
     mean_fpr = np.linspace(0, 1, 100)
     
-    for train_ids, test_ids in folds:
+    for train_index, test_index in split:
+        
+        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
     
-        if solver == "LDAoas":
-            oa = OAS(store_precision=False, assume_centered=False)
-            clf = LinearDiscriminantAnalysis(solver='lsqr', covariance_estimator=oa,
-                                            priors = np.array([0.5, 0.5]))
+        if solver == "LDA":
+            clf = LinearDiscriminantAnalysis(solver='svd')
         elif solver == "SVM":
-            clf = SVC(kernel="linear", C=0.025)
+            clf = SVC(probability=True)
         elif solver == "LR":
-            clf = LogisticRegression(max_iter=2000)   
+            clf = LogisticRegression(penalty='l1',solver='liblinear',random_state=0)
+        elif solver=='RF':
+            clf = RandomForestClassifier()
+     
         else:
             raise("muumi")
 
-        X_train = X[train_ids]
-        X_test = X[test_ids]
 
-        y_train = y[train_ids]
-        y_test = y[test_ids]
-
+        #clf = make_pipeline(StandardScaler(), clf)
         clf.fit(X_train, y_train)
         pred = clf.predict(X_test).astype(int)
         
         viz = RocCurveDisplay.from_estimator(
         clf,
-        X[test_ids],
-        y[test_ids],
+        X_test,
+        y_test,
         name="",
         alpha=0.3,
         lw=1,
@@ -61,10 +71,28 @@ def CV_solver(solver, X, y):
         tprs.append(interp_tpr)
         aucs.append(viz.roc_auc)
 
-    return test_ids, pred, tprs, aucs, mean_fpr
+    return test_index, pred, tprs, aucs, mean_fpr
 
 
 def ROC_results(LOOCV_results):
+    """
+    A function that fits a classifier to the data using leave-one-out cross-validation,
+    computes the ROC and AUC values for each fold.
+    
+    
+    Parameters
+    ----------
+    CV_results : tuple 
+        Results from CV_solver
+    
+    
+    
+    Returns
+    -------
+    
+    figure, maybe
+
+    """    
     
     tprs, aucs = LOOCV_results[2], LOOCV_results[3]
     mean_fpr = LOOCV_results[4]
@@ -102,7 +130,9 @@ def ROC_results(LOOCV_results):
         ylim=[-0.05, 1.05],
         title="10-fold CV ROC curve",
     )
-    #ax.legend(loc="lower right") #clutters the image
+    ax.legend(loc="lower right", ncol =2, fontsize=7) 
+    ax.set_aspect('equal')
+
 
     
     
@@ -110,57 +140,36 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
-    parser.add_argument('--iter', type=int, help="Current iteration") #not sure I want to do 50 iterations.....
-
     parser.add_argument('--band', type=str, help="Band")
-    parser.add_argument('--drop', type=str, help="Band_only or Band_drop")
-    parser.add_argument('--sensor', type=str, help="sensor: mag, grad, both")
-    parser.add_argument('--eyes', type=str, help="eo or ec")
-    parser.add_argument('--location', type=str, help="Otaniemi or BioMag")
-    parser.add_argument('--clf', type=str, help="classifier", default="LDAoas")
+    parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2")
+    parser.add_argument('--clf', type=str, help="classifier", default="LR")
 
     args = parser.parse_args()
     
-    if args.location == "Otaniemi":
-        LOC = "ON"
-    else:
-        LOC = "BM"
     
     #selection_file = f"{args.location}_select_{args.eyes}.csv"
-    selection_file = f"DATA/{args.location}_select.csv"
-    df = pd.read_csv(selection_file, index_col = 0)
-    file_selection = df.loc[f"pred_{args.iter}"]
-
-    save_folder = f"RESULTS/{args.drop}/{args.location}/{args.clf}/{args.sensor}"
-    save_file = f"{save_folder}/{LOC}_{args.band}_{args.clf}_{args.sensor}_{args.eyes}.csv"
+    X, y = dataframe.iloc[:,1:dataframe.shape[1]], dataframe.loc[:, 'Group']
+    
+    save_folder = "/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/figures/heikkiv"
+    save_file = f"{save_folder}/{args.band}_{args.clf}_{args.task}.pdf"
 
     bands = [[0,7.6], [7.6,13],[13,30],[30,90], [0,0]]
     band_name = ["slow", "alpha", "beta", "high", "all"]
     band = bands[band_name.index(args.band)]
 
     # Read frequencies 
-    freqs = np.loadtxt("f.txt", delimiter = ",")[:,0]
+    #freqs = np.loadtxt("f.txt", delimiter = ",")[:,0]
 
-    freqs_sel = (freqs >= band[0]) & (freqs < band[1])
-    if args.drop == "Band_only":
-        freqs_sel = freqs_sel == False
+    # freqs_sel = (freqs >= band[0]) & (freqs < band[1])
+    # if args.drop == "Band_only":
+    #     freqs_sel = freqs_sel == False
         
 
-    patient_path = f"DATA/{args.location}/patient"
-    control_path = f"DATA/{args.location}/control"
-
-    _index = ["case", "true"]
-    #results = []
-
-    print(f"TBIMEG classifcation data from {args.location} on {args.eyes} condition.")
-    print(f"Using {args.sensor} sensors with {args.clf} classifier. Iteration {args.iter}")
-    print("Load data")
-    X, y, s, i = load_dataset(patient_path, control_path, 1, 2, args.eyes, args.sensor, freqs_sel, file_selection)
-    X = preprocessing.scale(X)
-    
+    print(f"TBIEEG classifcation data on {args.task} task.")
+   
     fig, ax = plt.subplots() #TODO: should these be given for the functions?
+    results = Kfold_CV_solver(solver=args.clf, X=X, y=y, folds=10)
 
-    results = CV_solver(args.clf, X, y)
     ROC_results(results)
     
-    plt.savefig(fname=f"ROC_{LOC}_{args.band}_{args.clf}_{args.sensor}_{args.eyes}.pdf")
+    plt.savefig(fname=save_file)

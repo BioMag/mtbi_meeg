@@ -23,31 +23,33 @@ with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/subjects.txt
     subjects = subjects_file.readlines()
     subjects_file.close()
     
-tasks = [['ec_1', 'ec_2', 'ec_3'], ['eo_1', 'eo_2', 'eo_3'], ['PASAT_run1_1', 'PASAT_run1_2'], ['PASAT_run2_1', 'PASAT_run2_2']]
-five_bands = [(0,3), (3,7), (7,11), (11,34), (34,40)] # List of tuples (Note: if the bands are changed in 04_bandpower.py, these need to be modified too.)
+tasks = [['ec_1', 'ec_2', 'ec_3'], 
+         ['eo_1', 'eo_2', 'eo_3'], 
+         ['PASAT_run1_1', 'PASAT_run1_2'], 
+         ['PASAT_run2_1', 'PASAT_run2_2']]
 
-"""
-Choose parameters
+five_bands = [(0,3), (3,7), (7,11), (11,34), (34,40)] # List of freq. indices (Note: if the bands are changed in 04_bandpower.py, these need to be modified too.)
 
-"""
-# Choose frequency bands
-change_bands = False 
-new_bands = five_bands
+
+# Choose normalization methods
+channel_scaling = True
 
 # Define which files to read for each subject
-chosen_tasks = tasks[0] # Choose tasks (ec: 0, eo: 1, pasat1: 2, pasat2: 3)
+chosen_tasks = tasks[1] # Choose tasks (ec: 0, eo: 1, pasat1: 2, pasat2: 3)
 subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks] # length = subjects x chosen_tasks
 
-# Choose region of interest (not implemented yet)
+# TODO: Choose region of interest (not implemented yet)
 region_of_interest = False
 channels = []
 
-# Choose normalization methods
-channel_scaling = False
+# Choose frequency bands
+# TODO: these do not seem to do anything?? 
+change_bands = False 
+new_bands = five_bands 
 
 # Choose what to plot
-plot_tasks = False
-plot_averages = False
+plot_tasks = True
+plot_averages = True
 
 # Choose one channel and subject to be plotted
 channel = 59
@@ -63,7 +65,7 @@ all_bands_vectors = [] # Contains n (n = subjects x chosen_tasks) vectors (lengt
 # Lists for grand average and ROI
 averages_controls = [[], [], []] # Contains 3 lists (all, frontal, occipital)(length = len(chosen_tasks) x controls) of vectors (lenght = 39)(39 frequency bands)
 averages_patients= [[], [], []] # all, frontal, occipital
-averages_problem = []
+averages_problem = [] #TODO: what is this?
 
 
 """
@@ -71,8 +73,7 @@ Reading data
 """
 # Go through all the subjects
 for pair in subjects_and_tasks:
-    subject = pair[0].rstrip() # Get subject from subjects_and_tasks
-    task = pair[1] # Get task from subjects_and_tasks
+    subject, task = pair[0].rstrip(), pair[1] # Get subject & task from subjects_and_tasks
     bandpower_file = "/net/theta/fishpool/projects/tbi_meg/k22_processed/sub-" + subject + "/ses-01/eeg/bandpowers/" + task + '.csv'
     
     # Create a 2D list to which the read data will be added
@@ -86,34 +87,16 @@ for pair in subjects_and_tasks:
         file.close()
         
     # Convert list to array    
-    sub_bands_array = np.array(sub_bands_list) # n x m matrix (n = channels, m = frequency bands)
+    sub_bands_array = np.array(sub_bands_list) # m x n matrix (m = frequency bands, n=channels)
     
-    # Vectorize 'f_bands'
-    f_bands_array = np.array(f_bands_list)
-    f_bands_vector = np.concatenate(f_bands_array)
+    if channel_scaling: #Normalize each band
+        ch_tot_powers = np.sum(sub_bands_array, axis = 0)
+        sub_bands_array = sub_bands_array / ch_tot_powers[None,:]
     
-    # Add the vector to 'data_vectors' (this is not in dB)
-    data_vectors.append(f_bands_vector)
-    data_matrices.append(f_bands_array)
-    
-    # Total power 
-    tp_channel = np.sum(f_bands_array, axis=0)
-    tp_freq = np.sum(f_bands_array) 
-    tp_channels.append(tp_channel)
-    tp_freqs.append(tp_freq)
-    
-    # Vectorize array
-    sub_bands_vector = np.concatenate(sub_bands_array)
-
-    # Normalize vectors
-    if channel_scaling:
-        # Calculate channel total power
-        channel_total_power = np.sum(sub_bands_array, axis = 0) # Vector (length = 64) (64 channels)
-        # Vectorize matrix and divide channel bandpowers by channel total powers
-        sub_bands_vector = np.concatenate(np.divide(sub_bands_array, channel_total_power))
+    sub_bands_vec = np.concatenate(sub_bands_array.transpose())
         
     # Add vector to matrix
-    all_bands_vectors.append(sub_bands_vector)
+    all_bands_vectors.append(sub_bands_vec)
         
     """
     For plotting
@@ -196,8 +179,9 @@ if plot_averages:
     fig, axes = plt.subplots(1,3)
     axes[0].plot([x for x in range(1,40)], controls_average, label='Controls')
     axes[0].plot([x for x in range(1,40)], patients_average, label='Patients')
+    axes[1].title.set_text('Global average')
     axes[0].legend()
-    
+
     # Plot region of interest
     # Occipital lobe (channels 55-64)
     controls_sum_o = np.sum(averages_controls[1], axis = 0)
@@ -209,7 +193,7 @@ if plot_averages:
     axes[1].plot([x for x in range(1,40)], patients_average_o, label='Patients')
     axes[1].title.set_text('Frontal lobe')
     axes[1].legend()
-    
+
     # Frontal lobe (channels 1-22 (?))
     controls_sum_f = np.sum(averages_controls[2], axis = 0)
     controls_average_f = np.divide(controls_sum_f, controls)
@@ -220,7 +204,11 @@ if plot_averages:
     axes[2].plot([x for x in range(1,40)], patients_average_f, label='Patients')
     axes[2].title.set_text('Occipital lobe')
     axes[2].legend()
-
+    
+    
+    fig.supxlabel('Frequency (Hz)')
+    fig.supylabel('Normalized PSDs')
+    
 
 
     

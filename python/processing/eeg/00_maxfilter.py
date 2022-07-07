@@ -8,7 +8,7 @@ Created on Wed Jun 15 11:48:59 2022
 Script that applies maxfiltering on the bidsified data.
 Does all tasks in a row. Based on the script by Mia Liljeström.
 
-NOTE: needs to be ran on Maxfilter computer, either manually or via SSH connection.
+NOTE: needs to be ran on Maxfilter computer, either manually or via SSH connection (ssh -X ypsilon).
 """
 
 import subprocess
@@ -52,10 +52,6 @@ for input_f, output_f, log_f, pos_f in all_fnames:
             '-autobad','on', '-trans', trans_f, '-ctc', cross_talk, '-cal', calibration, \
             '-hpicons','-origin','fit','-in', '8', '-out', '3', '-frame','head', '-hp', pos_f, '-force']  
     
-    # args = ['/neuro/bin/util/maxfilter', '-f', input_f, '-o', output_f, '-st', '-movecomp', \
-    #          '-autobad','on', '-trans', 'default', '-ctc', cross_talk, '-cal', calibration, \
-    #          '-hpicons','-origin','fit','-in', '8', '-out', '3', '-frame','head', '-hp', pos_f, '-force']  
-      
     
     #save the error log
     log_output = open(log_f, "w")
