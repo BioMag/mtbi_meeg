@@ -20,13 +20,19 @@ The preprocessing pipeline is organized as follows:
 > NOTE: another possibility is to use shell script that loops through the subjects
 
 
-The data analysis is done in separate folder. The aim is to use three classifiers (LR, LDA, SVM) to differentiate between patients and controls. *It is currently WIP*.
+The data analysis is done in separate folder. The aim is to use three classifiers (LR, LDA, SVM) to differentiate between patients and controls. 
+
+1. Read in the data from ```readdata.py```
+2. Fit and plot the ROC curves of various models with ```ROC_AUC.py``` (accepts commandline argumens)
+
 Things that are to be implemented:
 
-- [] model fitting
-- [] hyperparameter optimization
+- [] config file for analysis? 
+- [x] model fitting
+- [] hyperparameter optimization, triton-compatible
 - [] model validation
-- [] visualizations
+- [x] visualizations
+- [] statistics
 
 
 
@@ -38,20 +44,23 @@ You can ```git clone``` the repo using HTTPS address.
 
 ```
 cd ~/mtbi-eeg
+git pull origin main #maybe...
 git branch <your branch name>
 git push
 ```
 It is **strongly recommended** to work on separate branches which are later merged to main by the owner of the repo.  
-Merge requests are handled together! Check the branch you are currently on by typing ```git branch```.
+Merge requests are handled together! Check the branch you are currently on by typing ```git status```. 
+You can change the branch you are one with the command ```git checkout <your branch name>```.
+After pushing, create a merge request and assign someone to go through your code.
+
+>NOTE: Before creating a new branch, ALWAYS pull the main branch from the remote repository!
 
 
 ## Collaboration
 
--  [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
 -  [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
 -  [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
 -  [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
--  [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
 
 
 ## License
