@@ -20,7 +20,7 @@ from config_common import (raw_data_dir, processed_data_dir, figures_dir,
 # later on. Lowpass filter below 100Hz to get rid of the signal produced by
 # the cHPI coils. Notch filters at 50Hz and 100Hz to get rid of powerline.
 fmin = 1
-fmax = 40
+fmax = 90
 fnotch = [50, 100]
 
 # Computation of the PSDs

@@ -10,7 +10,7 @@ import argparse
 
 from mne.io import read_raw_fif
 from mne.time_frequency import psd_welch
-from mne.externals.h5io import write_hdf5
+from h5io import write_hdf5
 from mne.viz import iter_topography
 from mne import open_report, find_layout, pick_info, pick_types
 import matplotlib.pyplot as plt
@@ -115,6 +115,6 @@ fig.legend(handles)
 
 
 with open_report(fname.report(subject=args.subject)) as report:
-    report.add_figs_to_section(fig, 'PSDs', section='PSDs', replace=True)
+    report.add_figure(fig, 'PSDs', replace=True)
     report.save(fname.report_html(subject=args.subject),
                 overwrite=True, open_browser=False)

@@ -83,47 +83,68 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
 
     # Put a whole lot of quality control figures in the HTML report.
     with open_report(fname.report(subject=args.subject)) as report:
-        report.add_figs_to_section(
-            ica.plot_scores(scores_eog, exclude=bads_eog, title=date_time, show=False),
-            f'{task}: EOG scores', section='ICA', replace=True)
+        if len(bads_eog)>0:
+            report.add_ica(ica=ica, 
+                            title=f' {task}' + ' EOG', 
+                            inst=raw_filt, 
+                            picks=bads_eog,
+                            eog_evoked=eog_epochs.average(),
+                            eog_scores=scores_eog,
+                            tags=(f'{task}', 'EOG', 'ICA'),
+                            replace=True
+                            )
+        if ecg_exists:
+            if len(bads_ecg)>0:
+                report.add_ica(ica=ica, 
+                                title=f' {task}' + ' ECG', 
+                                inst=raw_filt, 
+                                picks=bads_ecg,
+                                ecg_evoked=ecg_epochs.average(),
+                                ecg_scores=scores_ecg,
+                                tags=(f'{task}', 'ECG', 'ICA'),
+                                replace=True
+                                )
+        # report.add_figure(
+        #     ica.plot_scores(scores_eog, exclude=bads_eog, title=date_time, show=False),
+        #     f'{task}: EOG scores', replace=True, tags=('EOG', f'{task}', 'ICA'))
 
-        report.add_figs_to_section(
+        report.add_figure(
             ica.plot_overlay(eog_epochs.average(), title=date_time, show=False),
-            f'{task}: EOG overlay', section='ICA', replace=True)
+            f'{task}: EOG overlay', replace=True, tags=(f'{task}', 'ICA', 'EOG', 'overlay'))
         
         if ecg_exists:
-            report.add_figs_to_section(
-                ica.plot_scores(scores_ecg, exclude=bads_ecg, title=date_time, show=False),
-                f'{task}: ECG scores', section='ICA', replace=True)
+        #     report.add_figure(
+        #         ica.plot_scores(scores_ecg, exclude=bads_ecg, title=date_time, show=False),
+        #         f'{task}: ECG scores', replace=True, tags=('ECG', f'{task}', 'ICA'))
             
-            report.add_figs_to_section(
+            report.add_figure(
                 ica.plot_overlay(ecg_epochs.average(), title=date_time, show=False),
-                f'{task}: ECG overlay', section='ICA', replace=True)
+                f'{task}: ECG overlay', replace=True, tags=(f'{task}', 'ICA', 'ECG', 'overlay'))
             
-            if len(bads_ecg) == 1:
-                report.add_figs_to_section(
-                    ica.plot_properties(ecg_epochs, bads_ecg, show=False),
-                    [f'{task}: Component {i:02d}' for i in bads_ecg],
-                    section='ICA', replace=True)
-            elif len(bads_ecg) > 1:
-                report.add_slider_to_section(
-                    ica.plot_properties(ecg_epochs, bads_ecg, show=False),
-                    captions=[f'{task}: Component {i:02d}' for i in bads_ecg],
-                    title=f'{task}: ECG component properties', section='ICA',
-                    replace=True)
+        #     if len(bads_ecg) == 1:
+        #         report.add_figure(
+        #             ica.plot_properties(ecg_epochs, bads_ecg, show=False),
+        #             [f'{task}: ECG Component {i:02d}' for i in bads_ecg],
+        #             replace=True, tags=('ECG', f'{task}', 'ICA'))
+        #     elif len(bads_ecg) > 1:
+        #         report.add_figure(
+        #             ica.plot_properties(ecg_epochs, bads_ecg, show=False),
+        #             f'{task}: ECG component properties', 
+        #             #captions=[f'{task}: Component {i:02d}' for i in bads_ecg],
+        #             replace=True, tags=('ECG', f'{task}', 'ICA'))
                 
                 
-        if len(bads_eog) == 1:
-            report.add_figs_to_section(
-                ica.plot_properties(eog_epochs, bads_eog, show=False),
-                [f'{task}: Component {i:02d}' for i in bads_eog],
-                section='ICA', replace=True)
-        elif len(bads_eog) > 1:
-            report.add_slider_to_section(
-                ica.plot_properties(eog_epochs, bads_eog, show=False),
-                captions=[f'{task}: Component {i:02d}' for i in bads_eog],
-                title=f'{task}: EOG component properties', section='ICA',
-                replace=True)
+        # if len(bads_eog) == 1:
+        #     report.add_figure(
+        #         ica.plot_properties(eog_epochs, bads_eog, show=False),
+        #         [f'{task}: EOG Component {i:02d}' for i in bads_eog],
+        #         replace=True, tags=('EOG', f'{task}', 'ICA'))
+        # elif len(bads_eog) > 1:
+        #     report.add_figure(
+        #         ica.plot_properties(eog_epochs, bads_eog, show=False),
+        #         f'{task}: EOG component properties',
+        #         #captions=[f'{task}: Component {i:02d}' for i in bads_eog],
+        #         replace=True, tags=('EOG', f'{task}', 'ICA'))
 
         report.save(fname.report_html(subject=args.subject),
                     overwrite=True, open_browser=False)
