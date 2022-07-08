@@ -114,66 +114,6 @@ def plot_confusion_matrices(dim, clfs, X_test, y_test, titles):
 
     
 
-def plot_roc_curve(clfs, X, y, folds):
-    """
-    Plots ROC curves for a model
-    
-    Parameters
-    ----------
-    clfs : LIST
-        ('lr', 'lda', 'svm')
-    folds : INT
-    """
-    # Define classifier
-    classifier = ''
-    if 'lr' in clfs:
-        classifier = LogisticRegression(random_state=0)
-    elif 'svm' in clfs:
-        classifier = svm.SVC()
-    elif 'lda' in clfs:
-        classifier = LinearDiscriminantAnalysis(solver='lsqr')
-    else:
-        print("Wrong classifier")
-        
-    # Stratified k fold cross validation
-    skf = StratifiedKFold(n_splits=folds)
-    split = skf.split(X, y)   
-    tprs = []
-    aucs = []
-    mean_fpr = np.linspace(0, 1, 100)
-    
-    for train_index, test_index in split:
-        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
-        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-        classifier.fit(X_train, y_train)
-        #?pred = clf.predict(X_test).astype(int) 
-        # Plot ROC curves for individual folds
-        viz = RocCurveDisplay.from_estimator(classifier, X_test, y_test)
-        interp_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
-        interp_tpr[0] = 0.0
-        tprs.append(interp_tpr)
-        aucs.append(viz.roc_auc)
-    fig, ax = plt.subplots()
-    ax.plot([0,1],[0,1], lw=2, color='r', label='Chance', alpha=0.8)
-    mean_tpr = np.mean(tprs, axis = 0)
-    mean_tpr[-1]=1.0
-    mean_auc = auc(mean_fpr, mean_tpr) 
-    std_auc = np.std(aucs)
-    # Plot mean ROC curve
-    ax.plot(mean_fpr, mean_tpr, color='b', 
-            label=r"Mean ROC (AUC =%0.2f $\pm$ %0.2f)" % (mean_auc, std_auc),
-            lw=2, alpha = 0.8)  
-    std_tpr = np.std(tprs, axis = 0)
-    tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
-    tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
-    ax.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=0.2,
-                    label = r'$\pm$ 1 std. dev.')
-    ax.set(xlim=[-0.05, 1.05], ylim=[-0.05, 1.05], title="10-fold CV ROC curve")
-
-
-
-
-
 def plot_feature_importance(forest):
     # Make a list of feature names
     bands = ['delta', 'theta', 'alpha', 'beta', 'gamma']
