@@ -17,7 +17,7 @@ from sklearn import preprocessing
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.model_selection import train_test_split, StratifiedKFold, LeaveOneOut
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -134,11 +134,90 @@ def ROC_results(LOOCV_results):
     ax.set_aspect('equal')
 
 
+
+def LOOCV_solver(solver, X, y):
+    """
+    A function that fits a classifier to the data using leave-one-out cross-validation,
+    and computes the ROC and AUC values. Lastly, it plots the results and reurns the plot
+
+
+    Parameters
+    ----------
+    solver : string 
+        The classifier used to perform the analysis
+    X : numpy array
+        The data array
+    y : numpy array
+        The classes / binary response variable
+
+
+
+    Returns
+    -------
+    Nothin' 
+
+    """
+    loo = LeaveOneOut()
+    folds = loo.split(X) #create LOO-folds 
+    
+    tprs = [] #save results for plotting
+    aucs = []
+    all_probs = [] #save the probabilities in a list
+    ys = [] #save all responses 
+    mean_fpr = np.linspace(0, 1, 100)
+    
+    for train_ids, test_ids in folds:
+    
+        if solver == "LDA":
+            clf = LinearDiscriminantAnalysis(solver='svd')
+        elif solver == "SVM":
+            clf = SVC(probability=True)
+        elif solver == "LR":
+            clf = LogisticRegression(penalty='l1',solver='liblinear',random_state=0)
+        elif solver=='RF':
+            clf = RandomForestClassifier()
+     
+        else:
+            raise("muumi")
+
+        X_train = X.iloc[train_ids]
+        X_test = X.iloc[test_ids]
+
+        y_train = y[train_ids]
+        y_test = y[test_ids]
+        ys.append(y_test)
+
+        #clf = make_pipeline(StandardScaler(), clf)
+        clf.fit(X_train, y_train)
+        pred = clf.predict(X_test).astype(int)
+        all_probs.append(clf.fit(X_train, y_train).predict_proba(X_test)[:,1])
+        
+        
+    ys = np.array(ys)
+    all_probs = np.array(all_probs)
+    
+    fpr, tpr, thresholds = roc_curve(ys, all_probs) #calculare roc curve
+    roc_auc = auc(fpr, tpr) #get area under curve
+    
+
+    ax.plot(fpr, tpr, lw=2, alpha=0.5, color='b', label='LOOCV ROC (AUC = %0.2f)' % (roc_auc))
+    ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r', label='Chance level', alpha=.8)
+    ax.set(
+        xlim=[-0.05, 1.05],
+        ylim=[-0.05, 1.05],
+        title='LOO-CV ROC curve',
+        xlabel='False Positive Rate',
+        ylabel='True Positive Rate',
+    )
+
+    ax.legend(loc="lower right")
+    ax.set_aspect('equal')
     
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-
+    
+    CV = False
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     parser.add_argument('--band', type=str, help="Band")
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2")
@@ -168,8 +247,16 @@ if __name__ == "__main__":
     print(f"TBIEEG classifcation data on {args.task} task.")
    
     fig, ax = plt.subplots() #TODO: should these be given for the functions?
-    results = Kfold_CV_solver(solver=args.clf, X=X, y=y, folds=10)
-
-    ROC_results(results)
     
-    plt.savefig(fname=save_file)
+    if CV:
+        results = Kfold_CV_solver(solver=args.clf, X=X, y=y, folds=10)
+        ROC_results(results)
+        plt.savefig(fname=save_file)
+    else:
+        LOOCV_solver(args.clf, X, y)
+        plt.savefig(fname=f"{save_folder}/loo-ROC_{args.band}_{args.clf}_{args.task}.pdf")
+       
+        
+
+    
+
