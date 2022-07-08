@@ -48,8 +48,8 @@ change_bands = False
 new_bands = five_bands 
 
 # Choose what to plot
-plot_tasks = True
-plot_averages = True
+plot_tasks = False
+plot_averages = False
 
 # Choose one channel and subject to be plotted
 channel = 59
@@ -156,6 +156,8 @@ dataframe.insert(0, 'Group', groups)
 """
 Plotting
 """
+#TODO: modify this so that the plots work if the frequency bands are changed
+
 patients = sum(groups)/len(chosen_tasks)
 controls = len(groups)/len(chosen_tasks)-patients
 

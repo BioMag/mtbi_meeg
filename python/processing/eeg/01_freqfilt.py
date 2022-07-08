@@ -41,7 +41,7 @@ all_fnames = zip(
 
 # Date and time
 now = datetime.datetime.now()
-datetime = now.strftime('%A, %d. %B %Y %I:%M%p')
+date_time = now.strftime('%A, %d. %B %Y %I:%M%p')
 
 corrupted_raw_files = []
 
@@ -53,22 +53,26 @@ for raw_fname, filt_fname in all_fnames:
         raw_str = str(raw_fname)
         if 'task-ec' in raw_str:
             raw.info['bads'] = ec_bads[args.subject]
+            task = 'ec'
         elif 'task-eo' in raw_str:
             raw.info['bads'] = eo_bads[args.subject]
+            task = 'eo'
         elif 'task-PASAT' in raw_str and 'run-01' in raw_str:
             raw.info['bads'] = pasat1_bads[args.subject]
+            task = 'pasat1'
         elif 'task-PASAT' in raw_str and 'run-02' in raw_str:
             raw.info['bads'] = pasat2_bads[args.subject]
+            task = 'pasat2'
         
         # Remove MEG channels. This is the EEG pipeline after all.
         raw.pick_types(meg=False, eeg=True, eog=True, stim=True, ecg=True, exclude=[])
         
         # Plot segment of raw data
-        figures['raw_segment'].append(raw.plot(n_channels=30, title = datetime, show=False))
+        figures['raw_segment'].append(raw.plot(n_channels=30, title = date_time, show=False))
         
         # Interpolate bad channels
         raw.interpolate_bads()
-        figures['interpolated_segment'].append(raw.plot(n_channels=30, title = datetime, show=False))
+        figures['interpolated_segment'].append(raw.plot(n_channels=30, title = date_time + task, show=False))
         
         # Add a plot of the power spectrum to the list of figures to be placed in
         # the HTML report.
@@ -92,36 +96,38 @@ for raw_fname, filt_fname in all_fnames:
         
         raw.close()
     except:
-        print("Psds file corrupted or missing")
         corrupted_raw_files.append(args.subject)
     
 
 
 # Write HTML report with the quality control figures
 with open_report(fname.report(subject=args.subject)) as report:
-    report.add_slider_to_section(
-        figures['before_filt'],
-        section='freq filter',
-        title='Before frequency filtering',
+    report.add_figure(
+        figures['before_filt'],'Before frequency filtering',
+        caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
         replace=True,
+        tags=('filt')
     )
-    report.add_slider_to_section(
+    report.add_figure(
         figures['after_filt'],
-        section='freq filter',
-        title='After frequency filtering',
+        'After frequency filtering',
+        caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
         replace=True,
+        tags=('filt')
     )
-    report.add_slider_to_section(
+    report.add_figure(
         figures['raw_segment'],
-        section='freq filter',
-        title='Before interpolation',
+        'Before interpolation',
+        caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
         replace=True,
+        tags=('raw')
     )
-    report.add_slider_to_section(
+    report.add_figure(
         figures['interpolated_segment'],
-        section='freq filter',
-        title='After interpolation',
+        'After interpolation',
+        caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
         replace=True,
+        tags=('raw')
     )
     report.save(fname.report_html(subject=args.subject),
                 overwrite=True, open_browser=False)

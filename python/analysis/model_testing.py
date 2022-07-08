@@ -34,6 +34,7 @@ import math
 
 def one_split(clfs, X, y, confusion_m, pca, feature_importance):
     """
+    Tests the performance of chosen models. 
 
     Parameters
     ----------
@@ -49,7 +50,7 @@ def one_split(clfs, X, y, confusion_m, pca, feature_importance):
         If True, performs PCA before proceeding with the analysis
     feature_importance : bool
         If True, will plot feature importances for RandomForest classifier.
-        Ignored for other cladsifiers.
+        Ignored for other classifiers.
 
     Returns
     -------
@@ -104,6 +105,28 @@ def one_split(clfs, X, y, confusion_m, pca, feature_importance):
     
 
 def plot_confusion_matrices(dim, clfs, X_test, y_test, titles):
+    """
+    Plots confusion matrices for chosen classifiers.
+    
+    Parameters
+    ----------
+    dim : int
+        The number of classifiers i.e. the number of subplots
+    clfs : list
+        List of classifiers 
+    X_test : dataframe
+        Subset of the data that is used to test the performance of the classifiers (features: vectorized PSDs, observations: subjects)
+    y_test : dataframe
+        Classification labels for X_test (binary)
+    titles : str
+        List of the names of the classifiers for captions
+
+    Returns
+    -------
+    None.
+
+    """
+    
     figure, axis = plt.subplots(1, dim)
     for clf, ax, title in zip(clfs, axis.flatten(), titles):
         ConfusionMatrixDisplay.from_estimator(clf, X_test, y_test, ax=ax)
@@ -114,68 +137,20 @@ def plot_confusion_matrices(dim, clfs, X_test, y_test, titles):
 
     
 
-def plot_roc_curve(clfs, X, y, folds):
+def plot_feature_importance(forest):
     """
-    Plots ROC curves for a model
-    
+    Plots feature importances for n most significant features for RandomForestClassifier
+
     Parameters
     ----------
-    clfs : LIST
-        ('lr', 'lda', 'svm')
-    folds : INT
+    forest : 
+        StandardScaler + RandomForestClassifier
+    Returns
+    -------
+    None.
+
     """
-    # Define classifier
-    classifier = ''
-    if 'lr' in clfs:
-        classifier = LogisticRegression(random_state=0)
-    elif 'svm' in clfs:
-        classifier = svm.SVC()
-    elif 'lda' in clfs:
-        classifier = LinearDiscriminantAnalysis(solver='lsqr')
-    else:
-        print("Wrong classifier")
-        
-    # Stratified k fold cross validation
-    skf = StratifiedKFold(n_splits=folds)
-    split = skf.split(X, y)   
-    tprs = []
-    aucs = []
-    mean_fpr = np.linspace(0, 1, 100)
-    
-    for train_index, test_index in split:
-        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
-        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-        classifier.fit(X_train, y_train)
-        #?pred = clf.predict(X_test).astype(int) 
-        # Plot ROC curves for individual folds
-        viz = RocCurveDisplay.from_estimator(classifier, X_test, y_test)
-        interp_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
-        interp_tpr[0] = 0.0
-        tprs.append(interp_tpr)
-        aucs.append(viz.roc_auc)
-    fig, ax = plt.subplots()
-    ax.plot([0,1],[0,1], lw=2, color='r', label='Chance', alpha=0.8)
-    mean_tpr = np.mean(tprs, axis = 0)
-    mean_tpr[-1]=1.0
-    mean_auc = auc(mean_fpr, mean_tpr) 
-    std_auc = np.std(aucs)
-    # Plot mean ROC curve
-    ax.plot(mean_fpr, mean_tpr, color='b', 
-            label=r"Mean ROC (AUC =%0.2f $\pm$ %0.2f)" % (mean_auc, std_auc),
-            lw=2, alpha = 0.8)  
-    std_tpr = np.std(tprs, axis = 0)
-    tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
-    tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
-    ax.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=0.2,
-                    label = r'$\pm$ 1 std. dev.')
-    ax.set(xlim=[-0.05, 1.05], ylim=[-0.05, 1.05], title="10-fold CV ROC curve")
-
-
-
-
-
-def plot_feature_importance(forest):
-    # Make a list of feature names
+    # Make a list of feature names (this could be moved to readdata)
     bands = ['delta', 'theta', 'alpha', 'beta', 'gamma']
     channels = [x for x in range(64)]
     bands_and_channels = [(x, y) for x in bands for y in channels]
@@ -203,8 +178,36 @@ def plot_feature_importance(forest):
     
 
     #TODO: fix confusion matrix problem 
-def stratified_k_fold_cv(clfs, X, y, folds, confusion_m, pca, feature_importance):
-    # Stratified K fold cross validation, testing different models
+def stratified_k_fold_cv(clfs, X, y, folds, confusion_m, pca, feature_importance, standard_scaler):
+    """
+    Tests the performance of chosen models using stratified k fold cross validation.
+
+    Parameters
+    ----------
+    clfs : list
+        List of classifiers to test
+    X : dataframe
+        Vectorized PSDs (features) of each subject (observation)
+    y : series
+        Classification labels (binary)
+    folds : int
+        The number of folds in the CV
+    confusion_m : bool
+        If True, plots confusion matrices for the models
+    pca : bool
+        If True, performs PCA before training the models
+    feature_importance : bool
+        If True, plots feature importances for RandomForest
+        Ignored for other classifiers
+    standard_scaler: bool
+        If True, uses StandardScaler to normalize the features before training
+
+    Returns
+    -------
+    scores : list
+        List of scores for each classifier and each fold
+
+    """
     
     skf = StratifiedKFold(n_splits=folds, shuffle=True)
     split = skf.split(X, y)
@@ -217,7 +220,11 @@ def stratified_k_fold_cv(clfs, X, y, folds, confusion_m, pca, feature_importance
     stratified_accuracy_qda= []
     stratified_accuracy_rf = []
     
-    
+    if standard_scaler:
+        scaler = StandardScaler()
+    else:
+        scaler = None
+
     
     for train_index, test_index in split:
         # # Get training and testing sets
@@ -229,38 +236,36 @@ def stratified_k_fold_cv(clfs, X, y, folds, confusion_m, pca, feature_importance
             pca = PCA(n_components=15)
             X_train = pca.fit_transform(X_train)
             X_test = pca.fit_transform(X_test)
-    
+
         # Logistic regression
         if 'lr' in clfs:
-            clf = make_pipeline(StandardScaler(), LogisticRegression(penalty='l1',solver='liblinear',random_state=0)).fit(X_train, y_train)
-            stratified_accuracy_lr.append(clf.score(X_test, y_test))
-            classifiers.append(clf)
+            clf_lr = make_pipeline(scaler, LogisticRegression(penalty='l1',solver='liblinear',random_state=0)).fit(X_train, y_train)
+            stratified_accuracy_lr.append(clf_lr.score(X_test, y_test))
+            classifiers.append(clf_lr)
             
         # Linear discriminant analysis
         if 'lda' in clfs:
-            clf_2 = make_pipeline(StandardScaler(), LinearDiscriminantAnalysis(solver='svd')).fit(X_train, y_train)
-            stratified_accuracy_lda.append(clf_2.score(X_test, y_test))
-            classifiers.append(clf_2)
+            clf_lda = make_pipeline(scaler, LinearDiscriminantAnalysis(solver='svd')).fit(X_train, y_train)
+            stratified_accuracy_lda.append(clf_lda.score(X_test, y_test))
+            classifiers.append(clf_lda)
              
         # Support vector machine
         if 'svm' in clfs:
-            clf_3 = make_pipeline(StandardScaler(), svm.SVC(probability=True))
-            clf_3.fit(X_train, y_train)
-            stratified_accuracy_svm.append(clf_3.score(X_test, y_test))
-            classifiers.append(clf_3)
+            clf_svm = make_pipeline(scaler, svm.SVC(probability=True))
+            clf_svm.fit(X_train, y_train)
+            stratified_accuracy_svm.append(clf_svm.score(X_test, y_test))
+            classifiers.append(clf_svm)
         
         # Neighborhood component analysis 
         if 'nca' in clfs:
-            nca = NeighborhoodComponentsAnalysis()
-            knn = KNeighborsClassifier()
-            nca_pipe = make_pipeline(StandardScaler(), Pipeline([('nca', nca), ('knn', knn)]))
-            nca_pipe.fit(X_train, y_train)
-            stratified_accuracy_nca.append(nca_pipe.score(X_test, y_test))
-            classifiers.append(nca_pipe)
+            clf_nca = make_pipeline(scaler, Pipeline([('nca', NeighborhoodComponentsAnalysis()), ('knn', KNeighborsClassifier())]))
+            clf_nca.fit(X_train, y_train)
+            stratified_accuracy_nca.append(clf_nca.score(X_test, y_test))
+            classifiers.append(clf_nca)
             
         # Quadratic discriminant analysis
         if 'qda' in clfs:
-            clf_qda = make_pipeline(StandardScaler(), QuadraticDiscriminantAnalysis())
+            clf_qda = make_pipeline(scaler, QuadraticDiscriminantAnalysis())
             clf_qda.fit(X_train, y_train)
             stratified_accuracy_qda.append(clf_qda.score(X_test, y_test))
             classifiers.append(clf_qda)
@@ -268,9 +273,10 @@ def stratified_k_fold_cv(clfs, X, y, folds, confusion_m, pca, feature_importance
             ### Warning: variables are collinear (also with PCA)
         # Random forest
         if 'rf' in clfs:
-            clf_rf = make_pipeline(StandardScaler(), RandomForestClassifier()).fit(X_train, y_train)
+            clf_rf = make_pipeline(scaler, RandomForestClassifier()).fit(X_train, y_train)
             stratified_accuracy_rf.append(clf_rf.score(X_test, y_test))
             classifiers.append(clf_rf)
+            # Plot feature importances
             if feature_importance:
                 plot_feature_importance(clf_rf)
             
@@ -298,11 +304,12 @@ if __name__ == "__main__":
     X, y = data.iloc[:,1:data.shape[1]], data.loc[:, 'Group']
     
     # Choose parameters
-    test = 'cv' # How to test the models ('split', 'roc', 'cv')
+    test = 'cv' # How to split the data ('split', 'cv')
     clfs = ['lr','lda', 'svm', 'rf'] # List of models to test ('lr', 'lda', 'svm', 'nca', 'qda', 'rf') !!!IN THIS ORDER!!!
     pca = False
-    confusion_m = True
+    confusion_m = False
     feature_importance = False
+    standard_scaler = False
     folds = 10
     
     
@@ -311,10 +318,8 @@ if __name__ == "__main__":
         one_split(clfs, X, y, confusion_m, pca, feature_importance)
     # Stratified k fold cross validation
     elif test == 'cv':
-        scores = stratified_k_fold_cv(clfs, X, y, folds, confusion_m, pca, feature_importance)
+        scores = stratified_k_fold_cv(clfs, X, y, folds, confusion_m, pca, feature_importance, standard_scaler)
         print(scores)
         for i in scores:
             print(np.mean(i))
-    # Plots a ROC curve and uses stratified k fold cross validation (len(clfs)=1)
-    elif test == 'roc':
-        print(plot_roc_curve(clfs, X, y, folds))
+
