@@ -37,9 +37,6 @@ all_fnames = zip(
 )
 
 
-#TODO: think if this is the most sensible way to do this or 
-#      should I just write bascscr instead?
-
 #TODO: another solution is to use MNE version; would that be better??
 print("Maxfiltering subject ", args.subject)
 
@@ -49,7 +46,7 @@ for input_f, output_f, log_f, pos_f in all_fnames:
     
     #arguments given to maxfilter program. TODO: check these!
     args = ['/neuro/bin/util/maxfilter', '-f', input_f, '-o', output_f, '-st', '-movecomp', \
-            '-autobad','on', '-trans', trans_f, '-ctc', cross_talk, '-cal', calibration, \
+            '-autobad','on', '-trans', trans_f, '-ctc', cross_talk, '-cal', calibration, \    #TODO: change to trans default for the purposes of this study
             '-hpicons','-origin','fit','-in', '8', '-out', '3', '-frame','head', '-hp', pos_f, '-force']  
     
     
