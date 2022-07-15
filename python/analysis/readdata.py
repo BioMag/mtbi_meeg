@@ -5,10 +5,12 @@ Created on Thu Jun 16 10:21:38 2022
 
 @author: aino
 
-Reads bandpower data from csv files and creates a matrix whose rows represent each subject. 
+Reads bandpower data from CSV files and creates a matrix whose rows represent each subject. 
 Plots control vs patient grand average and ROI averages. Plots spectra for different tasks and a single subject and channel.
-"""
 
+DESCRIBE THE FILES' NAMES & PATHS
+
+"""
 import numpy as np
 import os
 import csv
@@ -17,15 +19,22 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from math import log
 
+## Implementing a better way for reading in files, specify the name and path ##
+## Implement try and catch for file read in##
+
 # Get the list of subjects
-with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/some_subjects.txt', 'r') as subjects_file:
+with open("C:\\Users\\EstanislaoPorta\\biomag\\mtbi-eeg\\python\\analysis\\subjects_.txt", 'r') as subjects_file:
     subjects = subjects_file.readlines()
     subjects_file.close()
     # subjects = ['14P'] # Choose subjects manually
 
+## Tasks look like pre-defined ---------------
+## Implementing a better way for reading in tasks, specify the name and path ##
 # Define which files to read for each subject
 tasks = ['ec_1', 'ec_2', 'ec_3', 'eo_1', 'eo_2', 'eo_3', 'PASAT_run1_1', 
          'PASAT_run1_2', 'PASAT_run2_1', 'PASAT_run2_2']
+
+## Implement selecting tasks? -----------------
 chosen_tasks = ['PASAT_run2_1', 'PASAT_run2_2'] # Choose tasks
 subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks]
 
@@ -33,6 +42,7 @@ subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks]
 data_vectors = []
 data_matrices = []
 
+## Why is this being plotted? --------------
 # Choose one channel and subject to be plotted
 channel = 11
 chosen_subject = '01C'
@@ -52,7 +62,9 @@ plot_averages = False
 for pair in subjects_and_tasks:
     subject = pair[0].rstrip()
     task = pair[1]
-    bandpower_file = "/net/theta/fishpool/projects/tbi_meg/k22_processed/sub-" + subject + "/ses-01/eeg/bandpowers/" + task + '.csv'
+    ## Implementing a better way for reading in files, specify the name and path ##
+    ## Implement try and catch for file read in## 
+    bandpower_file = "C:\\Users\\EstanislaoPorta\\biomag\\mtbi-eeg\\python\\analysis\\sub-" + subject + "\\ses-01\\eeg\\bandpowers\\" + task + '.csv'
     # Create a 2D list to which the read data will be added
     f_bands_list = []
     # Read csv file and save the data to the two dimensional list 'f_bands'
@@ -83,7 +95,6 @@ for pair in subjects_and_tasks:
     # Plot different tasks for one subject and channel
     if chosen_subject in subject:
         plot_array.append(log_array[:, channel])
-    
 
     # Grand average and ROI
     sum_all = np.sum(log_array, axis = 1)
@@ -185,10 +196,3 @@ if plot_averages:
     axes[2].plot([x for x in range(1,40)], patients_average_f, label='Patients')
     axes[2].title.set_text('Occipital lobe')
     axes[2].legend()
-
-
-
-
-
-
-
