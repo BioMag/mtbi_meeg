@@ -1,0 +1,27 @@
+Patient_ON	Control_ON	Patient_BM	Control_BM
+case_3144	nro152	case_5780	case_3922
+case_3254	3352	case_5781	case_5887
+case_3267	3312	case_5793	case_5890
+case_3269	nro85	case_5798	case_5894
+case_3299	nro158	case_5809	case_5895
+case_3303	nro115	case_5817	case_5896
+case_3309	nro48	case_5821	case_5897
+case_3320	nro176	case_5824	case_5898
+case_3321	3336	case_5828	case_5900
+case_3353	nro191	case_5835	case_5901
+case_3355	2994	case_5836	case_5902
+case_3359	3308	case_5852	case_5903
+case_3367	nro49	case_5857	case_5904
+case_3371	nro102	case_5859	case_5924
+case_3375	2624	case_5860	case_5927
+case_3386	3316	case_5864	case_5946
+case_3394	nro25	case_5865	case_5948
+case_3395	nro22	case_5867	case_5968
+case_3416	nro10	case_5871	case_5969
+case_3431	nro124	case_5872	case_5972
+		case_5877	case_5973
+		case_5878	case_5979
+		case_5879	case_5980
+		case_5932	case_5983
+		case_5939	case_5985
+		case_5950	case_5990
