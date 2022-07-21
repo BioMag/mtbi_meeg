@@ -29,6 +29,7 @@ args = parser.parse_args()
 
 subject = args.subject
 
+
 all_fnames = zip(
     get_all_fnames(args.subject, kind='raw'), #raw data
     get_all_fnames(args.subject, kind='tsss'), #maxfiltered data
@@ -47,7 +48,7 @@ for input_f, output_f, log_f, pos_f in all_fnames:
     
     #arguments given to maxfilter program. TODO: check these!
     args = ['/neuro/bin/util/maxfilter', '-f', input_f, '-o', output_f, '-st', '-movecomp', \
-            '-autobad','on', '-trans', trans_f, '-ctc', cross_talk, '-cal', calibration, \    #TODO: change to trans default for the purposes of this study
+            '-autobad','on', '-trans', trans_f, '-ctc', cross_talk, '-cal', calibration, \
             '-hpicons','-origin','fit','-in', '8', '-out', '3', '-frame','head', '-hp', pos_f, '-force']  
     
     
@@ -56,3 +57,5 @@ for input_f, output_f, log_f, pos_f in all_fnames:
     
     # run maxfilter, FIXME
     subprocess.run(args=args, stdout=log_output,stderr=log_output)
+
+

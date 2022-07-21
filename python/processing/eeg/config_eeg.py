@@ -363,24 +363,24 @@ fname.add('raw_data_dir', raw_data_dir)
 fname.add('processed_data_dir', processed_data_dir)
 
 # Continuous data
-fname.add('raw', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-0{run}_proc-raw_meg.fif')
-fname.add('filt', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-0{run}_filt.fif')
-fname.add('clean', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-0{run}_clean.fif')
+fname.add('raw', '{raw_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_proc-raw_meg.fif')
+fname.add('filt', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_filt.fif')
+fname.add('clean', '{processed_data_dir}/sub-{subject}/ses-{ses}/eeg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_clean.fif')
 
 # Maxfilter
-fname.add('tsss', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-0{run}_proc-raw_meg_mc_tsss.fif')
-fname.add('pos', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-0{run}_movecomp.pos') 
-fname.add('tsss_log', '{raw_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-01_task-{task}_run-0{run}_tsss_log.log')
+fname.add('tsss', '{raw_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_proc-raw_meg_mc_tsss.fif')
+fname.add('pos', '{raw_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_movecomp.pos') 
+fname.add('tsss_log', '{raw_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_tsss_log.log')
 
 
 # Files used during EOG and ECG artifact suppression
-fname.add('ica', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-01_task-{task}_run-0{run}_ica.h5')
+fname.add('ica', '{processed_data_dir}/sub-{subject}/ses-{ses}/eeg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_ica.h5')
 
 # PSD files
-fname.add('psds', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_psds.h5')
+fname.add('psds', '{processed_data_dir}/sub-{subject}/ses-{ses}/eeg/sub-{subject}_psds.h5')
 
 # Band power files
-fname.add('bandpower', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_bandpower.csv')
+fname.add('bandpower', '{processed_data_dir}/sub-{subject}/ses-{ses}/eeg/sub-{subject}_bandpower.csv')
 
 # Filenames for MNE reports
 fname.add('reports_dir', f'{reports_dir}')
@@ -392,7 +392,7 @@ fname.add('figures_dir', f'{figures_dir}')
 fname.add('figure_psds', '{figures_dir}/psds.pdf')
 
 
-def get_all_fnames(subject, kind, exclude=None):
+def get_all_fnames(subject, kind, ses='01', exclude=None):
     """Get all filenames for a given subject of a given kind.
 
     Not all subjects have exactly the same files. For example, subject 1 does
@@ -411,6 +411,8 @@ def get_all_fnames(subject, kind, exclude=None):
         The subject to get the names of the raw files for.
     kind : 'raw' | 'tsss' | 'filt' | 'eog_ecg_events' | 'ica'
         The kind of files to return the filenames for.
+    ses: str
+        The measurement session (e.g. 01 or 02). Defaults to 01
     exclude : None | str | list of str
         The tasks to exclude from the list.
         Defaults to not excluding anything.
@@ -435,8 +437,8 @@ def get_all_fnames(subject, kind, exclude=None):
         if task in exclude:
             continue
         for run in [1, 2]:
-            if op.exists(fname.raw(subject=subject, task=task, run=run)):
-                all_fnames.append(fname.files()[f'{kind}'](subject=subject, task=task, run=run))
+            if op.exists(fname.raw(subject=subject, ses=ses, task=task, run=run)):
+                all_fnames.append(fname.files()[f'{kind}'](subject=subject, ses=ses, task=task, run=run))
     return all_fnames
 
 
