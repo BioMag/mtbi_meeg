@@ -310,7 +310,7 @@ if __name__ == "__main__":
     confusion_m = False
     feature_importance = False
     standard_scaler = False
-    folds = 10
+    folds = 10 
     
     
     

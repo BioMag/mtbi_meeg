@@ -68,7 +68,7 @@ elif host == 'sirius' and user == 'heikkiv' : #TODO: should we overwrite old stu
     matplotlib_backend = 'Qt5Agg'
 elif host == 'ypsilon.biomag.hus.fi' and user == 'heikkiv':
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
-    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_sprocessed/'
+    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed/'
     reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/reports/',user)
     figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/resports/',user)
     n_jobs = 4
