@@ -13,23 +13,23 @@ import pandas as pd
 import argparse
 import matplotlib.pyplot as plt
 
-from sklearn import preprocessing
+#sfrom sklearn import preprocessing
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, StratifiedKFold, LeaveOneOut
+from sklearn.model_selection import train_test_split, StratifiedGroupKFold, LeaveOneOut
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_curve, roc_auc_score, RocCurveDisplay, auc
-from sklearn.covariance import OAS
+#from sklearn.covariance import OAS
 from readdata import dataframe, tasks #TODO: would want to decide which tasks are used
 
 
-def Kfold_CV_solver(solver, X, y, folds):
+def Kfold_CV_solver(solver, X, y, groups, folds):
     
-    skf = StratifiedKFold(n_splits=folds, shuffle=True)
-    split = skf.split(X, y)
+    skf = StratifiedGroupKFold(n_splits=folds, shuffle=True)
+    split = skf.split(X, y, groups) #takes into account the groups (=subjects) when splitting the data
     
     tprs = [] #save results for plotting
     aucs = []
@@ -135,7 +135,7 @@ def ROC_results(LOOCV_results):
 
 
 
-def LOOCV_solver(solver, X, y):
+def LOOCV_solver(solver, X, y, groups):
     """
     A function that fits a classifier to the data using leave-one-out cross-validation,
     and computes the ROC and AUC values. Lastly, it plots the results and reurns the plot
@@ -149,7 +149,8 @@ def LOOCV_solver(solver, X, y):
         The data array
     y : numpy array
         The classes / binary response variable
-
+    group : series
+        Maps each observation to correct subject
 
 
     Returns
@@ -157,8 +158,8 @@ def LOOCV_solver(solver, X, y):
     Nothin' 
 
     """
-    loo = LeaveOneOut()
-    folds = loo.split(X) #create LOO-folds 
+    skf = StratifiedGroupKFold(n_splits=len(pd.unique(groups)), shuffle=True)
+    folds = skf.split(X, y, groups) #create loo folds (here loo -> leave each subj. out)
     
     tprs = [] #save results for plotting
     aucs = []
@@ -185,7 +186,7 @@ def LOOCV_solver(solver, X, y):
 
         y_train = y[train_ids]
         y_test = y[test_ids]
-        ys.append(y_test)
+        ys.append(y_test[0]) #pick the first one since we get n_tasks identical labels
 
         #clf = make_pipeline(StandardScaler(), clf)
         clf.fit(X_train, y_train)
@@ -194,7 +195,7 @@ def LOOCV_solver(solver, X, y):
         
         
     ys = np.array(ys)
-    all_probs = np.array(all_probs)
+    all_probs = np.mean(np.array(all_probs), axis=1)
     
     fpr, tpr, thresholds = roc_curve(ys, all_probs) #calculare roc curve
     roc_auc = auc(fpr, tpr) #get area under curve
@@ -217,7 +218,7 @@ def LOOCV_solver(solver, X, y):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     
-    CV = False
+    CV = True
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     parser.add_argument('--band', type=str, help="Band")
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2")
@@ -227,7 +228,7 @@ if __name__ == "__main__":
     
     
     #selection_file = f"{args.location}_select_{args.eyes}.csv"
-    X, y = dataframe.iloc[:,1:dataframe.shape[1]], dataframe.loc[:, 'Group']
+    X, y, group = dataframe.iloc[:,2:dataframe.shape[1]], dataframe.loc[:, 'Group'], dataframe.loc[:, 'Subject']
     
     save_folder = "/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/figures/heikkiv"
     save_file = f"{save_folder}/{args.band}_{args.clf}_{args.task}.pdf"
@@ -244,16 +245,16 @@ if __name__ == "__main__":
     #     freqs_sel = freqs_sel == False
         
 
-    print(f"TBIEEG classifcation data on {args.task} task.")
+    print(f"TBIEEG classifcation with {args.clf} data on {args.task} task.")
    
     fig, ax = plt.subplots() #TODO: should these be given for the functions?
     
     if CV:
-        results = Kfold_CV_solver(solver=args.clf, X=X, y=y, folds=10)
+        results = Kfold_CV_solver(solver=args.clf, X=X, y=y, groups=group, folds=10)
         ROC_results(results)
         plt.savefig(fname=save_file)
     else:
-        LOOCV_solver(args.clf, X, y)
+        LOOCV_solver(args.clf, X, y, groups=group)
         plt.savefig(fname=f"{save_folder}/loo-ROC_{args.band}_{args.clf}_{args.task}.pdf")
        
         
