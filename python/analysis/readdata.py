@@ -6,7 +6,8 @@ Created on Thu Jun 16 10:21:38 2022
 @author: aino
 
 Reads bandpower data from CSV files and creates a matrix whose rows represent each subject. 
-Plots control vs patient grand average and ROI averages. Plots spectra for different tasks and a single subject and channel.
+Plots control vs patient grand average and ROI averages. Plots spectra for different tasks
+and a single subject and channel.
 
 DESCRIBE THE FILES' NAMES & PATHS
 
@@ -23,7 +24,9 @@ from math import log
 ## Implement try and catch for file read in##
 
 # Get the list of subjects
-with open("C:\\Users\\EstanislaoPorta\\biomag\\mtbi-eeg\\python\\analysis\\subjects_.txt", 'r') as subjects_file:
+## How should subjects.txt file format be? How should subjects look?
+## Sould the delimiter be defined explicitcly?
+with open("subjects.txt", 'r') as subjects_file:
     subjects = subjects_file.readlines()
     subjects_file.close()
     # subjects = ['14P'] # Choose subjects manually
@@ -35,9 +38,9 @@ tasks = ['ec_1', 'ec_2', 'ec_3', 'eo_1', 'eo_2', 'eo_3', 'PASAT_run1_1',
          'PASAT_run1_2', 'PASAT_run2_1', 'PASAT_run2_2']
 
 ## Implement selecting tasks? -----------------
-chosen_tasks = ['PASAT_run2_1', 'PASAT_run2_2'] # Choose tasks
-subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks]
-
+chosen_tasks = ['PASAT_run2_1', 'PASAT_run2_2']  # Choose tasks
+subjects_and_tasks = [(x, y) for x in subjects for y in chosen_tasks]
+print("The first line of subjects and tasks list is", subjects_and_tasks[0])
 # Create a two dimensional list (and a 3D list) to which the data will be saved
 data_vectors = []
 data_matrices = []
@@ -49,8 +52,8 @@ chosen_subject = '01C'
 plot_array = []
 
 # Lists for grand average and ROI
-averages_controls = [[],[],[] ] # all, frontal, occipital
-averages_patients= [[],[],[] ] # all, frontal, occipital
+averages_controls = [[], [], []]  # all, frontal, occipital
+averages_patients = [[], [], []]  # all, frontal, occipital
 averages_problem = []
 tp_channels = []
 tp_freqs = []
@@ -62,9 +65,9 @@ plot_averages = False
 for pair in subjects_and_tasks:
     subject = pair[0].rstrip()
     task = pair[1]
-    ## Implementing a better way for reading in files, specify the name and path ##
-    ## Implement try and catch for file read in## 
-    bandpower_file = "C:\\Users\\EstanislaoPorta\\biomag\\mtbi-eeg\\python\\analysis\\sub-" + subject + "\\ses-01\\eeg\\bandpowers\\" + task + '.csv'
+
+    bandpower_file = "sub-" + subject + "/ses-01/eeg/bandpowers/" + task + '.csv'
+
     # Create a 2D list to which the read data will be added
     f_bands_list = []
     # Read csv file and save the data to the two dimensional list 'f_bands'
@@ -73,9 +76,7 @@ for pair in subjects_and_tasks:
         for f_band in reader:
             f_bands_list.append([float(f) for f in f_band])
         file.close()
-        
-    
-    # Vectorize 'f_bands'
+# Vectorize 'f_bands'
     f_bands_array = np.array(f_bands_list)
     f_bands_vector = np.concatenate(f_bands_array)
     
@@ -90,7 +91,7 @@ for pair in subjects_and_tasks:
     tp_freqs.append(tp_freq)
     
     # Convert the array to dB
-    log_array = 10* np.log10(f_bands_array) 
+    log_array = 10 * np.log10(f_bands_array)
     
     # Plot different tasks for one subject and channel
     if chosen_subject in subject:
@@ -139,12 +140,10 @@ for subject in indices:
     elif 'C' in subject[2]:
         groups.append(0)
     else:
-        groups.append(2) # In case there is a problem
+        groups.append(2)  # In case there is a problem
 data_frame.insert(0, 'Group', groups)
 tp_c_dataframe.insert(0, 'Group', groups)
-tp_f_dataframe.insert(0,'Group', groups)
-
-
+tp_f_dataframe.insert(0, 'Group', groups)
 
 """
 Plotting
@@ -157,7 +156,7 @@ patients = len(groups)/len(chosen_tasks)-controls
 if plot_tasks:
     fig3, ax3 = plt.subplots()
     for index in range(len(chosen_tasks)):
-        ax3.plot([x for x in range(1,40)], plot_array[index], label=chosen_tasks[index])
+        ax3.plot([x for x in range(1, 40)], plot_array[index], label=chosen_tasks[index])
     plt.title('Sub-'+chosen_subject+' Channel '+str(channel + 1))
     ax3.legend()
 
@@ -169,9 +168,9 @@ if plot_averages:
     patients_total_power = np.sum(averages_patients[0], axis = 0)    
     patients_average = np.divide(patients_total_power, patients)
     
-    fig, axes = plt.subplots(1,3)
-    axes[0].plot([x for x in range(1,40)], controls_average, label='Controls')
-    axes[0].plot([x for x in range(1,40)], patients_average, label='Patients')
+    fig, axes = plt.subplots(1, 3)
+    axes[0].plot([x for x in range(1, 40)], controls_average, label='Controls')
+    axes[0].plot([x for x in range(1, 40)], patients_average, label='Patients')
     axes[0].legend()
     
     # Plot region of interest
@@ -181,8 +180,8 @@ if plot_averages:
     patients_sum_o = np.sum(averages_patients[1], axis = 0)    
     patients_average_o = np.divide(patients_sum_o, patients)
     
-    axes[1].plot([x for x in range(1,40)], controls_average_o, label='Controls')
-    axes[1].plot([x for x in range(1,40)], patients_average_o, label='Patients')
+    axes[1].plot([x for x in range(1, 40)], controls_average_o, label='Controls')
+    axes[1].plot([x for x in range(1, 40)], patients_average_o, label='Patients')
     axes[1].title.set_text('Frontal lobe')
     axes[1].legend()
     
@@ -192,7 +191,7 @@ if plot_averages:
     patients_sum_f = np.sum(averages_patients[2], axis = 0)    
     patients_average_f = np.divide(patients_sum_f, patients)
     
-    axes[2].plot([x for x in range(1,40)], controls_average_f, label='Controls')
-    axes[2].plot([x for x in range(1,40)], patients_average_f, label='Patients')
+    axes[2].plot([x for x in range(1, 40)], controls_average_f, label='Controls')
+    axes[2].plot([x for x in range(1, 40)], patients_average_f, label='Patients')
     axes[2].title.set_text('Occipital lobe')
     axes[2].legend()

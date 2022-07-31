@@ -1,0 +1,8 @@
+# Ignore CSV files
+*.csv
+
+# Ignore txt files
+*.txt
+
+# Ignore the .idea/ directory
+.idea/
