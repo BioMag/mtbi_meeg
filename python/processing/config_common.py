@@ -18,6 +18,7 @@ user = getuser()  # Username of the user running the scripts
 host = gethostname()  # Hostname of the machine running the scripts
 
 # You want to add your machine to this list
+# TODO: change them to match current users?
 if host == 'nbe-024' and user == 'vanvlm1':
     # Marijn's workstation
     raw_data_dir = '/m/nbe/scratch/brrr_fingerprinting/biomagtbi_bids/bids'
@@ -50,15 +51,15 @@ elif host.endswith('triton.aalto.fi'):
     figures_dir = '/home/vanvlm1/data/biomag-tbi/figures'
     n_jobs = 1
     matplotlib_backend = 'Agg'  # No graphics on triton
-elif host == 'nbe-065' and user == 'hkoivikk':
-    # Hanna's workstation
-    raw_data_dir = '/m/nbe/scratch/brrr_fingerprinting/biomagtbi_bids/bids'
-    processed_data_dir = '/m/nbe/scratch/brrr_fingerprinting/biomagtbi_bids/bids/derivatives/biomag-tbi'
-    reports_dir = '/m/home/home0/09/hkoivikk/unix/biomag-tbi/reports'
-    figures_dir = '/m/home/home0/09/hkoivikk/unix/biomag-tbi/figures'
+elif host == 'nbe-077' and user == 'heikkiv7':
+    # Verna's workstation in Aalto
+    raw_data_dir = '/m/nbe/scratch/tbi-meg/verna/BIDS'
+    processed_data_dir = '/m/nbe/scratch/tbi-meg/verna/k22_processed'
+    reports_dir = '/m/nbe/scratch/tbi-meg/verna/reports'
+    figures_dir = '/m/nbe/scratch/tbi-meg/verna/k22_processedfigures'
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
-elif host == 'sirius' and user == 'heikkiv' : #TODO: should we overwrite old stuff or not?
+elif host == 'sirius' and user == 'heikkiv' : 
     # Verna's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
     processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_sprocessed/'
