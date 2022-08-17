@@ -35,7 +35,7 @@ five_bands = [(0,3), (3,7), (7,11), (11,34), (34,40)] # List of freq. indices (N
 channel_scaling = True
 
 # Define which files to read for each subject
-chosen_tasks = tasks[0] # Choose tasks (ec: 0, eo: 1, pasat1: 2, pasat2: 3)
+chosen_tasks = tasks[2] # Choose tasks (ec: 0, eo: 1, pasat1: 2, pasat2: 3)
 subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks] # length = subjects x chosen_tasks
 
 # TODO: Choose region of interest (not implemented yet)
@@ -48,18 +48,18 @@ change_bands = False
 new_bands = five_bands 
 
 # Choose what to plot
-plot_tasks = False
-plot_averages = False
+plot_tasks = True
+plot_averages = True
 
 # Choose one channel and subject to be plotted
 channel = 59
 chosen_subject = '39C'
-plot_array = [] # Contains len(chosen_tasks) vectors (length = 39) (39 frequency bands)
+plot_array = [] # Contains len(chosen_tasks) vectors (length = 89) (89 frequency bands)
 
 
 
 # Create a two dimensional list to which the data will be saved
-all_bands_vectors = [] # Contains n (n = subjects x chosen_tasks) vectors (length = 2496 = 64 x 39) (64 channels, 39 frequency bands)
+all_bands_vectors = [] # Contains n (n = subjects x chosen_tasks) vectors (length = 5696 = 64 x 89) (64 channels, 89 frequency bands)
 
 
 # Lists for grand average and ROI
@@ -77,7 +77,7 @@ for pair in subjects_and_tasks:
     bandpower_file = "/net/theta/fishpool/projects/tbi_meg/k22_processed/sub-" + subject + "/ses-01/eeg/bandpowers/" + task + '.csv'
     
     # Create a 2D list to which the read data will be added
-    sub_bands_list = [] # 39 x 64 matrix (64 channels, 39 frequency bands)
+    sub_bands_list = [] # 89 x 64 matrix (64 channels, 89 frequency bands)
     
     # Read csv file and save the data to f_bands_list
     with open(bandpower_file, 'r') as file:
@@ -166,7 +166,7 @@ controls = len(groups)/len(chosen_tasks)-patients
 if plot_tasks:
     fig3, ax3 = plt.subplots()
     for index in range(len(chosen_tasks)):
-        ax3.plot([x for x in range(1,40)], plot_array[index], label=chosen_tasks[index])
+        ax3.plot([x for x in range(1,90)], plot_array[index], label=chosen_tasks[index])
     plt.title('Sub-'+chosen_subject+' Channel '+str(channel + 1))
     ax3.legend()
 
@@ -179,8 +179,8 @@ if plot_averages:
     patients_average = np.divide(patients_total_power, patients)
     
     fig, axes = plt.subplots(1,3)
-    axes[0].plot([x for x in range(1,40)], controls_average, label='Controls')
-    axes[0].plot([x for x in range(1,40)], patients_average, label='Patients')
+    axes[0].plot([x for x in range(1,90)], controls_average, label='Controls')
+    axes[0].plot([x for x in range(1,90)], patients_average, label='Patients')
     axes[1].title.set_text('Global average')
     axes[0].legend()
 
@@ -191,8 +191,8 @@ if plot_averages:
     patients_sum_o = np.sum(averages_patients[1], axis = 0)    
     patients_average_o = np.divide(patients_sum_o, patients)
     
-    axes[1].plot([x for x in range(1,40)], controls_average_o, label='Controls')
-    axes[1].plot([x for x in range(1,40)], patients_average_o, label='Patients')
+    axes[1].plot([x for x in range(1,90)], controls_average_o, label='Controls')
+    axes[1].plot([x for x in range(1,90)], patients_average_o, label='Patients')
     axes[1].title.set_text('Frontal lobe')
     axes[1].legend()
 
@@ -202,8 +202,8 @@ if plot_averages:
     patients_sum_f = np.sum(averages_patients[2], axis = 0)    
     patients_average_f = np.divide(patients_sum_f, patients)
     
-    axes[2].plot([x for x in range(1,40)], controls_average_f, label='Controls')
-    axes[2].plot([x for x in range(1,40)], patients_average_f, label='Patients')
+    axes[2].plot([x for x in range(1,90)], controls_average_f, label='Controls')
+    axes[2].plot([x for x in range(1,90)], patients_average_f, label='Patients')
     axes[2].title.set_text('Occipital lobe')
     axes[2].legend()
     

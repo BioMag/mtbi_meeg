@@ -1,10 +1,10 @@
 """
 Copyright by Verna Heikkinen 2022
  
-Scrtpt for plotting ROC and computing AUC for mTBI classification results on EEG data
+Script for plotting ROC and computing AUC for mTBI classification results on EEG data
 
 Works from commandline:
-    %run ROC_AUC.py --band all --task eo --clf SVM
+    %run ROC_AUC.py --task eo --clf SVM
 """
 #
 import os
@@ -25,6 +25,7 @@ from sklearn.metrics import roc_curve, roc_auc_score, RocCurveDisplay, auc
 #from sklearn.covariance import OAS
 from readdata import dataframe, tasks #TODO: would want to decide which tasks are used
 
+#TODO: fix a random seed!
 
 def Kfold_CV_solver(solver, X, y, groups, folds):
     
@@ -220,7 +221,6 @@ if __name__ == "__main__":
     
     CV = True
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
-    parser.add_argument('--band', type=str, help="Band")
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2")
     parser.add_argument('--clf', type=str, help="classifier", default="LR")
 
@@ -231,18 +231,7 @@ if __name__ == "__main__":
     X, y, group = dataframe.iloc[:,2:dataframe.shape[1]], dataframe.loc[:, 'Group'], dataframe.loc[:, 'Subject']
     
     save_folder = "/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/figures/heikkiv"
-    save_file = f"{save_folder}/{args.band}_{args.clf}_{args.task}.pdf"
-
-    bands = [[0,7.6], [7.6,13],[13,30],[30,90], [0,0]]
-    band_name = ["slow", "alpha", "beta", "high", "all"]
-    band = bands[band_name.index(args.band)]
-
-    # Read frequencies 
-    #freqs = np.loadtxt("f.txt", delimiter = ",")[:,0]
-
-    # freqs_sel = (freqs >= band[0]) & (freqs < band[1])
-    # if args.drop == "Band_only":
-    #     freqs_sel = freqs_sel == False
+    save_file = f"{save_folder}/{args.clf}_{args.task}.pdf"
         
 
     print(f"TBIEEG classifcation with {args.clf} data on {args.task} task.")
@@ -255,7 +244,7 @@ if __name__ == "__main__":
         plt.savefig(fname=save_file)
     else:
         LOOCV_solver(args.clf, X, y, groups=group)
-        plt.savefig(fname=f"{save_folder}/loo-ROC_{args.band}_{args.clf}_{args.task}.pdf")
+        plt.savefig(fname=f"{save_folder}/loo-ROC_{args.clf}_{args.task}.pdf")
        
         
 
