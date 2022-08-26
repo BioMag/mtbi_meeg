@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, StratifiedGroupKFold, LeaveOneOut
+from sklearn.model_selection import train_test_split, StratifiedGroupKFold, LeaveOneOut, GroupKFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -25,11 +25,10 @@ from sklearn.metrics import roc_curve, roc_auc_score, RocCurveDisplay, auc
 #from sklearn.covariance import OAS
 from readdata import dataframe, tasks #TODO: would want to decide which tasks are used
 
-#TODO: fix a random seed!
 
 def Kfold_CV_solver(solver, X, y, groups, folds):
     
-    skf = StratifiedGroupKFold(n_splits=folds, shuffle=True)
+    skf = StratifiedGroupKFold(n_splits=folds, shuffle=True, random_state=20)
     split = skf.split(X, y, groups) #takes into account the groups (=subjects) when splitting the data
     
     tprs = [] #save results for plotting
@@ -159,8 +158,9 @@ def LOOCV_solver(solver, X, y, groups):
     Nothin' 
 
     """
-    skf = StratifiedGroupKFold(n_splits=len(pd.unique(groups)), shuffle=True)
-    folds = skf.split(X, y, groups) #create loo folds (here loo -> leave each subj. out)
+    gkf = GroupKFold(n_splits=len(pd.unique(groups)))
+    folds = gkf.split(X, y, groups=groups) #create loo folds (here loo -> leave each subj. out)
+        
     
     tprs = [] #save results for plotting
     aucs = []
@@ -181,10 +181,9 @@ def LOOCV_solver(solver, X, y, groups):
      
         else:
             raise("muumi")
-
         X_train = X.iloc[train_ids]
         X_test = X.iloc[test_ids]
-
+        
         y_train = y[train_ids]
         y_test = y[test_ids]
         ys.append(y_test[0]) #pick the first one since we get n_tasks identical labels

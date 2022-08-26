@@ -149,7 +149,8 @@ for subject in indices:
     else:
         groups.append(2) # In case there is a problem
 dataframe.insert(0, 'Group', groups)
-subs = np.array([s.split('_ec_')[0] for s in indices]) #TODO: horrible bubble-gum quickfix for CV problem
+subs = np.array([s.split('_'+chosen_tasks[0][0:3])[0] for s in indices]) #TODO: horrible bubble-gum quickfix for CV problem
+#fixed the line above so that it works for all tasks
 dataframe.insert(1, 'Subject', subs)
 
 
