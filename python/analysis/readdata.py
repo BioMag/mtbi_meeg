@@ -35,7 +35,7 @@ five_bands = [(0,3), (3,7), (7,11), (11,34), (34,40)] # List of freq. indices (N
 channel_scaling = True
 
 # Define which files to read for each subject
-chosen_tasks = tasks[0] # Choose tasks (ec: 0, eo: 1, pasat1: 2, pasat2: 3)
+chosen_tasks = tasks[2] # Choose tasks (ec: 0, eo: 1, pasat1: 2, pasat2: 3)
 subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks] # length = subjects x chosen_tasks
 
 # TODO: Choose region of interest (not implemented yet)
@@ -53,7 +53,7 @@ plot_averages = True
 
 # Choose one channel and subject to be plotted
 channel = 59
-chosen_subject = '39C'
+chosen_subject = '09P'
 plot_array = [] # Contains len(chosen_tasks) vectors (length = 89) (89 frequency bands)
 
 
@@ -113,16 +113,16 @@ for pair in subjects_and_tasks:
     # Grand average and ROI 
     sum_all = np.sum(log_array, axis = 1) # Vector (length = 39)
     sum_frontal = np.sum(log_array[:, 0:22], axis = 1) # Vector (length = 39)
-    sum_occipital = np.sum(log_array[:, 54:63], axis = 1) # Vector (length = 39)
+    sum_occipital = np.sum(log_array[:, 60:63], axis = 1) # Vector (length = 39)
     
     if 'P' in subject:
         averages_patients[0].append(np.divide(sum_all, 64))
         averages_patients[1].append(np.divide(sum_frontal, 22))
-        averages_patients[2].append(np.divide(sum_occipital, 10))
+        averages_patients[2].append(np.divide(sum_occipital, 3))
     elif 'C' in subject:
         averages_controls[0].append(np.divide(sum_all, 64))
         averages_controls[1].append(np.divide(sum_frontal, 22))
-        averages_controls[2].append(np.divide(sum_occipital, 10))
+        averages_controls[2].append(np.divide(sum_occipital, 3))
     else:
         averages_problem.append(subject)
     

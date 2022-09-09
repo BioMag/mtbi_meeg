@@ -62,7 +62,7 @@ elif host == 'nbe-077' and user == 'heikkiv7':
 elif host == 'sirius' and user == 'heikkiv' : 
     # Verna's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
-    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_sprocessed/'
+    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed/'
     reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/reports/',user)
     figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/figures/',user)
     n_jobs = 4
