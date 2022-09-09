@@ -35,7 +35,7 @@ five_bands = [(0,3), (3,7), (7,11), (11,34), (34,40)] # List of freq. indices (N
 channel_scaling = True
 
 # Define which files to read for each subject
-chosen_tasks = tasks[2] # Choose tasks (ec: 0, eo: 1, pasat1: 2, pasat2: 3)
+chosen_tasks = tasks[0] # Choose tasks (ec: 0, eo: 1, pasat1: 2, pasat2: 3)
 subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks] # length = subjects x chosen_tasks
 
 # TODO: Choose region of interest (not implemented yet)
