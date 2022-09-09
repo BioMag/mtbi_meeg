@@ -28,7 +28,7 @@ tasks = [['ec_1', 'ec_2', 'ec_3'],
          ['PASAT_run1_1', 'PASAT_run1_2'], 
          ['PASAT_run2_1', 'PASAT_run2_2']]
 
-five_bands = [(0,3), (3,7), (7,11), (11,34), (34,40)] # List of freq. indices (Note: if the bands are changed in 04_bandpower.py, these need to be modified too.)
+wide_bands = [(0,3), (3,7), (7,11), (11,34), (34,40), (40,90)] # List of freq. indices (Note: if the bands are changed in 04_bandpower.py, these need to be modified too.)
 
 
 # Choose normalization methods
@@ -44,8 +44,7 @@ channels = []
 
 # Choose frequency bands
 # TODO: these do not seem to do anything?? 
-change_bands = False 
-new_bands = five_bands 
+change_bands = True 
 
 # Choose what to plot
 plot_tasks = True
@@ -77,17 +76,24 @@ for pair in subjects_and_tasks:
     bandpower_file = "/net/theta/fishpool/projects/tbi_meg/k22_processed/sub-" + subject + "/ses-01/eeg/bandpowers/" + task + '.csv'
     
     # Create a 2D list to which the read data will be added
-    sub_bands_list = [] # 89 x 64 matrix (64 channels, 89 frequency bands)
+    sub_bands_list = [] # n_freq x 64 matrix (64 channels, n_freq frequency bands)
     
     # Read csv file and save the data to f_bands_list
     with open(bandpower_file, 'r') as file:
         reader = csv.reader(file)
-        for f_band in reader:
+        for f_band in reader: #Goes through each frequency band. 
             sub_bands_list.append([float(f) for f in f_band])
         file.close()
         
     # Convert list to array    
     sub_bands_array = np.array(sub_bands_list) # m x n matrix (m = frequency bands, n=channels)
+    
+    
+    if change_bands: #If we want to aggregate 1 Hz freq bands to concentional delta, theta, alpha, etc.
+        sub_bands_list = []
+        sub_bands_list.append([np.sum(sub_bands_array[slice(*t),:], axis=0) for t in wide_bands])
+        #create array again
+        sub_bands_array = np.array(sub_bands_list)[0] #apparently there is annyoing extra dimension
     
     if channel_scaling: #Normalize each band
         ch_tot_powers = np.sum(sub_bands_array, axis = 0)
