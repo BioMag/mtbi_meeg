@@ -33,9 +33,9 @@ figures = defaultdict(list)
 exclude = ['emptyroom'] #these don't have eye blinks.
 bad_subjects = ['01P', '02P', '03P', '04P', '05P', '06P', '07P']#these ica need to be done manually
 all_fnames = zip(
-    get_all_fnames(args.subject, kind='filt', exclude=exclude),
-    get_all_fnames(args.subject, kind='ica', exclude=exclude),
-    get_all_fnames(args.subject, kind='clean', exclude=exclude),
+    get_all_fnames(args.subject, kind='filt_meg', exclude=exclude),
+    get_all_fnames(args.subject, kind='ica_meg', exclude=exclude),
+    get_all_fnames(args.subject, kind='clean_meg', exclude=exclude),
 )
 
 for filt_fname, ica_fname, clean_fname in all_fnames:

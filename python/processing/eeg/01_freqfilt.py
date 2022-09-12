@@ -34,7 +34,7 @@ exclude = ['emptyroom'] #these don't have eye blinks.
 # bad_subjects = ['01P', '02P', '03P', '04P', '05P', '06P', '07P']#these ica need to be done manually
 all_fnames = zip(
     get_all_fnames(args.subject, kind='tsss', exclude=exclude),
-    get_all_fnames(args.subject, kind='filt', exclude=exclude),
+    get_all_fnames(args.subject, kind='filt_meg', exclude=exclude),
 )
 # raw_fnames = get_all_fnames(args.subject, kind='raw')
 # filt_fnames = get_all_fnames(args.subject, kind='filt')
@@ -65,7 +65,7 @@ for raw_fname, filt_fname in all_fnames:
             task = 'pasat2'
         
         # Remove MEG channels. This is the EEG pipeline after all.
-        raw.pick_types(meg=False, eeg=True, eog=True, stim=True, ecg=True, exclude=[])
+        raw.pick_types(meg=True, eeg=False, eog=True, stim=True, ecg=True, exclude=[])
         
         # Plot segment of raw data
         figures['raw_segment'].append(raw.plot(n_channels=30, title = date_time, show=False))
@@ -80,10 +80,10 @@ for raw_fname, filt_fname in all_fnames:
         figures['before_filt'].append(raw_plot)
     
         # Remove 50Hz power line noise (and the first harmonic: 100Hz)
-        filt = raw.notch_filter(fnotch, picks=['eeg', 'eog', 'ecg'])
+        filt = raw.notch_filter(fnotch, picks=['meg', 'eog', 'ecg'])
         
         # Apply bandpass filter
-        filt = filt.filter(fmin, fmax, picks=['eeg', 'eog', 'ecg'])
+        filt = filt.filter(fmin, fmax, picks=['meg', 'eog', 'ecg'])
     
         # Save the filtered data
         filt_fname.parent.mkdir(parents=True, exist_ok=True)

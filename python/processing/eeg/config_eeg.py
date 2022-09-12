@@ -365,22 +365,29 @@ fname.add('processed_data_dir', processed_data_dir)
 # Continuous data
 fname.add('raw', '{raw_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_proc-raw_meg.fif')
 fname.add('filt', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_filt.fif')
+fname.add('filt_meg', '{processed_data_dir}/sub-{subject}/ses-01/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_filt.fif')
 fname.add('clean', '{processed_data_dir}/sub-{subject}/ses-{ses}/eeg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_clean.fif')
+fname.add('clean_meg', '{processed_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_clean.fif')
+
 
 # Maxfilter
-fname.add('tsss', '{processed_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_proc-raw_meg_mc_tsss.fif')
-fname.add('pos', '{processed_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_movecomp.pos') 
-fname.add('tsss_log', '{processed_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_tsss_log.log')
+fname.add('tsss', '{raw_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_proc-raw_meg_mc_tsss.fif')
+fname.add('pos', '{raw_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_movecomp.pos') 
+fname.add('tsss_log', '{raw_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_tsss_log.log')
 
 
 # Files used during EOG and ECG artifact suppression
 fname.add('ica', '{processed_data_dir}/sub-{subject}/ses-{ses}/eeg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_ica.h5')
+fname.add('ica_meg', '{processed_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_ica.h5')
+
 
 # PSD files
 fname.add('psds', '{processed_data_dir}/sub-{subject}/ses-{ses}/eeg/sub-{subject}_psds.h5')
+fname.add('psds_meg', '{processed_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_psds.h5')
 
 # Band power files
 fname.add('bandpower', '{processed_data_dir}/sub-{subject}/ses-{ses}/eeg/sub-{subject}_bandpower.csv')
+fname.add('bandpower_meg', '{processed_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_bandpower.csv')
 
 # Filenames for MNE reports
 fname.add('reports_dir', f'{reports_dir}')
