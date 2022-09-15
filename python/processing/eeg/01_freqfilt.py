@@ -16,7 +16,7 @@ from mne.io import read_raw_fif
 from mne import open_report
 import datetime
 
-from config_eeg import get_all_fnames, fname, ec_bads, eo_bads, pasat1_bads, pasat2_bads, fmin, fmax, fnotch
+from config_eeg import get_all_fnames, fname, task_from_fname, pasat1_bads, pasat2_bads, fmin, fmax, fnotch
 
 #TODO: fix 35C channels
 
@@ -46,57 +46,53 @@ date_time = now.strftime('%A, %d. %B %Y %I:%M%p')
 corrupted_raw_files = []
 
 for raw_fname, filt_fname in all_fnames:
-    try:
-        raw = read_raw_fif(raw_fname, preload=True)
     
-        # Mark bad channels that were manually annotated earlier.
-        raw_str = str(raw_fname)
-        if 'task-ec' in raw_str:
-            raw.info['bads'] = ec_bads[args.subject]
-            task = 'ec'
-        elif 'task-eo' in raw_str:
-            raw.info['bads'] = eo_bads[args.subject]
-            task = 'eo'
-        elif 'task-PASAT' in raw_str and 'run-01' in raw_str:
-            raw.info['bads'] = pasat1_bads[args.subject]
-            task = 'pasat1'
-        elif 'task-PASAT' in raw_str and 'run-02' in raw_str:
-            raw.info['bads'] = pasat2_bads[args.subject]
-            task = 'pasat2'
+    if 'PASAT' in task_from_fname(raw_fname):
+        try:
+            raw = read_raw_fif(raw_fname, preload=True)
         
-        # Remove MEG channels. This is the EEG pipeline after all.
-        raw.pick_types(meg=True, eeg=False, eog=True, stim=True, ecg=True, exclude=[])
+            # Mark bad channels that were manually annotated earlier.
+            raw_str = str(raw_fname)
+            if 'task-PASAT' in raw_str and 'run-01' in raw_str:
+                raw.info['bads'] = pasat1_bads[args.subject]
+                task = 'pasat1'
+            elif 'task-PASAT' in raw_str and 'run-02' in raw_str:
+                raw.info['bads'] = pasat2_bads[args.subject]
+                task = 'pasat2'
+            
+            # Remove MEG channels. This is the EEG pipeline after all.
+            raw.pick_types(meg=True, eeg=False, eog=True, stim=True, ecg=True, exclude=[])
+            
+            # Plot segment of raw data
+            figures['raw_segment'].append(raw.plot(n_channels=30, title = date_time, show=False))
+            
+            # Interpolate bad channels
+            raw.interpolate_bads()
+            figures['interpolated_segment'].append(raw.plot(n_channels=30, title = date_time + task, show=False))
+            
+            # Add a plot of the power spectrum to the list of figures to be placed in
+            # the HTML report.
+            raw_plot = raw.plot_psd(fmin=0, fmax=40, show=False)
+            figures['before_filt'].append(raw_plot)
         
-        # Plot segment of raw data
-        figures['raw_segment'].append(raw.plot(n_channels=30, title = date_time, show=False))
+            # Remove 50Hz power line noise (and the first harmonic: 100Hz)
+            filt = raw.notch_filter(fnotch, picks=['meg', 'eog', 'ecg'])
+            
+            # Apply bandpass filter
+            filt = filt.filter(fmin, fmax, picks=['meg', 'eog', 'ecg'])
         
-        # Interpolate bad channels
-        raw.interpolate_bads()
-        figures['interpolated_segment'].append(raw.plot(n_channels=30, title = date_time + task, show=False))
+            # Save the filtered data
+            filt_fname.parent.mkdir(parents=True, exist_ok=True)
+            filt.save(filt_fname, overwrite=True)
         
-        # Add a plot of the power spectrum to the list of figures to be placed in
-        # the HTML report.
-        raw_plot = raw.plot_psd(fmin=0, fmax=40, show=False)
-        figures['before_filt'].append(raw_plot)
-    
-        # Remove 50Hz power line noise (and the first harmonic: 100Hz)
-        filt = raw.notch_filter(fnotch, picks=['meg', 'eog', 'ecg'])
-        
-        # Apply bandpass filter
-        filt = filt.filter(fmin, fmax, picks=['meg', 'eog', 'ecg'])
-    
-        # Save the filtered data
-        filt_fname.parent.mkdir(parents=True, exist_ok=True)
-        filt.save(filt_fname, overwrite=True)
-    
-        # Add a plot of the power spectrum of the filtered data to the list of
-        # figures to be placed in the HTML report.
-        filt_plot = filt.plot_psd(fmin=0, fmax=40, show=False)
-        figures['after_filt'].append(filt_plot)
-        
-        raw.close()
-    except:
-        corrupted_raw_files.append(args.subject)
+            # Add a plot of the power spectrum of the filtered data to the list of
+            # figures to be placed in the HTML report.
+            filt_plot = filt.plot_psd(fmin=0, fmax=40, show=False)
+            figures['after_filt'].append(filt_plot)
+            
+            raw.close()
+        except:
+            corrupted_raw_files.append(args.subject)
     
 
 
@@ -104,35 +100,35 @@ for raw_fname, filt_fname in all_fnames:
 with open_report(fname.report(subject=args.subject)) as report:
     report.add_figure(
         figures['before_filt'],'Before frequency filtering',
-        caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
+        caption=('PASAT run 1', 'PASAT run 2'),
         replace=True,
         tags=('filt')
     )
     report.add_figure(
         figures['after_filt'],
         'After frequency filtering',
-        caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
+        caption=('PASAT run 1', 'PASAT run 2'),
         replace=True,
         tags=('filt')
     )
     report.add_figure(
         figures['raw_segment'],
         'Before interpolation',
-        caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
+        caption=('PASAT run 1', 'PASAT run 2'),
         replace=True,
         tags=('raw')
     )
     report.add_figure(
         figures['interpolated_segment'],
         'After interpolation',
-        caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
+        caption=('PASAT run 1', 'PASAT run 2'),
         replace=True,
         tags=('raw')
     )
     report.save(fname.report_html(subject=args.subject),
                 overwrite=True, open_browser=False)
     
-with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/maxfilter_puuttuu.txt', 'a') as file:
+with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/maxfilter_puuttuu.txt', 'a') as file:
     for bad_file in corrupted_raw_files:
         file.write(bad_file+'\n')
     file.close()

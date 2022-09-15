@@ -59,7 +59,7 @@ elif host == 'nbe-077' and user == 'heikkiv7':
     figures_dir = '/m/nbe/scratch/tbi-meg/verna/k22_processedfigures'
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
-elif host == 'sirius' and user == 'heikkiv' : 
+elif host == 'sirius' or 'arcturus' and user == 'heikkiv' : 
     # Verna's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
     processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed/'

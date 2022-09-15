@@ -38,8 +38,8 @@ fmax = 40
 exclude = ['emptyroom'] 
 bad_subjects = ['01P', '02P', '03P', '04P', '05P', '06P', '07P']#these ica need to be done manually
 all_fnames = zip(
-    get_all_fnames(args.subject, kind='psds', exclude=exclude),
-    get_all_fnames(args.subject, kind='clean', exclude=exclude),
+    get_all_fnames(args.subject, kind='psds_meg', exclude=exclude),
+    get_all_fnames(args.subject, kind='clean_meg', exclude=exclude),
 )
 
 for psds_fname, clean_fname in all_fnames:
@@ -53,29 +53,23 @@ for psds_fname, clean_fname in all_fnames:
     else:
         task_wo_run = task
     
-    raw = read_raw_fif(fname.clean(subject=args.subject, task=task_wo_run, run=run),
-                       preload=True)
+    if 'PASAT' in task:
+        raw = read_raw_fif(fname.clean(subject=args.subject, task=task_wo_run, run=run),
+                           preload=True)
+        
+        raw.info['bads']=[]
     
-    raw.info['bads']=[]
-    
-    if 'eo' in task or 'ec' in task:
-        clean_1 = raw.copy().crop(tmin=30, tmax=90)
-        clean_2 = raw.copy().crop(tmin=120, tmax=180)
-        clean_3 = raw.copy().crop(tmin=210, tmax=260)
-        psds[task+'_3'], freqs = psd_welch(clean_3, fmax=fmax, n_fft=n_fft, picks=['eeg'])
-
-    elif 'PASAT' in task:
         clean_1 = raw.copy().crop(tmin=2, tmax=62)
         clean_2 = raw.copy().crop(tmin=62, tmax=122)
-    
-    psds[task+'_1'], freqs = psd_welch(clean_1, fmax=fmax, n_fft=n_fft, picks=['eeg'])
-    psds[task+'_2'], freqs = psd_welch(clean_2, fmax=fmax, n_fft=n_fft, picks=['eeg'])
-    
-    
-    # Add some metadata to the file we are writing
-    psds['info'] = raw.info
-    psds['freqs'] = freqs
-    write_hdf5(fname.psds(subject=args.subject), psds, overwrite=True)
+        
+        psds[task+'_1'], freqs = psd_welch(clean_1, fmax=fmax, n_fft=n_fft, picks=['eeg'])
+        psds[task+'_2'], freqs = psd_welch(clean_2, fmax=fmax, n_fft=n_fft, picks=['eeg'])
+        
+        
+        # Add some metadata to the file we are writing
+        psds['info'] = raw.info
+        psds['freqs'] = freqs
+        write_hdf5(fname.psds(subject=args.subject), psds, overwrite=True)
     # TODO: save freqs
 
 # Add a PSD plot to the report.
@@ -87,10 +81,6 @@ layout = find_layout(info, exclude=[])
 def on_pick(ax, ch_idx):
     """Create a larger PSD plot for when one of the tiny PSD plots is
        clicked."""
-    ax.plot(psds['freqs'], psds['ec_1'][ch_idx], color='C0',
-            label='eyes closed')
-    ax.plot(psds['freqs'], psds['eo_1'][ch_idx], color='C1',
-            label='eyes open')
     ax.plot(psds['freqs'], psds['PASAT_run1_1'][ch_idx], color='C2',
             label='pasat run 1')
     ax.plot(psds['freqs'], psds['PASAT_run2_1'][ch_idx], color='C3',
@@ -108,8 +98,6 @@ axes = iter_topography(info, layout, on_pick=on_pick, fig=fig,
 for ax, ch_idx in axes:
     #print(ax)
     handles = [
-        ax.plot(psds['freqs'], psds['ec_1'][ch_idx], color='C0'),
-        ax.plot(psds['freqs'], psds['eo_1'][ch_idx], color='C1'),
         ax.plot(psds['freqs'], psds['PASAT_run1_1'][ch_idx], color='C2'),
         ax.plot(psds['freqs'], psds['PASAT_run2_1'][ch_idx], color='C3'),
     ]
