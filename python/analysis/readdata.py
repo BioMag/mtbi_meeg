@@ -164,6 +164,7 @@ dataframe.insert(1, 'Subject', subs)
 Plotting
 """
 #TODO: modify this so that the plots work if the frequency bands are changed
+#TODO: check https://www.python-graph-gallery.com/123-highlight-a-line-in-line-plot for deviations. Construct a dataframe? Move plotting to new script entirely?
 
 patients = sum(groups)/len(chosen_tasks)
 controls = len(groups)/len(chosen_tasks)-patients
