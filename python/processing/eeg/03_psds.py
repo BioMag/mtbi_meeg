@@ -18,7 +18,7 @@ from mne import open_report, find_layout, pick_info, pick_types
 import matplotlib.pyplot as plt
 import datetime
 
-from config_eeg import fname, n_fft, get_all_fnames, task_from_fname
+from config_eeg import fname, n_fft, get_all_fnames, task_from_fname, fmax
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)
@@ -29,7 +29,7 @@ args = parser.parse_args()
 psds = dict()
 
 # Maximum frequency at which to compute PSD
-fmax = 40
+fmax = fmax
 
 
 
@@ -54,26 +54,25 @@ for psds_fname, clean_fname in all_fnames:
         task_wo_run = task
     
     if 'PASAT' in task:
-        raw = read_raw_fif(fname.clean(subject=args.subject, task=task_wo_run, run=run),
-                           preload=True)
+        raw = read_raw_fif(clean_fname, preload=True)
         
         raw.info['bads']=[]
     
         clean_1 = raw.copy().crop(tmin=2, tmax=62)
         clean_2 = raw.copy().crop(tmin=62, tmax=122)
         
-        psds[task+'_1'], freqs = psd_welch(clean_1, fmax=fmax, n_fft=n_fft, picks=['eeg'])
-        psds[task+'_2'], freqs = psd_welch(clean_2, fmax=fmax, n_fft=n_fft, picks=['eeg'])
+        psds[task], freqs = psd_welch(clean_1, fmax=fmax, n_fft=n_fft, picks=['meg'])
+        psds[task], freqs = psd_welch(clean_2, fmax=fmax, n_fft=n_fft, picks=['meg'])
         
         
         # Add some metadata to the file we are writing
         psds['info'] = raw.info
         psds['freqs'] = freqs
-        write_hdf5(fname.psds(subject=args.subject), psds, overwrite=True)
+        write_hdf5(fname.psds_meg(subject=args.subject, ses='01'), psds, overwrite=True)
     # TODO: save freqs
 
 # Add a PSD plot to the report.
-raw.pick_types(meg=False, eeg=True, eog=False, stim=False, ecg=False, exclude=[])
+raw.pick_types(meg=True, eeg=False, eog=False, stim=False, ecg=False, exclude=[])
 info = pick_info(raw.info, sel=None)
 layout = find_layout(info, exclude=[])
 
@@ -81,9 +80,9 @@ layout = find_layout(info, exclude=[])
 def on_pick(ax, ch_idx):
     """Create a larger PSD plot for when one of the tiny PSD plots is
        clicked."""
-    ax.plot(psds['freqs'], psds['PASAT_run1_1'][ch_idx], color='C2',
+    ax.plot(psds['freqs'], psds['PASAT_run1'][ch_idx], color='C2',
             label='pasat run 1')
-    ax.plot(psds['freqs'], psds['PASAT_run2_1'][ch_idx], color='C3',
+    ax.plot(psds['freqs'], psds['PASAT_run2'][ch_idx], color='C3',
             label='pasat run 2')
     ax.legend()
     ax.set_xlabel('Frequency')
@@ -98,8 +97,8 @@ axes = iter_topography(info, layout, on_pick=on_pick, fig=fig,
 for ax, ch_idx in axes:
     #print(ax)
     handles = [
-        ax.plot(psds['freqs'], psds['PASAT_run1_1'][ch_idx], color='C2'),
-        ax.plot(psds['freqs'], psds['PASAT_run2_1'][ch_idx], color='C3'),
+        ax.plot(psds['freqs'], psds['PASAT_run1'][ch_idx], color='C2'),
+        ax.plot(psds['freqs'], psds['PASAT_run2'][ch_idx], color='C3'),
     ]
 fig.legend(handles)
 

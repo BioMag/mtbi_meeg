@@ -48,13 +48,13 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
         # Run a detection algorithm for the onsets of eye blinks (EOG) and heartbeat artefacts (ECG)
         eog_events = find_eog_events(raw_filt)
         eog_epochs = Epochs(raw_filt, eog_events, tmin=-0.5, tmax=0.5, preload=True)
-        #TODO: skip eog events for ec
-        if ecg_channel in raw_filt.info['ch_names']:
-                            ecg_events, ch, _ = find_ecg_events(raw_filt, ch_name=ecg_channel)
-                            ecg_epochs = Epochs(raw_filt, ecg_events, tmin=-0.5, tmax= 0.5, preload=True)
-                            ecg_exists = True
-        else:
-            ecg_exists = False
+       
+        try:
+            ecg_events, ch, _ = find_ecg_events(raw_filt, ch_name=ecg_channel)
+        except ValueError:
+            ecg_events, ch, _ =  find_ecg_events(raw_filt)
+        ecg_epochs = Epochs(raw_filt, ecg_events, tmin=-0.5, tmax= 0.5, preload=True)
+
         # Perform ICA decomposition
         ica = ICA(n_components=0.99, random_state=0).fit(raw_filt)
     
@@ -95,9 +95,9 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
                                 tags=(f'{task}', 'EOG', 'ICA'),
                                 replace=True
                                 )
-            if ecg_exists:
-                if len(bads_ecg)>0:
-                    report.add_ica(ica=ica, 
+  
+            if len(bads_ecg)>0:
+                report.add_ica(ica=ica, 
                                     title=f' {task}' + ' ECG', 
                                     inst=raw_filt, 
                                     picks=bads_ecg,
@@ -105,7 +105,7 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
                                     ecg_scores=scores_ecg,
                                     tags=(f'{task}', 'ECG', 'ICA'),
                                     replace=True
-                                    )
+                                )
             # report.add_figure(
             #     ica.plot_scores(scores_eog, exclude=bads_eog, title=date_time, show=False),
             #     f'{task}: EOG scores', replace=True, tags=('EOG', f'{task}', 'ICA'))
@@ -114,45 +114,17 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
                 ica.plot_overlay(eog_epochs.average(), title=date_time, show=False),
                 f'{task}: EOG overlay', replace=True, tags=(f'{task}', 'ICA', 'EOG', 'overlay'))
             
-            if ecg_exists:
+  
             #     report.add_figure(
             #         ica.plot_scores(scores_ecg, exclude=bads_ecg, title=date_time, show=False),
             #         f'{task}: ECG scores', replace=True, tags=('ECG', f'{task}', 'ICA'))
                 
-                report.add_figure(
-                    ica.plot_overlay(ecg_epochs.average(), title=date_time, show=False),
-                    f'{task}: ECG overlay', replace=True, tags=(f'{task}', 'ICA', 'ECG', 'overlay'))
+            report.add_figure(
+                 ica.plot_overlay(ecg_epochs.average(), title=date_time, show=False),
+                 f'{task}: ECG overlay', replace=True, tags=(f'{task}', 'ICA', 'ECG', 'overlay'))
                 
-            #     if len(bads_ecg) == 1:
-            #         report.add_figure(
-            #             ica.plot_properties(ecg_epochs, bads_ecg, show=False),
-            #             [f'{task}: ECG Component {i:02d}' for i in bads_ecg],
-            #             replace=True, tags=('ECG', f'{task}', 'ICA'))
-            #     elif len(bads_ecg) > 1:
-            #         report.add_figure(
-            #             ica.plot_properties(ecg_epochs, bads_ecg, show=False),
-            #             f'{task}: ECG component properties', 
-            #             #captions=[f'{task}: Component {i:02d}' for i in bads_ecg],
-            #             replace=True, tags=('ECG', f'{task}', 'ICA'))
-                    
-                    
-            # if len(bads_eog) == 1:
-            #     report.add_figure(
-            #         ica.plot_properties(eog_epochs, bads_eog, show=False),
-            #         [f'{task}: EOG Component {i:02d}' for i in bads_eog],
-            #         replace=True, tags=('EOG', f'{task}', 'ICA'))
-            # elif len(bads_eog) > 1:
-            #     report.add_figure(
-            #         ica.plot_properties(eog_epochs, bads_eog, show=False),
-            #         f'{task}: EOG component properties',
-            #         #captions=[f'{task}: Component {i:02d}' for i in bads_eog],
-            #         replace=True, tags=('EOG', f'{task}', 'ICA'))
+
     
             report.save(fname.report_html(subject=args.subject),
                         overwrite=True, open_browser=False)
         
-        with open("ecg_puuttuu.txt", "a") as filu:
-            filu_name = task_from_fname(filt_fname)
-            if not ecg_exists:
-                filu.write(str(args.subject)+filu_name+'\n')
-            filu.close()
