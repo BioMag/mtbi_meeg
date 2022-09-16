@@ -41,16 +41,18 @@ global_tot = []
 frontal_tot = []
 occipital_tot = []
 
+# Get information for each channel
 for i in range(n_channels):
     global_tot.append(log_df.iloc[:, 0+n_f_bands*i:n_f_bands+n_f_bands*i])
     if i < 23:
         frontal_tot.append(log_df.iloc[:, 0+n_f_bands*i:n_f_bands+n_f_bands*i])
     if i > 54:
         occipital_tot.append(log_df.iloc[:, 0+n_f_bands*i:n_f_bands+n_f_bands*i]) 
-# ROI averages
+# global_tot is a list on dataframes (n_f_bands x (subjects + tasks)). Each element of this list represents a single channel
 global_df = np.add(global_tot[0], global_tot[1])
 frontal_df = np.add(frontal_tot[0], frontal_tot[1])
 occipital_df = np.add(occipital_tot[0], occipital_tot[1])
+# Sum the dataframes such that we get one dataframe (n_f_bands x (subjects + tasks)) and the total bandpower for each frequency band
 for i in range(n_channels-3):
     global_df = np.add(global_df, global_tot[i+2])
     if i < 21:
@@ -59,6 +61,7 @@ for i in range(n_channels-3):
         occipital_df = np.add(occipital_df, occipital_tot[i+2])
 # Problem: for channel 64 there are only 88 frequency bands?? 
 
+#Divide the total bandpowers by the number of channels
 global_df = np.divide(global_df, 63)
 frontal_df = np.divide(frontal_df, 22)
 occipital_df = np.divide(occipital_df, 9)
@@ -67,9 +70,11 @@ global_df.insert(0, 'Group', groups)
 frontal_df.insert(0, 'Group', groups)
 occipital_df.insert(0, 'Group', groups)
 
+# Calculate the number of patients and controls
 controls = len(global_df.loc[global_df['Group'] == 0])/len(tasks)
 patients = len(global_df.loc[global_df['Group']==1])/len(tasks)
 
+#This is to be implemented
 
 # # Plot band powers for a single channel and a single subject
 # fig3, ax3 = plt.subplots()
