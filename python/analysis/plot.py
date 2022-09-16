@@ -6,7 +6,7 @@ Created on Fri Sep 16 10:28:20 2022
 @author: aino
 
 Plots ROI grand averages for a task
-
+THIS DOES NOT WORK YET
 """
 from readdata import dataframe as df
 import numpy as np
@@ -22,7 +22,7 @@ for i in df.index:
         task = i.removeprefix(subjects[0]+'_')
         tasks.append(task)
 groups = df.loc[:, 'Group']
-n_f_bands = 6
+n_f_bands = int(len(df.columns)/64)
 n_channels = 64
 
 if n_f_bands == 6:
@@ -40,14 +40,28 @@ log_df = np.log10(df.iloc[:, 2:n_f_bands*n_channels+1])
 global_tot = []
 frontal_tot = []
 occipital_tot = []
-for i in range(n_f_bands):
-    global_tot.append(np.sum(log_df.iloc[:, 0+64*i:64+64*i], axis=1))
-    frontal_tot.append(np.sum(log_df.iloc[:, 0+64*i:22+64*i], axis=1))
-    occipital_tot.append(np.sum(log_df.iloc[:,60+64*i:63+64*i], axis=1))
+
+for i in range(n_channels):
+    global_tot.append(log_df.iloc[:, 0+n_f_bands*i:n_f_bands+n_f_bands*i])
+    if i < 23:
+        frontal_tot.append(log_df.iloc[:, 0+n_f_bands*i:n_f_bands+n_f_bands*i])
+    if i > 54:
+        occipital_tot.append(log_df.iloc[:, 0+n_f_bands*i:n_f_bands+n_f_bands*i]) 
 # ROI averages
-global_df = np.divide(np.transpose(pd.DataFrame(global_tot)), 64)
-frontal_df = np.divide(np.transpose(pd.DataFrame(frontal_tot)), 22)
-occipital_df = np.divide(np.transpose(pd.DataFrame(occipital_tot)), 3)
+global_df = np.add(global_tot[0], global_tot[1])
+frontal_df = np.add(frontal_tot[0], frontal_tot[1])
+occipital_df = np.add(occipital_tot[0], occipital_tot[1])
+for i in range(n_channels-3):
+    global_df = np.add(global_df, global_tot[i+2])
+    if i < 21:
+        frontal_df = np.add(frontal_df, frontal_tot[i+2])
+    if i < 6:
+        occipital_df = np.add(occipital_df, occipital_tot[i+2])
+# Problem: for channel 64 there are only 88 frequency bands?? 
+
+global_df = np.divide(global_df, 63)
+frontal_df = np.divide(frontal_df, 22)
+occipital_df = np.divide(occipital_df, 9)
 # Insert 'Group' column
 global_df.insert(0, 'Group', groups)
 frontal_df.insert(0, 'Group', groups)
@@ -57,15 +71,15 @@ controls = len(global_df.loc[global_df['Group'] == 0])/len(tasks)
 patients = len(global_df.loc[global_df['Group']==1])/len(tasks)
 
 
-# Plot band powers for a single channel and a single subject
-fig3, ax3 = plt.subplots()
-sub_df =log_df.loc[log_df.index==df.index[0]]
-sub_array = []
-channel = 1 
-for i in range(n_f_bands):
-    sub_array.append(sub_df.iloc[:, channel-1+64*i])
-ax3.plot(channels, pd.DataFrame(sub_array))
-plt.title('Sub-'+df.index[0]+' Channel '+str(channel))
+# # Plot band powers for a single channel and a single subject
+# fig3, ax3 = plt.subplots()
+# sub_df =log_df.loc[log_df.index==df.index[0]]
+# sub_array = []
+# channel = 1 
+# for i in range(n_f_bands):
+#     sub_array.append(sub_df.iloc[:, channel-1+64*i])
+# ax3.plot(channels, pd.DataFrame(sub_array))
+# plt.title('Sub-'+df.index[0]+' Channel '+str(channel))
 
 
 

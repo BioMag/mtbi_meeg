@@ -35,7 +35,7 @@ wide_bands = [(0,3), (3,7), (7,11), (11,34), (34,40), (40,90)] # List of freq. i
 channel_scaling = True
 
 # Define which files to read for each subject
-chosen_tasks = tasks[0] # Choose tasks (ec: 0, eo: 1, pasat1: 2, pasat2: 3)
+chosen_tasks = tasks[2] # Choose tasks (ec: 0, eo: 1, pasat1: 2, pasat2: 3)
 subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks] # length = subjects x chosen_tasks
 
 # TODO: Choose region of interest (not implemented yet)
@@ -44,27 +44,14 @@ channels = []
 
 # Choose frequency bands
 # TODO: these do not seem to do anything?? 
-change_bands = True 
+change_bands = True
 
-# Choose what to plot
-plot_tasks = False
-plot_averages = False
-
-# Choose one channel and subject to be plotted
-channel = 59
-chosen_subject = '09P'
-plot_array = [] # Contains len(chosen_tasks) vectors (length = 89) (89 frequency bands)
 
 
 
 # Create a two dimensional list to which the data will be saved
 all_bands_vectors = [] # Contains n (n = subjects x chosen_tasks) vectors (length = 5696 = 64 x 89) (64 channels, 89 frequency bands)
 
-
-# Lists for grand average and ROI
-averages_controls = [[], [], []] # Contains 3 lists (all, frontal, occipital)(length = len(chosen_tasks) x controls) of vectors (lenght = 39)(39 frequency bands)
-averages_patients= [[], [], []] # all, frontal, occipital
-averages_problem = [] #TODO: what is this?
 
 
 """
@@ -86,7 +73,7 @@ for pair in subjects_and_tasks:
         file.close()
         
     # Convert list to array    
-    sub_bands_array = np.array(sub_bands_list) # m x n matrix (m = frequency bands, n=channels)
+    sub_bands_array = np.array(sub_bands_list)[0:90, :] # m x n matrix (m = frequency bands, n=channels)
     
     
     if change_bands: #If we want to aggregate 1 Hz freq bands to concentional delta, theta, alpha, etc.
@@ -104,34 +91,7 @@ for pair in subjects_and_tasks:
     # Add vector to matrix
     all_bands_vectors.append(sub_bands_vec)
         
-    """
-    For plotting
-    """
-    # Convert the array to dB
-    log_array = 10* np.log10(sub_bands_array)  # 64 x 39 matrix
-    
-    
-    # Plot different tasks for one subject and channel
-    if chosen_subject in subject:
-        plot_array.append(log_array[:, channel])
-    
-
-    # Grand average and ROI 
-    sum_all = np.sum(log_array, axis = 1) # Vector (length = 39)
-    sum_frontal = np.sum(log_array[:, 0:22], axis = 1) # Vector (length = 39)
-    sum_occipital = np.sum(log_array[:, 60:63], axis = 1) # Vector (length = 39)
-    
-    if 'P' in subject:
-        averages_patients[0].append(np.divide(sum_all, 64))
-        averages_patients[1].append(np.divide(sum_frontal, 22))
-        averages_patients[2].append(np.divide(sum_occipital, 3))
-    elif 'C' in subject:
-        averages_controls[0].append(np.divide(sum_all, 64))
-        averages_controls[1].append(np.divide(sum_frontal, 22))
-        averages_controls[2].append(np.divide(sum_occipital, 3))
-    else:
-        averages_problem.append(subject)
-    
+   
 """
 Creating a data frame
 """
