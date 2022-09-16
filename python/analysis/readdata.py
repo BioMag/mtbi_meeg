@@ -12,21 +12,28 @@ Plots control vs patient grand average and ROI averages. Plots spectra for diffe
 import numpy as np
 import os
 import csv
+import json
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from math import log
 from sklearn.preprocessing import scale
 
+
+#Open meg ROI dict
+with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/ROI_chs.txt', 'r') as ROIfile:
+    ROI_chs = ROIfile.readlines()
+    ROIfile.close()
+    
+ROI_chs = json.loads(ROI_chs[0]) 
+
 # Get the list of subjects
-with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/subjects.txt', 'r') as subjects_file:
+with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/subjects.txt', 'r') as subjects_file:
     subjects = subjects_file.readlines()
     subjects_file.close()
     
-tasks = [['ec_1', 'ec_2', 'ec_3'], 
-         ['eo_1', 'eo_2', 'eo_3'], 
-         ['PASAT_run1_1', 'PASAT_run1_2'], 
-         ['PASAT_run2_1', 'PASAT_run2_2']]
+tasks = ['PASAT_run1', 
+         'PASAT_run2'], 
 
 wide_bands = [(0,4), (4,7), (7,12), (12,30), (30,40), (40,90)] # List of freq. indices (Note: if the bands are changed in 04_bandpower.py, these need to be modified too.)
 #TODO: indexes or freqs?? 
@@ -35,7 +42,7 @@ wide_bands = [(0,4), (4,7), (7,12), (12,30), (30,40), (40,90)] # List of freq. i
 channel_scaling = True
 
 # Define which files to read for each subject
-chosen_tasks = tasks[0] # Choose tasks (ec: 0, eo: 1, pasat1: 2, pasat2: 3)
+chosen_tasks = tasks[1] # Choose tasks (pasat1: 0, pasat2: 1)
 subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks] # length = subjects x chosen_tasks
 
 # TODO: Choose region of interest (not implemented yet)
@@ -51,8 +58,8 @@ plot_tasks = True
 plot_averages = True
 
 # Choose one channel and subject to be plotted
-channel = 59
-chosen_subject = '09C'
+channel = 100 #MEG channel
+chosen_subject = '26P'
 plot_array = [] # Contains len(chosen_tasks) vectors (length = 89) (89 frequency bands)
 
 
@@ -71,79 +78,86 @@ averages_problem = [] #TODO: what is this?
 Reading data
 """
 # Go through all the subjects
+indices = [] # Create indices for dataframe
 for pair in subjects_and_tasks:
     subject, task = pair[0].rstrip(), pair[1] # Get subject & task from subjects_and_tasks
-    bandpower_file = "/net/theta/fishpool/projects/tbi_meg/k22_processed/sub-" + subject + "/ses-01/eeg/bandpowers/" + task + '.csv'
+    
+    bandpower_file = "/net/theta/fishpool/projects/tbi_meg/k22_processed/sub-" + subject + "/ses-01/meg/bandpowers/" + task + '.csv'
     
     # Create a 2D list to which the read data will be added
     sub_bands_list = [] # n_freq x 64 matrix (64 channels, n_freq frequency bands)
     
     # Read csv file and save the data to f_bands_list
-    with open(bandpower_file, 'r') as file:
-        reader = csv.reader(file)
-        for f_band in reader: #Goes through each frequency band. 
-            sub_bands_list.append([float(f) for f in f_band])
-        file.close()
-        
-    # Convert list to array    
-    sub_bands_array = np.array(sub_bands_list) # m x n matrix (m = frequency bands, n=channels)
     
-    
-    if change_bands: #If we want to aggregate 1 Hz freq bands to concentional delta, theta, alpha, etc.
-        sub_bands_list = []
-        sub_bands_list.append([np.sum(sub_bands_array[slice(*t),:], axis=0) for t in wide_bands])
-        #create array again
-        sub_bands_array = np.array(sub_bands_list)[0] #apparently there is annyoing extra dimension
-    
-    if channel_scaling: #Normalize each band
-        ch_tot_powers = np.sum(sub_bands_array, axis = 0)
-        sub_bands_array = sub_bands_array / ch_tot_powers[None,:]
-    
-    sub_bands_vec = np.concatenate(sub_bands_array.transpose())
-        
-    # Add vector to matrix
-    all_bands_vectors.append(sub_bands_vec)
-        
-    """
-    For plotting
-    """
-    # Convert the array to dB
-    log_array = 10* np.log10(sub_bands_array)  # 64 x 39 matrix
-    
-    
-    # Plot different tasks for one subject and channel
-    if chosen_subject in subject:
-        plot_array.append(log_array[:, channel])
-    
+    try:
+        with open(bandpower_file, 'r') as file:
+            reader = csv.reader(file)
+            for f_band in reader: #Goes through each frequency band. 
+                sub_bands_list.append([float(f) for f in f_band])
+            file.close()
+            
+        i = pair[0].rstrip()+'_'+pair[1]
+        indices.append(i)
 
-    # Grand average and ROI 
-    sum_all = np.sum(log_array, axis = 1) # Vector (length = 39)
-    sum_frontal = np.sum(log_array[:, 0:22], axis = 1) # Vector (length = 39)
-    sum_occipital = np.sum(log_array[:, 54:63], axis = 1) # Vector (length = 39)
+            
+        # Convert list to array    
+        sub_bands_array = np.array(sub_bands_list) # m x n matrix (m = frequency bands, n=channels)
+        
+        
+        if change_bands: #If we want to aggregate 1 Hz freq bands to concentional delta, theta, alpha, etc.
+            sub_bands_list = []
+            sub_bands_list.append([np.sum(sub_bands_array[slice(*t),:], axis=0) for t in wide_bands])
+            #create array again
+            sub_bands_array = np.array(sub_bands_list)[0] #apparently there is annyoing extra dimension
+        
+        if channel_scaling: #Normalize each band
+            ch_tot_powers = np.sum(sub_bands_array, axis = 0)
+            sub_bands_array = sub_bands_array / ch_tot_powers[None,:]
+        
+        sub_bands_vec = np.concatenate(sub_bands_array.transpose())
+            
+        # Add vector to matrix
+        all_bands_vectors.append(sub_bands_vec)
+        
+            
+        """
+        For plotting
+        """
+        # Convert the array to dB
+        log_array = 10* np.log10(sub_bands_array)  # 64 x 39 matrix
+        
+        
+        # Plot different tasks for one subject and channel
+        if chosen_subject in subject:
+            plot_array.append(log_array[:, channel])
+        
     
-    
-    #TODO: check deviations!
-    
-    if 'P' in subject:
-        averages_patients[0].append(np.divide(sum_all, 64))
-        averages_patients[1].append(np.divide(sum_frontal, 22))
-        averages_patients[2].append(np.divide(sum_occipital, 3))
-    elif 'C' in subject:
-        averages_controls[0].append(np.divide(sum_all, 64))
-        averages_controls[1].append(np.divide(sum_frontal, 22))
-        averages_controls[2].append(np.divide(sum_occipital, 9))
-    else:
-        averages_problem.append(subject)
-    
+        # Grand average and ROI 
+        sum_all = np.sum(log_array, axis = 1) # Vector (length = 39)
+        sum_frontal = np.sum(log_array[:, ROI_chs['frontal']], axis = 1) # Vector (length = 39)
+        sum_occipital = np.sum(log_array[:, ROI_chs['occipital']], axis = 1) # Vector (length = 39)
+        
+        
+        #TODO: check deviations!
+        
+        if 'P' in subject:
+            averages_patients[0].append(np.divide(sum_all, 306))
+            averages_patients[1].append(np.divide(sum_frontal, len(ROI_chs['frontal'])))
+            averages_patients[2].append(np.divide(sum_occipital, len(ROI_chs['occipital'])))
+        elif 'C' in subject:
+            averages_controls[0].append(np.divide(sum_all, 306))
+            averages_controls[1].append(np.divide(sum_frontal, len(ROI_chs['frontal'])))
+            averages_controls[2].append(np.divide(sum_occipital,  len(ROI_chs['occipital'])))
+        else:
+            averages_problem.append(subject)
+            
+    except FileNotFoundError:
+        print(f'Could not fing the MEG bandpowerfile for {subject}')
+        
 """
 Creating a data frame
 """
 
-# Create indices for dataframe
-indices = []
-for i in subjects_and_tasks:
-    i = i[0].rstrip()+'_'+i[1]
-    indices.append(i)
 
 # Convert numpy array to dataframe
 dataframe = pd.DataFrame(np.array(all_bands_vectors), indices) #n x m matrix where n = subjects x tasks, m = channels x frequency bands
