@@ -189,7 +189,7 @@ if plot_averages:
     fig, axes = plt.subplots(1,3)
     axes[0].plot([x for x in range(1,90)], controls_average, label='Controls')
     axes[0].plot([x for x in range(1,90)], patients_average, label='Patients')
-    axes[1].title.set_text('Global average')
+    axes[0].title.set_text('Global average')
     axes[0].legend()
 
     # Plot region of interest
