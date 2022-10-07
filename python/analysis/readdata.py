@@ -175,9 +175,10 @@ if plot_tasks:
     fig3, ax3 = plt.subplots()
     for index in range(len(chosen_tasks)):
         ax3.plot([x for x in range(1,90)], plot_array[index], label=chosen_tasks[index])
-    plt.title('Sub-'+chosen_subject+' Channel '+str(channel + 1))
+    plt.title('Reference plot: Subject '+ chosen_subject +' - Channel '+ str(channel + 1))
     ax3.legend()
-
+    ax3.set_ylabel('Normalized PSDs')
+    ax3.set_xlabel('Frequency (Hz)')
 
 # Calculate and plot grand average patients vs controls 
 if plot_averages:
@@ -191,6 +192,8 @@ if plot_averages:
     axes[0].plot([x for x in range(1,90)], patients_average, label='Patients')
     axes[0].title.set_text('Global average')
     axes[0].legend()
+    axes[0].set_ylabel('Normalized PSDs')
+    axes[0].set_xlabel('Frequency (Hz)')
 
     # Plot region of interest
     # Occipital lobe (channels 55-64)
@@ -203,6 +206,7 @@ if plot_averages:
     axes[1].plot([x for x in range(1,90)], patients_average_o, label='Patients')
     axes[1].title.set_text('Frontal lobe')
     axes[1].legend()
+    axes[1].set_xlabel('Frequency (Hz)')
 
     # Frontal lobe (channels 1-22 (?))
     controls_sum_f = np.sum(averages_controls[2], axis = 0)
@@ -214,15 +218,4 @@ if plot_averages:
     axes[2].plot([x for x in range(1,90)], patients_average_f, label='Patients')
     axes[2].title.set_text('Occipital lobe')
     axes[2].legend()
-    
-    
-    fig.supxlabel('Frequency (Hz)')
-    fig.supylabel('Normalized PSDs')
-    
-
-
-    
-
-
-
-
+    axes[2].set_xlabel('Frequency (Hz)')
