@@ -44,7 +44,7 @@ channels = []
 
 # Choose frequency bands
 # TODO: these do not seem to do anything?? 
-change_bands = True 
+change_bands = False 
 
 # Choose what to plot
 plot_tasks = True
@@ -99,7 +99,7 @@ for pair in subjects_and_tasks:
         ch_tot_powers = np.sum(sub_bands_array, axis = 0)
         sub_bands_array = sub_bands_array / ch_tot_powers[None,:]
     
-    sub_bands_vec = np.concatenate(sub_bands_array.transpose())
+    sub_bands_vec = np.concatenate(sub_bands_array.transpose()) #so we are concatting n_ch * m_bands matrix here? Joined by row.
         
     # Add vector to matrix
     all_bands_vectors.append(sub_bands_vec)
@@ -164,8 +164,6 @@ dataframe.insert(1, 'Subject', subs)
 Plotting
 """
 #TODO: modify this so that the plots work if the frequency bands are changed
-#TODO: check https://www.python-graph-gallery.com/123-highlight-a-line-in-line-plot for deviations. Construct a dataframe? Move plotting to new script entirely?
-
 patients = sum(groups)/len(chosen_tasks)
 controls = len(groups)/len(chosen_tasks)-patients
 
