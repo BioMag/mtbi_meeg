@@ -31,7 +31,7 @@ tasks = [['ec_1', 'ec_2', 'ec_3'],
 wide_bands = [(0,3), (3,7), (7,11), (11,34), (34,40), (40,90)] # List of freq. indices (Note: if the bands are changed in 04_bandpower.py, these need to be modified too.)
 
 
-# Choose normalization methods
+# Choose normalization methods. TODO: is this wanted for the plots though?
 channel_scaling = True
 
 # Define which files to read for each subject
