@@ -218,7 +218,7 @@ def LOOCV_solver(solver, X, y, groups):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     
-    CV = True
+    CV = False
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2")
     parser.add_argument('--clf', type=str, help="classifier", default="LR")

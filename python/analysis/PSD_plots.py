@@ -14,21 +14,20 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from readdata import chosen_tasks, dataframe as df
 
-#check https://www.python-graph-gallery.com/123-highlight-a-line-in-line-plot for deviations.
-
-
-#TODO: vectorized data back to matrix (n*m), from which we should calculate global powers?
+#vectorized data back to matrix (n*m), from which we should calculate global powers
 #So each df row now has [ch1_freq1, ..., ch64_freq89, ch2_freq1, ..., ch64_freq1, ...ch64_freq64] 
 
-#-> revert these? or take from before? 
+#-> revert these
 
 subject_array_list = [];
 global_averages = [];
 
 drop_subs=False
+ROI = 'All' #One of 'All', 'Frontal', 'Occipital', 'FTC', 'Centro-parietal'
 
-freqs=np.array([x for x in range(1,90)])
+freqs=np.array([x for x in range(1,90)]) #todo: pls no hardcoded values!
 
+#check this out for rois: https://www.nature.com/articles/s41598-021-02789-9
 
 for idx in df.index:
     subj_data=df.loc[idx]
@@ -38,6 +37,8 @@ for idx in df.index:
     #reshape to 2D array again: (+ change to logscale)
     subj_arr = np.reshape(subj_arr, (64, 89)) #Rows=channels, cols=freqbands
     
+    if ROI == 'frontal': #TODO: check these channels
+        subj_arr = subj_arr[0:22,:]
     #calculate global average power accross all chs:
     GA = np.mean(subj_arr, axis=0)
     global_averages.append(GA)
@@ -75,17 +76,45 @@ for subj in plot_df['Subject'].values:
     i=list(plot_df['Subject'].values).index(subj)
     
     data=data.drop(['Group', 'Subject'], axis=1)
-    plt.plot(freqs, data.values.T, color=col, alpha=0.4)
+    plt.plot(freqs, data.values.T, color=col, alpha=0.2)
     plt.text(90,data.values.T[-1], subj, horizontalalignment='left', size='small', color=col)
 
 #Calculate also means of controls and patients
 group_means=plot_df.groupby('Group').mean()
 
-plt.plot(freqs, group_means.iloc[0,:], marker='.', color='green', linewidth=1)
-plt.plot(freqs, group_means.iloc[1,:], marker='.', color='red', linewidth=1)
+plt.plot(freqs, group_means.iloc[0,:], 'g--', linewidth=1, label='Controls')
+plt.plot(freqs, group_means.iloc[1,:], 'r-.', linewidth=1, label='Patients')
 
 plt.xlabel('Frequency (Hz)')
 plt.ylabel('PSD (dB)') #only if no channel scaling
+plt.title(f'{ROI}')
+plt.legend()
+
+#Make SD plot
+plt.figure()
+group_sd=plot_df.groupby('Group').std()
+
+
+plt.plot(freqs, group_means.iloc[0,:], 'g--', linewidth=1, label='Controls')
+plt.plot(freqs, group_means.iloc[1,:], 'r-.', linewidth=1, label='Patients')
+
+c_plus=group_means.iloc[0,:]+group_sd.iloc[0,:]
+c_minus=group_means.iloc[0,:]-group_sd.iloc[0,:]
+plt.fill_between(freqs, c_plus, c_minus, color='g', alpha=.2, linewidth=.5)
+
+p_plus=group_means.iloc[1,:]+group_sd.iloc[1,:]
+p_minus=group_means.iloc[1,:]-group_sd.iloc[1,:]
+plt.fill_between(freqs, p_plus, p_minus, color='r', alpha=.2, linewidth=.5)
+
+plt.xlabel('Frequency (Hz)')
+plt.ylabel('PSD (dB)') #only if no channel scaling
+plt.legend()
+
+
+#TODO: violin plots?
+
+
+
 
 
 
