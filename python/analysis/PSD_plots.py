@@ -25,6 +25,8 @@ from readdata import chosen_tasks, dataframe as df
 subject_array_list = [];
 global_averages = [];
 
+drop_subs=False
+
 freqs=np.array([x for x in range(1,90)])
 
 
@@ -48,7 +50,15 @@ plot_df.set_index(df.index)
 plot_df['Group'] =  df['Group'].values
 plot_df['Subject'] = df['Subject'].values
 
+
+
 plot_df = plot_df.iloc[::2,:] #take every other value(=1obs. per subject)
+
+#The following subjects have very low power in PASAT_1:
+subs_to_drop=['15P', '19P', '31P', '36C', '08P', '31C']
+if drop_subs:
+    for sub in subs_to_drop:
+        plot_df = plot_df.drop(plot_df[plot_df['Subject']==sub].index)
 
 # Change the style of plot
 plt.style.use('seaborn-darkgrid')
@@ -76,3 +86,6 @@ plt.plot(freqs, group_means.iloc[1,:], marker='.', color='red', linewidth=1)
 
 plt.xlabel('Frequency (Hz)')
 plt.ylabel('PSD (dB)') #only if no channel scaling
+
+
+

@@ -19,7 +19,7 @@ import numpy as np
 from pathlib import Path
 
 
-from config_eeg import fname
+from config_eeg import fname, fmax
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)
@@ -29,13 +29,13 @@ args = parser.parse_args()
 # The frequency bands
 # f_bands = [(1,3), (3,5.2), (5.2,7.6), (7.6,10.2), (10.2, 13), (13,16),
 #           (16,19.2), (19.2,22.6), (22.6,26.2), (26.2,30), (30,34), (34,38.2), (38.2,42.6)]
-f_bands_2 = [(x, x+1) for x in range(1,40)]
+f_bands_2 = [(x, x+1) for x in range(1,fmax)]
 
 # A list for corruprted or missing psds files
 corrupted_psds_files = []
 
 try:
-    subject_psds = fname.psds(subject=args.subject)
+    subject_psds = fname.psds(subject=args.subject, ses='01')
     
     f = h5py.File(subject_psds, 'r')
     psds_keys = list(f.keys())
@@ -77,7 +77,7 @@ except:
     print("Psds file corrupted or missing")
     corrupted_psds_files.append(args.subject)
     
-with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/psds_corrupted_or_missing.txt', 'a') as file:
+with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/psds_corrupted_or_missing.txt', 'a') as file:
     for bad_file in corrupted_psds_files:
         file.write(bad_file+'\n')
     file.close()

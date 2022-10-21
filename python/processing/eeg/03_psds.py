@@ -29,7 +29,7 @@ args = parser.parse_args()
 psds = dict()
 
 # Maximum frequency at which to compute PSD
-fmax = 40
+fmax = 90
 
 
 
@@ -53,7 +53,7 @@ for psds_fname, clean_fname in all_fnames:
     else:
         task_wo_run = task
     
-    raw = read_raw_fif(fname.clean(subject=args.subject, task=task_wo_run, run=run),
+    raw = read_raw_fif(fname.clean(subject=args.subject, task=task_wo_run, run=run,ses='01'),
                        preload=True)
     
     raw.info['bads']=[]
@@ -75,7 +75,7 @@ for psds_fname, clean_fname in all_fnames:
     # Add some metadata to the file we are writing
     psds['info'] = raw.info
     psds['freqs'] = freqs
-    write_hdf5(fname.psds(subject=args.subject), psds, overwrite=True)
+    write_hdf5(fname.psds(subject=args.subject, ses='01'), psds, overwrite=True)
     # TODO: save freqs
 
 # Add a PSD plot to the report.
