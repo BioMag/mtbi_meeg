@@ -5,7 +5,7 @@ Created on Tue Oct 11 12:18:46 2022
 
 @author: aino
 
-Plots histograms for each frequency band.
+Plots histograms for each frequency band. (should these be moved to plot.py??)
 Performs the Wilcoxon signed rank test. 
 """
 from readdata import dataframe as df
@@ -16,8 +16,9 @@ import pandas as pd
 import numpy as np
 from scipy.stats import wilcoxon
 
-# gdf = gdf.drop(['22P_PASAT_run1_2', '22P_PASAT_run1_1']) #We want matched controls and patients, 22P's control had bad data
-gdf = gdf.drop(['22P_ec_1', '22P_ec_2', '22P_ec_3'])
+#gdf = gdf.drop(['22P_PASAT_run1_2', '22P_PASAT_run1_1']) #We want matched controls and patients, 22P's control had bad data
+#gdf = gdf.drop(['22P_ec_1', '22P_ec_2', '22P_ec_3'])
+#gdf = gdf.drop(['22P_eo_1', '22P_eo_2', '22P_eo_3'])
 patients = gdf.loc[gdf['Group']==1]
 controls = gdf.loc[gdf['Group']==0]
 
@@ -59,6 +60,18 @@ if plot:
         axes[0][i].set_ylabel('')
         axes[0][i].set_xlabel('')
         axes[1][i].set_xlabel('')
+    axes[0][0].set_xlim([-1.2,0])
+    axes[1][0].set_xlim([-1.2, 0])
+    axes[0][1].set_xlim([-1.5,-0.5])
+    axes[1][1].set_xlim([-1.5, -0.5])
+    axes[0][2].set_xlim([-1.75,-0.5])
+    axes[1][2].set_xlim([-1.75, -0.5])
+    axes[0][3].set_xlim([-1.5,-0.5])
+    axes[1][3].set_xlim([-1.5, -0.5])
+    axes[0][4].set_xlim([-2.5,-1])
+    axes[1][4].set_xlim([-2.5, -1])
+    axes[0][5].set_xlim([-1.8,-0.3])
+    axes[1][5].set_xlim([-1.8, -0.3])
     axes[0][0].set_ylabel('Controls')
     axes[1][0].set_ylabel('Patients')
     axes[0][0].title.set_text('Delta')
@@ -82,6 +95,7 @@ res_beta = wilcoxon(x=beta_p, y=beta_c)
 res_gamma = wilcoxon(x=gamma_p, y= gamma_c)
 res_hgamma = wilcoxon(x=hgamma_p, y=hgamma_c)
 
+print(res_delta.pvalue, res_theta.pvalue, res_alpha.pvalue, res_beta.pvalue, res_gamma.pvalue, res_hgamma.pvalue)
 
 
 

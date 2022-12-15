@@ -8,6 +8,7 @@ Works from commandline:
 """
 #
 import os
+import random
 import numpy as np
 import pandas as pd
 import argparse
@@ -17,7 +18,7 @@ import matplotlib.pyplot as plt
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, StratifiedGroupKFold, LeaveOneOut, GroupKFold
+from sklearn.model_selection import train_test_split, GroupKFold, LeaveOneOut, GroupKFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -27,25 +28,48 @@ from readdata import dataframe, tasks #TODO: would want to decide which tasks ar
 
 
 def Kfold_CV_solver(solver, X, y, groups, folds):
+    # Implementation for stratified group k fold cv
+    # Splitting the data into test and train sets
+    sub_list = dataframe.loc[:,['Subject', 'Group']]
+    sub_list.insert(1, 'Index', [x for x in range(sub_list.shape[0])]) # Create indices for each data point
+    subs = dict(sub_list.loc[:,['Index', 'Subject']].values)
+    sub_list = sub_list.drop_duplicates(subset=['Subject']) # Get a list of subjects and their labels 
+    n_p = sub_list.loc[:,'Group'].sum() # Number of patients
+    n_c = sub_list.shape[0] - n_p # not necessary
+    patients = list(sub_list.sort_values(by='Group', ascending=False).iloc[:n_p,1]) # A list of patients
+    controls = list(sub_list.sort_values(by='Group').iloc[:n_c,1]) # A list of controls
+    test_size = sub_list.shape[0] / folds # Determine the size of a single test set 
+    # TODO: currently this only works when test_size is an integer, fix this
+    test_sets = []
+    train_sets = []
+    for i in range(folds):
+          test_set=[random.sample(patients, k=int(test_size/ 2*n_p/n_c)), random.sample(controls, k=int(test_size/2*n_c/n_p))]
+          test_set = [x for x in test_set[0]] +[x for x in test_set[1]]+[x+1 for x in test_set[0]] +[x+1 for x in test_set[1]]
+          patients =[x for x in patients if x not in test_set] # Remove patients that already are included in a test set
+          controls =[x for x in controls if x not in test_set] # Remove controls that are included in a test set
+          train_set = [x for x in subs if x not in test_set] # Train set: subjects not included in test set
+          test_sets.append(test_set)
+          train_sets.append(train_set)
     
-    skf = StratifiedGroupKFold(n_splits=folds, shuffle=True, random_state=20)
-    split = skf.split(X, y, groups) #takes into account the groups (=subjects) when splitting the data
+    split = np.array([test_sets, train_sets])
+    split = split.transpose()
+    # skf = GroupKFold(n_splits=folds)
+    # split = skf.split(X, y, groups) #takes into account the groups (=subjects) when splitting the data
     
     tprs = [] #save results for plotting
     aucs = []
     mean_fpr = np.linspace(0, 1, 100)
     
-    for train_index, test_index in split:
+    for test_index, train_index in split:
         
         X_train, X_test = X.iloc[train_index], X.iloc[test_index]
         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-    
         if solver == "LDA":
             clf = LinearDiscriminantAnalysis(solver='svd')
         elif solver == "SVM":
             clf = SVC(probability=True)
         elif solver == "LR":
-            clf = LogisticRegression(penalty='l1',solver='liblinear',random_state=0)
+            clf = LogisticRegression(penalty='l1', solver='liblinear',random_state=0)
         elif solver=='RF':
             clf = RandomForestClassifier()
      
@@ -179,8 +203,12 @@ def LOOCV_solver(solver, X, y, groups):
         elif solver=='RF':
             clf = RandomForestClassifier()
      
-        else:
-            raise("muumi")
+        else:"""
+136
+Creating a data frame
+137
+"""
+        raise("muumi")
         X_train = X.iloc[train_ids]
         X_test = X.iloc[test_ids]
         
@@ -229,13 +257,13 @@ if __name__ == "__main__":
     #selection_file = f"{args.location}_select_{args.eyes}.csv"
     X, y, group = dataframe.iloc[:,2:dataframe.shape[1]], dataframe.loc[:, 'Group'], dataframe.loc[:, 'Subject']
     
-    save_folder = "/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/figures/heikkiv"
+    save_folder = "/net/tera2/home/aino/work/mtbi-eeg/python/figures"
     save_file = f"{save_folder}/{args.clf}_{args.task}.pdf"
         
 
     print(f"TBIEEG classifcation with {args.clf} data on {args.task} task.")
    
-    fig, ax = plt.subplots() #TODO: should these be given for the functions?
+    fig, ax = plt.subplots() #TODO: should these be given for the functions?heikkiv/work_s2022/mtbi-eeg
     
     if CV:
         results = Kfold_CV_solver(solver=args.clf, X=X, y=y, groups=group, folds=10)
