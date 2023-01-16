@@ -6,7 +6,6 @@ Created on Thu Jun 16 10:21:38 2022
 @author: aino
 
 Reads bandpower data from csv files and creates a matrix whose rows represent each subject. 
-Plots control vs patient grand average and ROI averages. Plots spectra for different tasks and a single subject and channel.
 """
 
 import numpy as np
@@ -53,11 +52,20 @@ def read_data(task, freq_bands):
     channel_scaling = True
     
     to_exclude = []
-    #to_exclude = ['32C', '33C', '34C', '35C', '36C', '37C', '38C', '39C', '40C', '41C', '22P']
+    to_exclude = ['32C', '33C', '34C', '35C', '36C', '37C', '38C', '39C', '40C', '41C', '22P']
     for i in to_exclude:
         subjects.remove(i)
     # Define which files to read for each subject
-    chosen_tasks = tasks[2] # Choose tasks (ec: 0, eo: 1, pasat1: 2, pasat2: 3)
+    if task == 'ec':
+        chosen_tasks = tasks[0]
+    elif task == 'eo':
+        chosen_tasks = tasks[1]
+    elif task == 'PASAT_1':
+        chosen_tasks = tasks[2]
+    elif task == 'PASAT_2': 
+        chosen_tasks = tasks[3]
+    else:
+        raise("Incorrect task")
     subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks] # length = subjects x chosen_tasks
     
     # TODO: Choose region of interest (not implemented yet)
@@ -107,7 +115,7 @@ def read_data(task, freq_bands):
             #create array again
             sub_bands_array = np.array(sub_bands_list)[0] #apparently there is annyoing extra dimension
         
-        if channel_scaling: #Normalize each band
+        if channel_scaling: #Normalize each band('')
             ch_tot_powers = np.sum(sub_bands_array, axis = 0)
             sub_bands_array = sub_bands_array / ch_tot_powers[None,:]
         
@@ -155,8 +163,9 @@ if __name__ == '__main__':
     parser.add_argument('--freq_bands', type=str, help="wide, thin", default="wide")
 
     args = parser.parse_args()
-    print("{args.task} data with {args.freq_bands} frequency bands")
+    print(f"{args.task} data with {args.freq_bands} frequency bands")
     dataframe = read_data(args.task, args.freq_bands)
+    dataframe.to_csv('/net/tera2/home/aino/work/mtbi-eeg/python/analysis/dataframe.csv')
     
     
     

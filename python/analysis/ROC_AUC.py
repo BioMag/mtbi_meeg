@@ -14,62 +14,69 @@ import pandas as pd
 import argparse
 import matplotlib.pyplot as plt
 
-#sfrom sklearn import preprocessing
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, GroupKFold, LeaveOneOut, GroupKFold
+from sklearn.model_selection import train_test_split, GroupKFold, LeaveOneOut, StratifiedGroupKFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import roc_curve, roc_auc_score, RocCurveDisplay, auc
-#from sklearn.covariance import OAS
-from readdata import dataframe, tasks #TODO: would want to decide which tasks are used
+from sklearn.metrics import roc_curve, accuracy_score, RocCurveDisplay, auc
+from statistics import mean, stdev
 
 
-def Kfold_CV_solver(solver, X, y, groups, folds):
-    # Implementation for stratified group k fold cv
-    # Splitting the data into test and train sets
-    sub_list = dataframe.loc[:,['Subject', 'Group']]
-    sub_list.insert(1, 'Index', [x for x in range(sub_list.shape[0])]) # Create indices for each data point
-    subs = dict(sub_list.loc[:,['Index', 'Subject']].values)
-    sub_list = sub_list.drop_duplicates(subset=['Subject']) # Get a list of subjects and their labels 
-    n_p = sub_list.loc[:,'Group'].sum() # Number of patients
-    n_c = sub_list.shape[0] - n_p # not necessary
-    patients = list(sub_list.sort_values(by='Group', ascending=False).iloc[:n_p,1]) # A list of patients
-    controls = list(sub_list.sort_values(by='Group').iloc[:n_c,1]) # A list of controls
-    test_size = sub_list.shape[0] / folds # Determine the size of a single test set 
-    # TODO: currently this only works when test_size is an integer, fix this
-    test_sets = []
-    train_sets = []
-    for i in range(folds):
-          test_set=[random.sample(patients, k=int(test_size/ 2*n_p/n_c)), random.sample(controls, k=int(test_size/2*n_c/n_p))]
-          test_set = [x for x in test_set[0]] +[x for x in test_set[1]]+[x+1 for x in test_set[0]] +[x+1 for x in test_set[1]]
-          patients =[x for x in patients if x not in test_set] # Remove patients that already are included in a test set
-          controls =[x for x in controls if x not in test_set] # Remove controls that are included in a test set
-          train_set = [x for x in subs if x not in test_set] # Train set: subjects not included in test set
-          test_sets.append(test_set)
-          train_sets.append(train_set)
-    
-    split = np.array([test_sets, train_sets])
-    split = split.transpose()
-    # skf = GroupKFold(n_splits=folds)
-    # split = skf.split(X, y, groups) #takes into account the groups (=subjects) when splitting the data
-    
+
+def Kfold_CV_solver(solver, X, y, groups, folds, stratified):
+    if stratified:
+        # Implementation for stratified group k fold cv
+        # Splitting the data into test and train sets
+        sub_list = dataframe.loc[:,['Subject', 'Group']]
+        sub_list.insert(1, 'Index', [x for x in range(sub_list.shape[0])]) # Create indices for each data point
+        subs = dict(sub_list.loc[:,['Index', 'Subject']].values)
+        sub_list = sub_list.drop_duplicates(subset=['Subject']) # Get a list of subjects and their labels 
+        n_p = sub_list.loc[:,'Group'].sum() # Number of patients
+        n_c = sub_list.shape[0] - n_p # not necessary
+        patients = list(sub_list.sort_values(by='Group', ascending=False).iloc[:n_p,1]) # A list of patients
+        controls = list(sub_list.sort_values(by='Group').iloc[:n_c,1]) # A list of controls
+        test_size = sub_list.shape[0] / folds # Determine the size of a single test set 
+        # TODO: currently this only works when test_size is an integer, fix this
+        test_sets = []
+        train_sets = []
+        for i in range(folds):
+              test_set=[random.sample(patients, k=int(test_size/ 2*n_p/n_c)), random.sample(controls, k=int(test_size/2*n_c/n_p))]
+              test_set = [x for x in test_set[0]] +[x for x in test_set[1]]+[x+1 for x in test_set[0]] +[x+1 for x in test_set[1]]
+              patients =[x for x in patients if x not in test_set] # Remove patients that already are included in a test set
+              controls =[x for x in controls if x not in test_set] # Remove controls that are included in a test set
+              train_set = [x for x in subs if x not in test_set] # Train set: subjects not included in test set
+              test_sets.append(test_set)
+              train_sets.append(train_set)
+        
+        split = np.array([train_sets, test_sets], dtype=object)
+        split = split.transpose()
+        # skf = GroupKFold(n_splits=folds)
+        # split = skf.split(X, y, groups) #takes into account the groups (=subjects) when splitting the data
+
+        del X['Subject']
+    else:
+        del X['Subject']
+        skf = StratifiedGroupKFold(n_splits=folds, shuffle=True)
+        #skf = GroupKFold(n_splits=folds) #Tässä ei saa shufflattua 
+        split = skf.split(X, y, groups) #takes into account the groups (=subjects) when splitting the data
+    accuracies =[] # save accuracies
     tprs = [] #save results for plotting
     aucs = []
     mean_fpr = np.linspace(0, 1, 100)
-    
-    for test_index, train_index in split:
-        
+    for train_index, test_index in split:
+
         X_train, X_test = X.iloc[train_index], X.iloc[test_index]
         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+        print(sum(y_test))
         if solver == "LDA":
             clf = LinearDiscriminantAnalysis(solver='svd')
         elif solver == "SVM":
             clf = SVC(probability=True)
         elif solver == "LR":
-            clf = LogisticRegression(penalty='l1', solver='liblinear',random_state=0)
+            clf = LogisticRegression(penalty='l1', solver='liblinear', random_state=0)
         elif solver=='RF':
             clf = RandomForestClassifier()
      
@@ -80,7 +87,7 @@ def Kfold_CV_solver(solver, X, y, groups, folds):
         #clf = make_pipeline(StandardScaler(), clf)
         clf.fit(X_train, y_train)
         pred = clf.predict(X_test).astype(int)
-        
+        accuracies.append(accuracy_score(y_test, pred))
         viz = RocCurveDisplay.from_estimator(
         clf,
         X_test,
@@ -94,7 +101,9 @@ def Kfold_CV_solver(solver, X, y, groups, folds):
         interp_tpr[0] = 0.0
         tprs.append(interp_tpr)
         aucs.append(viz.roc_auc)
-
+    average_accuracy = mean(accuracies)
+    accuracy_std = stdev(accuracies)
+    print(f"Average accuracy: {average_accuracy} \nStandard deviation of accuracies: {accuracy_std}")
     return test_index, pred, tprs, aucs, mean_fpr
 
 
@@ -245,7 +254,7 @@ Creating a data frame
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    
+    dataframe = pd.read_csv('/net/tera2/home/aino/work/mtbi-eeg/python/analysis/dataframe.csv')
     CV = True
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2")
@@ -266,7 +275,7 @@ if __name__ == "__main__":
     fig, ax = plt.subplots() #TODO: should these be given for the functions?heikkiv/work_s2022/mtbi-eeg
     
     if CV:
-        results = Kfold_CV_solver(solver=args.clf, X=X, y=y, groups=group, folds=10)
+        results = Kfold_CV_solver(solver=args.clf, X=X, y=y, groups=group, folds=10, stratified=False)
         ROC_results(results)
         plt.savefig(fname=save_file)
     else:
