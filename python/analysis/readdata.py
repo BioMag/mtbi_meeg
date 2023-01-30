@@ -165,7 +165,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(f"{args.task} data with {args.freq_bands} frequency bands")
     dataframe = read_data(args.task, args.freq_bands)
-    dataframe.to_csv('/net/tera2/home/aino/work/mtbi-eeg/python/analysis/dataframe.csv')
+    dataframe.to_csv('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/analysis/dataframe.csv')
     
     
     
