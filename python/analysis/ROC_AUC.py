@@ -3,8 +3,8 @@ Copyright by Verna Heikkinen 2022
  
 Script for plotting ROC and computing AUC for mTBI classification results on EEG data
 
-Works from commandline:
-    %run ROC_AUC.py --task eo --clf SVM
+
+ To run, use runscript.py 
 """
 #
 import os
@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import argparse
 import matplotlib.pyplot as plt
+import csv
 
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import SVC
@@ -27,6 +28,47 @@ from statistics import mean, stdev
 
 
 def Kfold_CV_solver(solver, X, y, groups, folds, stratified):
+    """
+    A function that fits a classifier to the data using K-Fold cross-validation,
+    computes the ROC and AUC values for each fold.
+
+    Parameters
+    ----------
+    solver : str
+        Classifier that is used.
+    X : DataFrame
+        DESCRIPTION.
+    y : Series
+        DESCRIPTION.
+    groups : Series
+        
+    folds : int
+        Number of folds in CV
+    stratified : bool
+        Defines which CV method is used
+
+    Returns
+    -------
+    test_index : TYPE
+        DESCRIPTION.
+    pred : TYPE
+        DESCRIPTION.
+    tprs : TYPE
+        DESCRIPTION.
+    aucs : TYPE
+        DESCRIPTION.
+    mean_fpr : TYPE
+        DESCRIPTION.
+    average_accuracy : float
+        Mean of accuracies
+    accuracy_std : float
+        Standard deviation of the accuracies
+    AUC : tuple
+        Contains values of mean AUC and std of AUC
+    params : str
+        For saving the results
+
+    """
     if stratified:
         # Implementation for stratified group k fold cv
         # Splitting the data into test and train sets
@@ -50,7 +92,6 @@ def Kfold_CV_solver(solver, X, y, groups, folds, stratified):
               train_set = [x for x in subs if x not in test_set] # Train set: subjects not included in test set
               test_sets.append(test_set)
               train_sets.append(train_set)
-        
         split = np.array([train_sets, test_sets], dtype=object)
         split = split.transpose()
         # skf = GroupKFold(n_splits=folds)
@@ -73,13 +114,16 @@ def Kfold_CV_solver(solver, X, y, groups, folds, stratified):
         print(sum(y_test))
         if solver == "LDA":
             clf = LinearDiscriminantAnalysis(solver='svd')
+            params= "solver=svd" # TODO: better way to keep track of the parameters
         elif solver == "SVM":
             clf = SVC(probability=True)
+            params = "probability=True"
         elif solver == "LR":
             clf = LogisticRegression(penalty='l1', solver='liblinear', random_state=0)
+            params = "penalty='l1', solver='liblinear', random_state=0"
         elif solver=='RF':
             clf = RandomForestClassifier()
-     
+            params = ''
         else:
             raise("muumi")
 
@@ -103,8 +147,9 @@ def Kfold_CV_solver(solver, X, y, groups, folds, stratified):
         aucs.append(viz.roc_auc)
     average_accuracy = mean(accuracies)
     accuracy_std = stdev(accuracies)
-    print(f"Average accuracy: {average_accuracy} \nStandard deviation of accuracies: {accuracy_std}")
-    return test_index, pred, tprs, aucs, mean_fpr
+    AUC = (mean(aucs), stdev(aucs))
+    print(f"Average accuracy: {average_accuracy} \nStandard deviation of accuracies: {accuracy_std}, AUC = {AUC}")
+    return test_index, pred, tprs, aucs, mean_fpr, average_accuracy, accuracy_std, AUC, params
 
 
 def ROC_results(LOOCV_results):
@@ -275,9 +320,13 @@ if __name__ == "__main__":
     fig, ax = plt.subplots() #TODO: should these be given for the functions?heikkiv/work_s2022/mtbi-eeg
     
     if CV:
-        results = Kfold_CV_solver(solver=args.clf, X=X, y=y, groups=group, folds=10, stratified=False)
-        ROC_results(results)
+        test_index, pred, tprs, aucs, mean_fpr, average_accuracy, accuracy_std, AUC, params = Kfold_CV_solver(solver=args.clf, X=X, y=y, groups=group, folds=10, stratified=False)
+        ROC_results((test_index, pred, tprs, aucs, mean_fpr))
         plt.savefig(fname=save_file)
+        with open('/net/tera2/home/aino/work/mtbi-eeg/python/analysis/results.csv', 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow([f"{args.task}", f"{args.clf}", f"{average_accuracy:.2f} +- {accuracy_std:.2f}", f"{AUC[0]:.2f} +- {AUC[1]:.2f}", f"{params}"])
+            f.close()
     else:
         LOOCV_solver(args.clf, X, y, groups=group)
         plt.savefig(fname=f"{save_folder}/loo-ROC_{args.clf}_{args.task}.pdf")
