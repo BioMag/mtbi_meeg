@@ -33,7 +33,7 @@ figures = defaultdict(list)
 exclude = ['emptyroom'] #these don't have eye blinks.
 # bad_subjects = ['01P', '02P', '03P', '04P', '05P', '06P', '07P']#these ica need to be done manually
 all_fnames = zip(
-    get_all_fnames(args.subject, kind='tsss', exclude=exclude),
+    get_all_fnames(args.subject, kind='raw', exclude=exclude),
     get_all_fnames(args.subject, kind='filt', exclude=exclude),
 )
 # raw_fnames = get_all_fnames(args.subject, kind='raw')
@@ -132,7 +132,7 @@ with open_report(fname.report(subject=args.subject)) as report:
     report.save(fname.report_html(subject=args.subject),
                 overwrite=True, open_browser=False)
     
-with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/maxfilter_puuttuu.txt', 'a') as file:
+with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/maxfilter_puuttuu.txt', 'a') as file:
     for bad_file in corrupted_raw_files:
         file.write(bad_file+'\n')
     file.close()

@@ -368,9 +368,9 @@ fname.add('filt', '{processed_data_dir}/sub-{subject}/ses-01/eeg/sub-{subject}_s
 fname.add('clean', '{processed_data_dir}/sub-{subject}/ses-{ses}/eeg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_clean.fif')
 
 # Maxfilter
-fname.add('tsss', '{processed_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_proc-raw_meg_mc_tsss.fif')
-fname.add('pos', '{processed_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_movecomp.pos') 
-fname.add('tsss_log', '{processed_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_tsss_log.log')
+fname.add('tsss', '{raw_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_proc-raw_meg_mc_tsss.fif')
+fname.add('pos', '{raw_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_movecomp.pos') 
+fname.add('tsss_log', '{raw_data_dir}/sub-{subject}/ses-{ses}/meg/sub-{subject}_ses-{ses}_task-{task}_run-0{run}_tsss_log.log')
 
 
 # Files used during EOG and ECG artifact suppression

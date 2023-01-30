@@ -49,12 +49,12 @@ def task_psds():
         yield dict(
             name=f'sub-{subject:02d}',
             file_dep=[
-                fname.clean(subject=subject, task='eyesopen', run=1),
-                fname.filt(subject=subject, task='eyesclosed', run=1),
-                fname.clean(subject=subject, task='pasat', run=1),
-                fname.clean(subject=subject, task='pasat', run=2),
+                fname.clean(subject=subject, task='eyesopen', run=1, ses='01'),
+                fname.clean(subject=subject, task='eyesclosed', run=1, ses='01'),
+                fname.clean(subject=subject, task='pasat', run=1, ses='01'),
+                fname.clean(subject=subject, task='pasat', run=2, ses='01'),
                 '03_psds.py',
             ],
-            targets=[fname.psds(subject=subject)],
+            targets=[fname.psds(subject=subject, ses='01')],
             actions=[f'python 03_psds.py {subject}'],
         )
