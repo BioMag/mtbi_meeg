@@ -12,12 +12,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from readdata import chosen_tasks, dataframe as df
+#from readdata import chosen_tasks, dataframe as df
 
 #vectorized data back to matrix (n*m), from which we should calculate global powers
 #So each df row now has [ch1_freq1, ..., ch64_freq89, ch2_freq1, ..., ch64_freq1, ...ch64_freq64] 
 
 #-> revert these
+df = pd.read_csv('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/analysis/dataframe.csv')
 
 subject_array_list = [];
 global_averages = [];
@@ -31,7 +32,7 @@ freqs=np.array([x for x in range(1,90)]) #todo: pls no hardcoded values!
 
 for idx in df.index:
     subj_data=df.loc[idx]
-    subj_arr = np.array(subj_data)[2:len(subj_data)]
+    subj_arr = np.array(subj_data)[3:len(subj_data)]
     subj_arr = 10*np.log10(subj_arr.astype(float))
     
     #reshape to 2D array again: (+ change to logscale)
