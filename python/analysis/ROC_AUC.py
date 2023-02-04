@@ -222,14 +222,14 @@ if __name__ == "__main__":
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2")
     parser.add_argument('--clf', type=str, help="classifier", default="LR")
-
+    #parser.add_argument('--model', type=str, help="LOOCV or KFOLD", default="KFOLD")
     args = parser.parse_args()
     
     
     #selection_file = f"{args.location}_select_{args.eyes}.csv"
     X, y, group = dataframe.iloc[:,2:dataframe.shape[1]], dataframe.loc[:, 'Group'], dataframe.loc[:, 'Subject']
     
-    save_folder = "/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/figures/heikkiv"
+    save_folder = "figures"
     save_file = f"{save_folder}/{args.clf}_{args.task}.pdf"
         
 
@@ -237,14 +237,16 @@ if __name__ == "__main__":
    
     fig, ax = plt.subplots() #TODO: should these be given for the functions?
     
+    #if args.model == "KFOLD":
     if CV:
         results = Kfold_CV_solver(solver=args.clf, X=X, y=y, groups=group, folds=10)
         ROC_results(results)
         plt.savefig(fname=save_file)
+    #elif args.model=="LOOCV":
     else:
         LOOCV_solver(args.clf, X, y, groups=group)
         plt.savefig(fname=f"{save_folder}/loo-ROC_{args.clf}_{args.task}.pdf")
-       
+
         
 
     
