@@ -19,7 +19,7 @@ from math import log
 from sklearn.preprocessing import scale
 
 # Get the list of subjects
-with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/subjects.txt', 'r') as subjects_file:
+with open('subjects.txt', 'r') as subjects_file:
     subjects = subjects_file.readlines()
     subjects_file.close()
     
@@ -44,7 +44,7 @@ channels = []
 
 # Choose frequency bands
 # TODO: these do not seem to do anything?? 
-change_bands = True 
+change_bands = False 
 
 # Choose what to plot
 plot_tasks = True
@@ -73,7 +73,7 @@ Reading data
 # Go through all the subjects
 for pair in subjects_and_tasks:
     subject, task = pair[0].rstrip(), pair[1] # Get subject & task from subjects_and_tasks
-    bandpower_file = "/net/theta/fishpool/projects/tbi_meg/k22_processed/sub-" + subject + "/ses-01/eeg/bandpowers/" + task + '.csv'
+    bandpower_file = "k22_processed/sub-" + subject + "/ses-01/eeg/bandpowers/" + task + '.csv'
     
     # Create a 2D list to which the read data will be added
     sub_bands_list = [] # n_freq x 64 matrix (64 channels, n_freq frequency bands)
@@ -216,8 +216,8 @@ if plot_averages:
     axes[2].legend()
     
     
-    fig.supxlabel('Frequency (Hz)')
-    fig.supylabel('Normalized PSDs')
+    #fig.supxlabel('Frequency (Hz)')
+    #fig.supylabel('Normalized PSDs')
     
 
 
