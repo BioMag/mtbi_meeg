@@ -19,17 +19,13 @@ import numpy as np
 from pathlib import Path
 
 
-from config_eeg import fname, fmax
+from config_eeg import fname, f_bands
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('subject', help='The subject to process')
 args = parser.parse_args()
 
-# The frequency bands
-# f_bands = [(1,3), (3,5.2), (5.2,7.6), (7.6,10.2), (10.2, 13), (13,16),
-#           (16,19.2), (19.2,22.6), (22.6,26.2), (26.2,30), (30,34), (34,38.2), (38.2,42.6)]
-f_bands_2 = [(x, x+1) for x in range(1,fmax)]
 
 # A list for corruprted or missing psds files
 corrupted_psds_files = []
@@ -61,7 +57,7 @@ try:
     # Calculate the average bandpower for each PSD
     for data_obj in list(data.keys()):
         data_bandpower =[] 
-        for band in f_bands_2:
+        for band in f_bands:
             fmin, fmax = band[0], band[1]
             
             min_index = np.argmax(freqs > fmin) - 1

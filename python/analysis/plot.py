@@ -106,9 +106,7 @@ def plot_ROI_grand_averages(df, bands, n_runs, n_channels):
     patients_average_f = np.divide(patients_sum_f[1:n_f_bands+1], patients)
 
     axes[2].plot(bands, controls_average_f, label='Controls')
-    axes[2].plot(bands, patients_average_f, label=   A function that fits a classifier to the data using leave-one-out cross-validation,
-       computes the ROC and AUC values for each fold.
-       'Patients')
+    axes[2].plot(bands, patients_average_f, label='Patients')
     axes[2].title.set_text('Occipital lobe')
     axes[2].legend()
 

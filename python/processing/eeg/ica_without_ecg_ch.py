@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Script for handling the ICA for subjects without ECG sensor. 
+Builds virtual ECG chennel from magnetometers.
+
 Created on Thu Jun 30 14:12:52 2022
 
 @author: aino

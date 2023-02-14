@@ -35,7 +35,7 @@ def read_data(task, freq_bands):
 
     """
     # Get the list of subjects
-    with open('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/subjects.txt', 'r') as subjects_file:
+    with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/subjects.txt', 'r') as subjects_file:
         subjects = subjects_file.readlines()
         subjects_file.close()
     subjects = [x[:-1] for x in subjects]
@@ -160,7 +160,7 @@ if __name__ == '__main__':
     CV = True
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2")
-    parser.add_argument('--freq_bands', type=str, help="wide, thin", default="wide")
+    parser.add_argument('--freq_bands', type=str, help="wide, thin", default="thin")
 
     args = parser.parse_args()
     print(f"{args.task} data with {args.freq_bands} frequency bands")
