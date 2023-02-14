@@ -19,29 +19,13 @@ host = gethostname()  # Hostname of the machine running the scripts
 
 # You want to add your machine to this list
 # TODO: change them to match current users?
-if host == 'nbe-024' and user == 'vanvlm1':
-    # Marijn's workstation
-    raw_data_dir = '/m/nbe/scratch/brrr_fingerprinting/biomagtbi_bids/bids'
-    processed_data_dir = '/m/nbe/scratch/brrr_fingerprinting/biomagtbi_bids/bids/derivatives/biomag-tbi'
-    reports_dir = '/m/home/home4/45/vanvlm1/data/projects/biomag-tbi/reports'
-    figures_dir = '/m/home/home4/45/vanvlm1/data/projects/biomag-tbi/figures'
-    n_jobs = 4  # My workstation has 4 cores
-    matplotlib_backend = 'Qt5Agg'
-elif user == 'wmvan':
-    # Marijn's laptop
-    raw_data_dir = 'S:/nbe/brrr_fingerprinting/biomagtbi_bids/bids'
-    processed_data_dir = 'S:/nbe/brrr_fingerprinting/biomagtbi_bids/bids/derivatives/biomag-tbi'
-    reports_dir = 'C:/Users/wmvan/projects/biomag-tbi/reports'
-    figures_dir = 'C:/Users/wmvan/projects/biomag-tbi/figures'
-    n_jobs = 6  # My laptop has 6 cores
-    matplotlib_backend = 'Qt5Agg'
-elif host.startswith('vdiubuntu') and user == 'vanvlm1':
-    # Marijn's VDI machine
-    raw_data_dir = '/m/nbe/scratch/brrr_fingerprinting/biomagtbi_bids/bids'
-    processed_data_dir = '/m/nbe/scratch/brrr_fingerprinting/biomagtbi_bids/bids/derivatives/biomag-tbi'
-    reports_dir = '/u/45/vanvlm1/unix/projects/biomag-tbi/reports'
-    figures_dir = '/u/45/vanvlm1/unix/projects/biomag-tbi/figures'
-    n_jobs = 2  # VDI gives you 2 cores
+if host == 'nbe-077' and user == 'heikkiv7':
+    # Verna's workstation in Aalto
+    raw_data_dir = '/m/nbe/scratch/tbi-meg/verna/BIDS'
+    processed_data_dir = '/m/nbe/scratch/tbi-meg/verna/k22_processed'
+    reports_dir = '/m/nbe/scratch/tbi-meg/verna/reports'
+    figures_dir = '/m/nbe/scratch/tbi-meg/verna/k22_processedfigures'
+    n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
 elif host.endswith('triton.aalto.fi'):
     # Triton cluster
@@ -51,14 +35,6 @@ elif host.endswith('triton.aalto.fi'):
     figures_dir = '/home/vanvlm1/data/biomag-tbi/figures'
     n_jobs = 1
     matplotlib_backend = 'Agg'  # No graphics on triton
-elif host == 'nbe-077' and user == 'heikkiv7':
-    # Verna's workstation in Aalto
-    raw_data_dir = '/m/nbe/scratch/tbi-meg/verna/BIDS'
-    processed_data_dir = '/m/nbe/scratch/tbi-meg/verna/k22_processed'
-    reports_dir = '/m/nbe/scratch/tbi-meg/verna/reports'
-    figures_dir = '/m/nbe/scratch/tbi-meg/verna/k22_processedfigures'
-    n_jobs = 4
-    matplotlib_backend = 'Qt5Agg'
 elif host == 'sirius' and user == 'heikkiv' : 
     # Verna's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
@@ -71,10 +47,9 @@ elif host == 'ypsilon.biomag.hus.fi' and user == 'heikkiv':
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
     processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed/'
     reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/reports/',user)
-    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/resports/',user)
+    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/reports/',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
-
 elif host == 'psi' and user == 'aino' :
     # Ainos's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
@@ -83,6 +58,14 @@ elif host == 'psi' and user == 'aino' :
     figures_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/python/figures/',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
+elif host == 'rho' and user == 'portae1' :
+    # Estanislao's workstation in BioMag
+    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
+    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed/'
+    reports_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/python/reports/', user)
+    figures_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/python/figures/',user)
+    n_jobs = 4
+    matplotlib_backend = 'Qt5Agg'    
 else:
     raise ValueError(f'Please enter the details of your system ({user}@{host}) in config_common.py')
 

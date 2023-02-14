@@ -5,6 +5,7 @@ ready to run the analysis pipeline.
 
 import os
 import pkg_resources
+import mne
 
 # Check to see if the python dependencies are fullfilled.
 dependencies = []
@@ -37,9 +38,11 @@ os.makedirs(fname.figures_dir, exist_ok=True)
 os.makedirs(fname.reports_dir, exist_ok=True)
 
 # Prints some information about the system
-import mne
+print('\nPrint NME packages installed in the system\n------')
 mne.sys_info()
+print('-------------')
 
+# I don't know what is the goal of this
 with open('system_check.txt', 'w') as f:
     f.write('System check OK.')
 
