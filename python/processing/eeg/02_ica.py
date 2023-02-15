@@ -1,7 +1,5 @@
 """
-Remove EOG artifacts through independant component analysis (ICA).
-No ECG artifacts are removed at the moment, since they are hard to detect based
-on just EEG data.
+Remove EOG & ECG artifacts through independant component analysis (ICA).
 
 
 Running: 
@@ -14,7 +12,7 @@ from collections import defaultdict
 
 from mne import Epochs
 from mne.io import read_raw_fif
-from mne.preprocessing import find_eog_events, find_ecg_events, ICA
+from mne.preprocessing import create_eog_epochs, create_ecg_epochs, ICA
 from mne import open_report
 import datetime
 
@@ -44,12 +42,10 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
     raw_filt = read_raw_fif(filt_fname, preload=True)
 
     # Run a detection algorithm for the onsets of eye blinks (EOG) and heartbeat artefacts (ECG)
-    eog_events = find_eog_events(raw_filt)
-    eog_epochs = Epochs(raw_filt, eog_events, tmin=-0.5, tmax=0.5, preload=True)
+    eog_events = create_eog_epochs(raw_filt)
     #TODO: skip eog events for ec
     if ecg_channel in raw_filt.info['ch_names']:
-                        ecg_events, ch, _ = find_ecg_events(raw_filt, ch_name=ecg_channel)
-                        ecg_epochs = Epochs(raw_filt, ecg_events, tmin=-0.5, tmax= 0.5, preload=True)
+                        ecg_events = create_ecg_epochs(raw_filt)
                         ecg_exists = True
     else:
         ecg_exists = False
@@ -58,17 +54,14 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
 
     # Find components that are likely capturing EOG artifacts
     
-    bads_eog, scores_eog = ica.find_bads_eog(eog_epochs, threshold=2.0)
+    bads_eog, scores_eog = ica.find_bads_eog(raw_filt)
     print('Bads EOG:', bads_eog)
     try:
-        bads_ecg, scores_ecg = ica.find_bads_ecg(raw_filt, method='correlation', threshold=2.0)
+        bads_ecg, scores_ecg = ica.find_bads_ecg(raw_filt, method='correlation',threshold='auto')
     except ValueError:
         print('Not able to find ecg components')
         bads_ecg = []
         scores_ecg = []
-        # # ECG artefact removal for subjects who don't have ECG data
-        # bads_ecg, scores_ecg = ica.find_bads_ecg(raw_filt, method = 'correlation', threshold='auto')
-        # # ValueError: Unable to generate artificial ECG channel - is this even possible at all for EEG?
     # Mark the EOG components for removal
     ica.exclude = bads_eog + bads_ecg
     ica.save(ica_fname, overwrite=True) 
@@ -88,7 +81,7 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
                             title=f' {task}' + ' EOG', 
                             inst=raw_filt, 
                             picks=bads_eog,
-                            eog_evoked=eog_epochs.average(),
+                            eog_evoked=eog_events.average(),
                             eog_scores=scores_eog,
                             tags=(f'{task}', 'EOG', 'ICA'),
                             replace=True
@@ -99,56 +92,28 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
                                 title=f' {task}' + ' ECG', 
                                 inst=raw_filt, 
                                 picks=bads_ecg,
-                                ecg_evoked=ecg_epochs.average(),
+                                ecg_evoked=ecg_events.average(),
                                 ecg_scores=scores_ecg,
                                 tags=(f'{task}', 'ECG', 'ICA'),
                                 replace=True
                                 )
-        # report.add_figure(
-        #     ica.plot_scores(scores_eog, exclude=bads_eog, title=date_time, show=False),
-        #     f'{task}: EOG scores', replace=True, tags=('EOG', f'{task}', 'ICA'))
 
         report.add_figure(
-            ica.plot_overlay(eog_epochs.average(), title=date_time, show=False),
+            ica.plot_overlay(eog_events.average(), title=date_time, show=False),
             f'{task}: EOG overlay', replace=True, tags=(f'{task}', 'ICA', 'EOG', 'overlay'))
         
         if ecg_exists:
-        #     report.add_figure(
-        #         ica.plot_scores(scores_ecg, exclude=bads_ecg, title=date_time, show=False),
-        #         f'{task}: ECG scores', replace=True, tags=('ECG', f'{task}', 'ICA'))
+
             
             report.add_figure(
-                ica.plot_overlay(ecg_epochs.average(), title=date_time, show=False),
+                ica.plot_overlay(ecg_events.average(), title=date_time, show=False),
                 f'{task}: ECG overlay', replace=True, tags=(f'{task}', 'ICA', 'ECG', 'overlay'))
             
-        #     if len(bads_ecg) == 1:
-        #         report.add_figure(
-        #             ica.plot_properties(ecg_epochs, bads_ecg, show=False),
-        #             [f'{task}: ECG Component {i:02d}' for i in bads_ecg],
-        #             replace=True, tags=('ECG', f'{task}', 'ICA'))
-        #     elif len(bads_ecg) > 1:
-        #         report.add_figure(
-        #             ica.plot_properties(ecg_epochs, bads_ecg, show=False),
-        #             f'{task}: ECG component properties', 
-        #             #captions=[f'{task}: Component {i:02d}' for i in bads_ecg],
-        #             replace=True, tags=('ECG', f'{task}', 'ICA'))
-                
-                
-        # if len(bads_eog) == 1:
-        #     report.add_figure(
-        #         ica.plot_properties(eog_epochs, bads_eog, show=False),
-        #         [f'{task}: EOG Component {i:02d}' for i in bads_eog],
-        #         replace=True, tags=('EOG', f'{task}', 'ICA'))
-        # elif len(bads_eog) > 1:
-        #     report.add_figure(
-        #         ica.plot_properties(eog_epochs, bads_eog, show=False),
-        #         f'{task}: EOG component properties',
-        #         #captions=[f'{task}: Component {i:02d}' for i in bads_eog],
-        #         replace=True, tags=('EOG', f'{task}', 'ICA'))
 
         report.save(fname.report_html(subject=args.subject),
                     overwrite=True, open_browser=False)
     
+    #TODO: is this necessary anymore?
     with open("ecg_puuttuu.txt", "a") as filu:
         filu_name = task_from_fname(filt_fname)
         if not ecg_exists:
