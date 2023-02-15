@@ -3,15 +3,13 @@ Perform bandpass filtering and notch filtering to get rid of cHPI and powerline
 frequencies.
 
 
-
 Running:
 import subprocess
-subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.sh', shell=True)
+subprocess.run('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/runsome.sh', shell=True)
 """
 
 import argparse
 from collections import defaultdict
-
 from mne.io import read_raw_fif
 from mne import open_report
 import datetime
@@ -76,7 +74,7 @@ for raw_fname, filt_fname in all_fnames:
         
         # Add a plot of the power spectrum to the list of figures to be placed in
         # the HTML report.
-        raw_plot = raw.plot_psd(fmin=0, fmax=40, show=False)
+        raw_plot = raw.compute_psd(fmin=0, fmax=40).plot(Show=False)
         figures['before_filt'].append(raw_plot)
     
         # Remove 50Hz power line noise (and the first harmonic: 100Hz)
@@ -101,32 +99,38 @@ for raw_fname, filt_fname in all_fnames:
 
 
 # Write HTML report with the quality control figures
+section='Filtering'
 with open_report(fname.report(subject=args.subject)) as report:
     report.add_figure(
-        figures['before_filt'],'Before frequency filtering',
+        figures['before_filt'],
+        title='Before frequency filtering',
         caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
         replace=True,
+        section=section,
         tags=('filt')
     )
     report.add_figure(
         figures['after_filt'],
-        'After frequency filtering',
+        title='After frequency filtering',
         caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
         replace=True,
+        section=section,
         tags=('filt')
     )
     report.add_figure(
         figures['raw_segment'],
-        'Before interpolation',
+        title='Before interpolation',
         caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
         replace=True,
+        section=section,
         tags=('raw')
     )
     report.add_figure(
         figures['interpolated_segment'],
-        'After interpolation',
+        title='After interpolation',
         caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
         replace=True,
+        section=section,
         tags=('raw')
     )
     report.save(fname.report_html(subject=args.subject),
