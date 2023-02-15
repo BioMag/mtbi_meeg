@@ -16,7 +16,7 @@ import datetime
 
 from config_eeg import get_all_fnames, fname, ec_bads, eo_bads, pasat1_bads, pasat2_bads, fmin, fmax, fnotch
 
-#TODO: fix 35C channels
+#TODO: fix 35C channels (WHAT'S THIS???)
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)
@@ -29,13 +29,11 @@ figures = defaultdict(list)
 # Not all subjects have files for all conditions. These functions grab the
 # files that do exist for the subject.
 exclude = ['emptyroom'] #these don't have eye blinks.
-# bad_subjects = ['01P', '02P', '03P', '04P', '05P', '06P', '07P']#these ica need to be done manually
 all_fnames = zip(
     get_all_fnames(args.subject, kind='raw', exclude=exclude),
     get_all_fnames(args.subject, kind='filt', exclude=exclude),
 )
-# raw_fnames = get_all_fnames(args.subject, kind='raw')
-# filt_fnames = get_all_fnames(args.subject, kind='filt')
+
 
 # Date and time
 now = datetime.datetime.now()
@@ -66,16 +64,16 @@ for raw_fname, filt_fname in all_fnames:
         raw.pick_types(meg=False, eeg=True, eog=True, stim=True, ecg=True, exclude=[])
         
         # Plot segment of raw data
-        figures['raw_segment'].append(raw.plot(n_channels=30, title = date_time, show=False))
+        figures['raw segment'].append(raw.plot(n_channels=30, title = date_time, show=False))
         
         # Interpolate bad channels
         raw.interpolate_bads()
-        figures['interpolated_segment'].append(raw.plot(n_channels=30, title = date_time + task, show=False))
+        figures['interpolated segment'].append(raw.plot(n_channels=30, title = date_time + task, show=False))
         
         # Add a plot of the power spectrum to the list of figures to be placed in
         # the HTML report.
         raw_plot = raw.compute_psd(fmin=0, fmax=40).plot(Show=False)
-        figures['before_filt'].append(raw_plot)
+        figures['before filt'].append(raw_plot)
     
         # Remove 50Hz power line noise (and the first harmonic: 100Hz)
         filt = raw.notch_filter(fnotch, picks=['eeg', 'eog', 'ecg'])
@@ -90,7 +88,7 @@ for raw_fname, filt_fname in all_fnames:
         # Add a plot of the power spectrum of the filtered data to the list of
         # figures to be placed in the HTML report.
         filt_plot = filt.plot_psd(fmin=0, fmax=40, show=False)
-        figures['after_filt'].append(filt_plot)
+        figures['after filt'].append(filt_plot)
         
         raw.close()
     except:
@@ -99,10 +97,11 @@ for raw_fname, filt_fname in all_fnames:
 
 
 # Write HTML report with the quality control figures
+# TODO: These could be nicer!
 section='Filtering'
 with open_report(fname.report(subject=args.subject)) as report:
     report.add_figure(
-        figures['before_filt'],
+        figures['before filt'],
         title='Before frequency filtering',
         caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
         replace=True,
@@ -110,7 +109,7 @@ with open_report(fname.report(subject=args.subject)) as report:
         tags=('filt')
     )
     report.add_figure(
-        figures['after_filt'],
+        figures['after filt'],
         title='After frequency filtering',
         caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
         replace=True,
@@ -118,7 +117,7 @@ with open_report(fname.report(subject=args.subject)) as report:
         tags=('filt')
     )
     report.add_figure(
-        figures['raw_segment'],
+        figures['raw segment'],
         title='Before interpolation',
         caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
         replace=True,
@@ -126,7 +125,7 @@ with open_report(fname.report(subject=args.subject)) as report:
         tags=('raw')
     )
     report.add_figure(
-        figures['interpolated_segment'],
+        figures['interpolated segment'],
         title='After interpolation',
         caption=('Eyes open', 'Eyes closed', 'PASAT run 1', 'PASAT run 2'),
         replace=True,
