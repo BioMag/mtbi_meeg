@@ -1,39 +1,62 @@
 # mTBI-EEG
 
-Git repo building on the BioMag pipelines for analyzing the EEG data of mTBI patients.
+Git repos building on the BioMag pipelines for analyzing the EEG data of mTBI patients.
 Preprocessing and analysis are currently on separate folders.
 
 
 ## Getting started
 
-The preprocessing pipeline is organized as follows:
+In order to execute the scripts in this repository, you should first configure your user in the `python/processing/config_common.py` file. The information is used for system requirements check and also to define the paths where the input and output data is expected.
 
-1. Check your system with check_system.py
-2. Configure user settings in ```config_common.py``` & ```config_eeg.py```
-3. Using ```python -m doit``` while in eeg/ -directory, run the preprocessing of all files
-    - ```01_freqfilt.py``` applies frequency filtering
-    - ```02_ica.py``` removes ocular & heartbeat artefacts with independent component analysis
-    - ```03_psds.py``` computes the PSDs over all channels and saves them as h5 files
-    - ```04_bandpower.py``` calculates band power for each subject and creates a spatial frequency matrix that is then vectorized for later analysis.
+Edit the `config_common` by doing the following,
+
+1. Edit the file `python/processing/config_common.py` and add your user and host to the list. There's a commented block you can use as example in line 70.
+2. Add the path for input data and the target path where to put processed data (*only for the the preprocessing pipeline. WIP to include also the output from the analysis pipeline*).
+3. Check your system by running the script `python/processing/check_system.py`.
+> Do we have something to be configured in config_eeg for users? 2. Configure user settings in ```config_common.py``` & ```config_eeg.py```
+
+If everything looks ok, you should be ready to execute the pipeline.
+
+## Data preprocessing pipeline
+
+The preprocessing pipeline can be found in `python/processing/`. The scripts are under the folder `python/processing/eeg`. The aim of this pipeline is to XXXXXXX (TBC).
+
+The list of files is described below:
+- `config_eeg.py`: contains the information of bad channels for the dataset k22
+- `00_maxfilter.py`: applies max filtering (TBC)
+- `01_freqfilt.py`: applies frequency filtering
+- `02_ica.py`: removes ocular & heartbeat artefacts with independent component analysis
+- `03_psds.py`: computes the PSDs over all channels and saves them as h5 files
+- `04_bandpower.py`: calculates band power for each subject and creates a spatial frequency matrix that is then vectorized for later analysis.
+
+To run the pipeline, go to `python/processing/eeg` and do, **Is this working?**
+```
+doit
+```
+or run,
+```
+python -m doit
+```
+This will run the `dodo.py` file, which triggers the exection of all the scripts in this folders. Currently also `runall.sh` is being used (TBC)
 
 > NOTE: these can be also ran separately for each individual!
 > NOTE: another possibility is to use shell script that loops through the subjects
 
+## Data analysis pipeline
 
-The data analysis is done in separate folder. The aim is to use three classifiers (LR, LDA, SVM) to differentiate between patients and controls. 
+The data analysis is done using the scripts in the folder `python/analysis`. The aim is to use different classifiers (LR, LDA, SVM and RF) to differentiate between patients and controls. 
 
 1. Read in the data from ```readdata.py```
-2. Fit and plot the ROC curves of various models with ```ROC_AUC.py``` (accepts commandline argumens)
+2. Fit and plot the ROC curves of various models with ```ROC_AUC.py``` (accepts commandline arguments)
 
-Things that are to be implemented:
+### Things that are yet to be implemented:
 
-- [] config file for analysis? 
+- [ ] config file for analysis? 
 - [x] model fitting
-- [] hyperparameter optimization, triton-compatible
-- [] model validation
+- [ ] hyperparameter optimization, triton-compatible
+- [ ] model validation
 - [x] visualizations
-- [] statistics
-
+- [ ] statistics
 
 
 ## Git stuff

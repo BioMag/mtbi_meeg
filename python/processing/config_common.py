@@ -13,6 +13,7 @@ from socket import gethostname
 ###############################################################################
 # Determine which user is running the scripts on which machine and set the path
 # where the data is stored and how many CPU cores to use.
+##############################################################################
 
 user = getuser()  # Username of the user running the scripts
 host = gethostname()  # Hostname of the machine running the scripts
@@ -65,7 +66,17 @@ elif host == 'rho' and user == 'portae1' :
     reports_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/python/reports/', user)
     figures_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/python/figures/',user)
     n_jobs = 4
-    matplotlib_backend = 'Qt5Agg'    
+    matplotlib_backend = 'Qt5Agg' 
+## Add new users below
+# elif host == '<WORKSTATION>' and user == '<USER>' :
+#    # <USER>'s workstation in <WORKPLACE>
+#    raw_data_dir = ''
+#    processed_data_dir = ''
+#    reports_dir = ''
+#    figures_dir = ''
+#    n_jobs = 4
+#    matplotlib_backend = '' 
+
 else:
     raise ValueError(f'Please enter the details of your system ({user}@{host}) in config_common.py')
 
