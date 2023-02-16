@@ -72,7 +72,7 @@ for raw_fname, filt_fname in all_fnames:
         
         # Add a plot of the power spectrum to the list of figures to be placed in
         # the HTML report.
-        raw_plot = raw.compute_psd(fmin=0, fmax=40).plot(Show=False)
+        raw_plot = raw.compute_psd(fmin=0, fmax=40).plot(show=False)
         figures['before filt'].append(raw_plot)
     
         # Remove 50Hz power line noise (and the first harmonic: 100Hz)
