@@ -11,8 +11,12 @@ subprocess.run('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/ee
 import argparse
 from collections import defaultdict
 from mne.io import read_raw_fif
-from mne import open_report
+from mne import open_report, set_log_level
 import datetime
+import time
+
+# Save time of beginning of the execution to measure running time
+start_time = time.time()
 
 from config_eeg import get_all_fnames, fname, ec_bads, eo_bads, pasat1_bads, pasat2_bads, fmin, fmax, fnotch
 
@@ -44,7 +48,11 @@ corrupted_raw_files = []
 for raw_fname, filt_fname in all_fnames:
     try:
         raw = read_raw_fif(raw_fname, preload=True)
-    
+
+        # Reduce logging level (technically, one could define it in the read_raw_fif function, but it seems to be buggy)
+        # More info about the bug can be found here: https://github.com/mne-tools/mne-python/issues/8872
+        set_log_level(verbose='Warning')
+
         # Mark bad channels that were manually annotated earlier.
         raw_str = str(raw_fname)
         if 'task-ec' in raw_str:
@@ -134,8 +142,16 @@ with open_report(fname.report(subject=args.subject)) as report:
     )
     report.save(fname.report_html(subject=args.subject),
                 overwrite=True, open_browser=False)
-    
-with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/maxfilter_puuttuu.txt', 'a') as file:
+
+#TODO: remove hardcoded dependency & name in Finnish
+#TODO: Should this be in another folder?
+with open('/net/tera2/home/portae1/biomag/mtbi-eeg/python/processing/eeg/maxfilter_puuttuu.txt', 'a') as file:
     for bad_file in corrupted_raw_files:
         file.write(bad_file+'\n')
     file.close()
+
+# Calculate time that the script takes to run
+execution_time = (time.time() - start_time)
+print('\n###################################################\n')
+print(f'Execution time in seconds of 01_freqfilter is: {round(execution_time,2)} seconds\n')
+print('###################################################\n')

@@ -14,9 +14,14 @@ from mne.io import read_raw_fif
 from mne.time_frequency import psd_array_welch
 from h5io import write_hdf5
 from mne.viz import iter_topography
-from mne import open_report, find_layout, pick_info, pick_types
+from mne import open_report, find_layout, pick_info, pick_types, set_log_level
 import matplotlib.pyplot as plt
 import datetime
+import time
+
+# Save time of beginning of the execution to measure running time
+start_time = time.time()
+
 
 from config_eeg import fname, n_fft, get_all_fnames, task_from_fname
 
@@ -55,6 +60,10 @@ for psds_fname, clean_fname in all_fnames:
     
     raw = read_raw_fif(fname.clean(subject=args.subject, task=task_wo_run, run=run,ses='01'),
                        preload=True)
+    
+    # Reduce logging level (technically, one could define it in the read_raw_fif function, but it seems to be buggy)
+    # More info about the bug can be found here: https://github.com/mne-tools/mne-python/issues/8872
+    set_log_level(verbose='Warning')
     
     raw.info['bads']=[]
     sfreq=raw.info['sfreq']
@@ -125,3 +134,9 @@ with open_report(fname.report(subject=args.subject)) as report:
     report.add_figure(fig, 'PSDs', replace=True)
     report.save(fname.report_html(subject=args.subject),
                 overwrite=True, open_browser=False)
+
+# Calculate time that the script takes to run
+execution_time = (time.time() - start_time)
+print('\n###################################################\n')
+print(f'Execution time in seconds of 01_freqfilter is: {round(execution_time,2)} seconds\n')
+print('###################################################\n')

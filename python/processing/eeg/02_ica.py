@@ -10,11 +10,15 @@ subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.
 import argparse
 from collections import defaultdict
 
-from mne import Epochs
+from mne import Epochs, set_log_level
 from mne.io import read_raw_fif
 from mne.preprocessing import create_eog_epochs, create_ecg_epochs, ICA
 from mne import open_report
 import datetime
+import time
+
+# Save time of beginning of the execution to measure running time
+start_time = time.time()
 
 from config_eeg import get_all_fnames, task_from_fname, fname, ecg_channel
 
@@ -40,6 +44,10 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
     task = task_from_fname(filt_fname)
     #TODO: crop first and last 2-5 s
     raw_filt = read_raw_fif(filt_fname, preload=True)
+    
+    # Reduce logging level (technically, one could define it in the read_raw_fif function, but it seems to be buggy)
+    # More info about the bug can be found here: https://github.com/mne-tools/mne-python/issues/8872
+    set_log_level(verbose='Warning')
 
     # Run a detection algorithm for the onsets of eye blinks (EOG) and heartbeat artefacts (ECG)
     eog_events = create_eog_epochs(raw_filt)
@@ -119,3 +127,9 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
         if not ecg_exists:
             filu.write(str(args.subject)+filu_name+'\n')
         filu.close()
+
+# Calculate time that the script takes to run
+execution_time = (time.time() - start_time)
+print('\n###################################################\n')
+print(f'Execution time in seconds of 02_ica is: {round(execution_time,2)} seconds\n')
+print('###################################################\n')

@@ -17,7 +17,10 @@ import argparse
 import h5py
 import numpy as np
 from pathlib import Path
+import time
 
+# Save time of beginning of the execution to measure running time
+start_time = time.time()
 
 from config_eeg import fname, f_bands
 
@@ -73,10 +76,14 @@ except:
     print("Psds file corrupted or missing")
     corrupted_psds_files.append(args.subject)
     
-with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/psds_corrupted_or_missing.txt', 'a') as file:
+with open('/net/tera2/home/portae1/biomag/mtbi-eeg/python/processing/eeg/psds_corrupted_or_missing.txt', 'a') as file:
     for bad_file in corrupted_psds_files:
         file.write(bad_file+'\n')
     file.close()
 
-
+# Calculate time that the script takes to run
+execution_time = (time.time() - start_time)
+print('\n###################################################\n')
+print(f'Execution time in seconds of 01_freqfilter is: {round(execution_time,2)} seconds\n')
+print('###################################################\n')
 
