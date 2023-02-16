@@ -13,17 +13,16 @@ Edit the `config_common` by doing the following,
 1. Edit the file `python/processing/config_common.py` and add your user and host to the list. There's a commented block you can use as example in line 70.
 2. Add the path for input data and the target path where to put processed data (*only for the the preprocessing pipeline. WIP to include also the output from the analysis pipeline*).
 3. Check your system by running the script `python/processing/check_system.py`.
-> Do we have something to be configured in config_eeg for users? 2. Configure user settings in ```config_common.py``` & ```config_eeg.py```
 
 If everything looks ok, you should be ready to execute the pipeline.
 
 ## Data preprocessing pipeline
 
-The preprocessing pipeline can be found in `python/processing/`. The scripts are under the folder `python/processing/eeg`. The aim of this pipeline is to XXXXXXX (TBC).
+The preprocessing pipeline can be found in `python/processing/`. The scripts are under the folder `python/processing/eeg`. The aim of this pipeline is to clean up the data and extract useful features, so data can be used by the classifiers in the analysis section.
 
 The list of files is described below:
 - `config_eeg.py`: contains the information of bad channels for the dataset k22
-- `00_maxfilter.py`: applies max filtering (TBC)
+- `00_maxfilter.py`: applies max filtering (not applicable to this data)
 - `01_freqfilt.py`: applies frequency filtering
 - `02_ica.py`: removes ocular & heartbeat artefacts with independent component analysis
 - `03_psds.py`: computes the PSDs over all channels and saves them as h5 files
