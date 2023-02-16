@@ -12,6 +12,10 @@ reports/
 .xlsx
 *slurm*
 
+#spesific files
+maxfilter_puuttuu.txt
+psds_corrupted_or_missing.txt
+ecg_puuttuu.txt
 
 
 # Byte-compiled / optimized / DLL files
