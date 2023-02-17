@@ -7,7 +7,6 @@ Created on Thu Jun 16 10:21:38 2022
 
 Reads bandpower data from csv files and creates a matrix whose rows represent each subject. 
 """
-import sys
 import numpy as np
 import os
 import csv
@@ -18,8 +17,8 @@ from math import log
 from sklearn.preprocessing import scale
 import argparse
 
+import sys
 sys.path.append('../processing/')
-
 from config_common import processed_data_dir
 
 def read_data(task, freq_bands):
@@ -137,9 +136,8 @@ def read_data(task, freq_bands):
         i = i[0].rstrip()+'_'+i[1]
         indices.append(i)
     
-    # Convert numpy array to dataframe
-#    dataframe = pd.DataFrame(np.array(all_bands_vectors, dtype = object), indices )
-    dataframe = pd.DataFrame(np.array(all_bands_vectors), indices ) #n x m matrix where n = subjects x tasks, m = channels x frequency bands
+    # Convert list to numpy array to dataframe 
+    dataframe = pd.DataFrame(np.array(all_bands_vectors, dtype = object), indices ) 
     
     # Add column 'Group'
     groups = []
