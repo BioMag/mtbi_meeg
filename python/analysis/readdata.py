@@ -7,7 +7,7 @@ Created on Thu Jun 16 10:21:38 2022
 
 Reads bandpower data from csv files and creates a matrix whose rows represent each subject. 
 """
-
+import sys
 import numpy as np
 import os
 import csv
@@ -17,6 +17,10 @@ import matplotlib.pyplot as plt
 from math import log
 from sklearn.preprocessing import scale
 import argparse
+
+sys.path.append('../processing/')
+
+from config_common import processed_data_dir
 
 def read_data(task, freq_bands):
     """
@@ -35,6 +39,7 @@ def read_data(task, freq_bands):
 
     """
     # Get the list of subjects
+    # TODO: Where should subjects.txt exist, in current directory? If yes, then let's remove absolute path
     with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/subjects.txt', 'r') as subjects_file:
         subjects = subjects_file.readlines()
         subjects_file.close()
@@ -77,24 +82,21 @@ def read_data(task, freq_bands):
     if freq_bands == 'wide':
         change_bands = True
     else:
-        change_bands = False
-    
-    
-    
+        change_bands = False    
     
     # Create a two dimensional list to which the data will be saved
-    all_bands_vectors = [] # Contains n (n = subjects x chosen_tasks) vectors (length = 5696 = 64 x 89) (64 channels, 89 frequency bands)
-    
-    
+    all_bands_vectors = [] # Contains n (n = subjects x chosen_tasks) vectors (length = 5696 = 64 x 89) (64 channels, 89 frequency bands)    
     
     """
     Reading data
     """
-    # Go through all the subjects
+    # Populate a numpy array with all the preprocessed data from subjects and tasks
     for pair in subjects_and_tasks:
-        subject, task = pair[0].rstrip(), pair[1] # Get subject & task from subjects_and_tasks
-        bandpower_file = "/net/theta/fishpool/projects/tbi_meg/k22_processed/sub-" + subject + "/ses-01/eeg/bandpowers/" + task + '.csv'
-        
+        # Get subject & task from subjects_and_tasks
+        subject, task = pair[0].rstrip(), pair[1] 
+        # Construct reate the path pointing to processed data for subject and task 
+        bandpower_file = f'{processed_data_dir}sub-{subject}/ses-01/eeg/bandpowers/{task}.csv'
+
         # Create a 2D list to which the read data will be added
         sub_bands_list = [] # n_freq x 64 matrix (64 channels, n_freq frequency bands)
         
@@ -136,7 +138,8 @@ def read_data(task, freq_bands):
         indices.append(i)
     
     # Convert numpy array to dataframe
-    dataframe = pd.DataFrame(np.array(all_bands_vectors), indices) #n x m matrix where n = subjects x tasks, m = channels x frequency bands
+#    dataframe = pd.DataFrame(np.array(all_bands_vectors, dtype = object), indices )
+    dataframe = pd.DataFrame(np.array(all_bands_vectors), indices ) #n x m matrix where n = subjects x tasks, m = channels x frequency bands
     
     # Add column 'Group'
     groups = []
@@ -159,13 +162,13 @@ if __name__ == '__main__':
     
     CV = True
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
-    parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2")
+    parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="ec")
     parser.add_argument('--freq_bands', type=str, help="wide, thin", default="thin")
 
     args = parser.parse_args()
-    print(f"{args.task} data with {args.freq_bands} frequency bands")
+    print(f"Reading in data from {args.task} task, using {args.freq_bands} frequency bands.")
     dataframe = read_data(args.task, args.freq_bands)
-    dataframe.to_csv('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/analysis/dataframe.csv')
-    
-    
+    #TODO: Add a path to config_common for this folder. Or if data frame is not needed, remove the creation of a file, and rather return a value to be consumed by the ROC function
+    dataframe.to_csv('/net/tera2/home/portae1/biomag/mtbi-eeg/python/analysis/dataframe.csv')
+    print('Dataframe has been created to file dataframe.csv, in current directory')    
     
