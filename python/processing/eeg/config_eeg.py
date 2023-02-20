@@ -27,7 +27,8 @@ fnotch = [50, 100]
 n_fft = 2048  # Higher number means more resolution at the lower frequencies
 #1024?4096?
 
-band_type = 'thin' #or 'thin'
+# These are currently not in use
+band_type = 'wide' #or 'thin'
 if band_type == 'wide':
     f_bands = [(1,3), (3,5.2), (5.2,7.6), (7.6,10.2), (10.2, 13), (13,16),
                (16,19.2), (19.2,22.6), (22.6,26.2), (26.2,30), (30,34), (34,38.2), (38.2,42.6)]    
