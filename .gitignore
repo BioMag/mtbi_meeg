@@ -1,22 +1,23 @@
-#Possible folders (ADD HERE)
+# Possible folders (ADD HERE)
 aino/
 heikkiv7/
 figures/
 reports/
 
-#Figs & data
-.pdf
-.png
-.h5
-.csv
-.xlsx
+# Figs & data
+*.pdf
+*.png
+*.h5
+*.csv
+*.xlsx
 *slurm*
+.doit*
 
-#spesific files
+# Specific files
 maxfilter_puuttuu.txt
 psds_corrupted_or_missing.txt
 ecg_puuttuu.txt
-
+subjects.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
