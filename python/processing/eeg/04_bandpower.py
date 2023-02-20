@@ -76,7 +76,7 @@ except:
     print("Psds file corrupted or missing")
     corrupted_psds_files.append(args.subject)
     
-with open('/net/tera2/home/portae1/biomag/mtbi-eeg/python/processing/eeg/psds_corrupted_or_missing.txt', 'a') as file:
+with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/psds_corrupted_or_missing.txt', 'a') as file:
     for bad_file in corrupted_psds_files:
         file.write(bad_file+'\n')
     file.close()
