@@ -84,6 +84,6 @@ with open('/net/tera2/home/portae1/biomag/mtbi-eeg/python/processing/eeg/psds_co
 # Calculate time that the script takes to run
 execution_time = (time.time() - start_time)
 print('\n###################################################\n')
-print(f'Execution time in seconds of 01_freqfilter is: {round(execution_time,2)} seconds\n')
+print(f'Execution time in seconds of 04_bandpower is: {round(execution_time,2)} seconds\n')
 print('###################################################\n')
 
