@@ -3,6 +3,7 @@ aino/
 heikkiv7/
 figures/
 reports/
+.idea/
 
 # Figs & data
 *.pdf
