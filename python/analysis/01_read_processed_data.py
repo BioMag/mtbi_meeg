@@ -224,7 +224,7 @@ if __name__ == '__main__':
     
     # Outputs the dataframe file that is needed by the ROC_AUC.py
     #TODO: Add a path to config_common for this folder? Or if data frame is not needed, remove the creation of a file, and rather return a value to be consumed by the ROC function?
-    dataframe.to_csv('/net/tera2/home/portae1/biomag/mtbi-eeg/python/analysis/dataframe.csv')
+    dataframe.to_csv('dataframe.csv')
 
 #    dataframe.to_csv('/net/tera2/home/portae1/biomag/mtbi-eeg/python/analysis/dataframe.csv', index_label='Index')
     print('Dataframe has been created to file dataframe.csv, in current directory')    
