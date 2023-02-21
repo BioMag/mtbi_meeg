@@ -64,7 +64,15 @@ elif host == 'rho' and user == 'portae1' :
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
     processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed/'
     reports_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/python/reports/', user)
-    figures_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/python/figures/',user)
+    figures_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/python/figures/', user)
+    n_jobs = 4
+    matplotlib_backend = 'Qt5Agg' 
+elif host == 'vdiubuntu080' and user == 'portae1' :
+    # Estanislao's workstation in VirtualMachine Aalto
+    raw_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed/' #This is not in use actually
+    processed_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed/'
+    reports_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi-eeg/python/reports/'
+    figures_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi-eeg/python/figures/'
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg' 
 ## Add new users below
@@ -93,13 +101,13 @@ matplotlib.use(matplotlib_backend)
 # analysis pipelines.
 ###############################################################################
 
-# All subjects for which there is some form of data available
-all_subjects = os.listdir(raw_data_dir)
-for s in all_subjects:
-    s_path = os.path.join(raw_data_dir, s)
-    if not os.path.isdir(s_path):
-        all_subjects.remove(s) #TODO: check this! 
-all_subjects.remove('participants.tsv')  
-all_subjects = [x.replace('sub-', '') for x in all_subjects]
-# Tasks performed in the scanner
-tasks = ['ec', 'eo', 'PASAT']
+## All subjects for which there is some form of data available
+#all_subjects = os.listdir(raw_data_dir)
+#for s in all_subjects:
+#    s_path = os.path.join(raw_data_dir, s)
+#    if not os.path.isdir(s_path):
+#        all_subjects.remove(s) #TODO: check this! 
+#all_subjects.remove('participants.tsv')  
+#all_subjects = [x.replace('sub-', '') for x in all_subjects]
+## Tasks performed in the scanner
+#tasks = ['ec', 'eo', 'PASAT']
