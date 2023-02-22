@@ -176,7 +176,7 @@ def read_processed_data(subjects_and_tasks, freq_bands, normalization):
         all_bands_vectors.append(sub_bands_vec)    
 
 #   Validate_all_bands_vectors_shape()     
-    print(f'INFO: Shape of \'all_bands_vectors\' is {len(all_bands_vectors)} x {len(all_bands_vectors[0])} (note that this is only the length of first column and first row, it does not account for shorter/longer rows/columns).')
+    print(f'INFO: Shape of \'all_bands_vectors\' is {len(all_bands_vectors)} x {len(all_bands_vectors[0])}.')
     return all_bands_vectors
 
 def create_data_frame(all_bands_vectors, subjects_and_tasks):
@@ -255,5 +255,4 @@ if __name__ == '__main__':
     # Outputs the dataframe file that is needed by the ROC_AUC.py
     #TODO: Add a path to config_common for this folder? Or if data frame is not needed, remove the creation of a file, and rather return a value to be consumed by the ROC function?
     dataframe.to_csv('dataframe.csv', index_label='Index')
-    print('\n###\nINFO: Success! Dataframe file \'dataframe.csv\' file has been created in current directory.')    
-        
+    print('\n###\nINFO: Success! Dataframe file \'dataframe.csv\' has been created in current directory.')    
