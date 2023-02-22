@@ -11,7 +11,6 @@ import numpy as np
 import csv
 import pandas as pd
 import argparse
-from tqdm import tqdm 
 
 import sys
 sys.path.append('../processing/')
@@ -67,7 +66,9 @@ def create_subjects_and_tasks(chosen_tasks):
     """
     # List of extra controls, dismissed so we'd have equal number of P vs C.
     to_exclude = ['32C', '33C', '34C', '35C', '36C', '37C', '38C', '39C', '40C', '41C']
-             
+
+    # TODO: Check format of subjects.txt file    
+         
     # Get the list of subjects. File expected in same directory    
     with open('subjects.txt', 'r') as subjects_file:
         subjects = subjects_file.readlines()
@@ -82,7 +83,7 @@ def create_subjects_and_tasks(chosen_tasks):
     subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks]
     # NOTE: shape(subjects_and_tasks) = n x 2, 
     #       where n = (elements in subjects * columns in chosen_tasks) 
-    #print(f'There are {len(subjects_and_tasks)} subject_and_task combinations.')
+    print(f'INFO: There are {len(subjects_and_tasks)} subject_and_task combinations.')
     
     return subjects_and_tasks
 
@@ -98,11 +99,17 @@ def read_processed_data(subjects_and_tasks, freq_bands, normalization):
     
     Input parameters
     ----------------
-    subjects_and_tasks: 
-        
+    - subjects_and_tasks: list of 2-uples
+            Contains the combinations of subjects and segments (e.g., (Subject1, Task1_segment1), (Subject1, Task1_segment2), ...)
+    - freq_bands: str
+            Frequency bins, 'thin' or 'wide'
+    - normalization: boolean
+            If True, normalization of the PSD data for all channels will be performed   
+            
     Output
     ------
-    - dataframe: panda dataframe that contains in each row the the bandpower measurements per each combination of (subject, tasks)
+    - all_bands_vector: list of np arrays
+            Each row contains the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
     """
     
     # List of freq. indices (Note: if the bands are changed in 04_bandpower.py, these need to be modified too.)
@@ -154,19 +161,40 @@ def read_processed_data(subjects_and_tasks, freq_bands, normalization):
         
         sub_bands_vec = np.concatenate(sub_bands_array.transpose())
         
-        if (len(sub_bands_vec) != 5696):
-            print(f'Processed data for subject {subject} does not meet the expected format.')
-            #raise ValueError(f'Processed data for subject {subject} is does not meet the expected format. \nDifferent band width might have been used for processing.\n####\n')
-            #sys.exit(1)    
+#       Validate_sub_band_vector_length():
+        if freq_bands == 'thin':
+            if (len(sub_bands_vec) != 5696):
+                print(f'ERROR: Processed data for subject {subject} does not meet the expected format when using thin frequency bands.')
+                #raise ValueError(f'Processed data for subject {subject} is does not meet the expected format. \nDifferent band width might have been used for processing.\n####\n')
+                sys.exit(1)    
+        elif freq_bands == 'wide':
+            if (len(sub_bands_vec) != (64 * len(wide_bands)) ):
+                print(f'ERROR: Processed data for subject {subject} does not meet the expected format when using wide frequency bands.')
+                sys.exit(1)
             
         # Add vector to matrix
         all_bands_vectors.append(sub_bands_vec)    
-        
-    #print(f'Shape of \'all_bands_vectors\' is {len(all_bands_vectors)} x {len(all_bands_vectors[0])} (note that this is only the length of first column and first row, it does not account for shorter/longer rows/columns).')
+
+#   Validate_all_bands_vectors_shape()     
+    print(f'INFO: Shape of \'all_bands_vectors\' is {len(all_bands_vectors)} x {len(all_bands_vectors[0])} (note that this is only the length of first column and first row, it does not account for shorter/longer rows/columns).')
     return all_bands_vectors
 
 def create_data_frame(all_bands_vectors, subjects_and_tasks):
     """
+    Create a dataframe structure to be used by the model_testing and ROC_AUC.py scripts
+    
+    
+    Input parameters
+    ----------------
+    - all_bands_vector: list of np arrays
+            Each row contains the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
+    - subjects_and_tasks: list of 2-uples
+                Contains the combinations of subjects and segments (e.g., (Subject1, Task1_segment1), (Subject1, Task1_segment2), ...)    
+    Output
+    ------
+    - dataframe: panda dataframe
+            Each row contains the subject_and_task label, the group which it belongs to, and the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
+    
     Creating a data frame
     """
     
@@ -210,8 +238,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     # Print out the chosen configuration
-    print(f"Reading in data from task {args.task}, using {args.freq_bands} frequency bands... \n")
-    
+    print(f"\nReading in data from task {args.task}, using {args.freq_bands} frequency bands... \n")
                 
     # Define subtasks according to input arguments
     chosen_tasks = define_subtasks(args.task)
@@ -219,7 +246,7 @@ if __name__ == '__main__':
     # Read in list of subjects from file and create subjects_and_tasks list
     subjects_and_tasks = create_subjects_and_tasks(chosen_tasks)
     
-    # Read in processed data from file and create list
+    # Read in processed data from file and create list where each row contains all the frquency bands and all channels per subject_and_task
     all_bands_vectors = read_processed_data(subjects_and_tasks, args.freq_bands, args.normalization)
     
     # Create dataframe
@@ -228,5 +255,5 @@ if __name__ == '__main__':
     # Outputs the dataframe file that is needed by the ROC_AUC.py
     #TODO: Add a path to config_common for this folder? Or if data frame is not needed, remove the creation of a file, and rather return a value to be consumed by the ROC function?
     dataframe.to_csv('dataframe.csv', index_label='Index')
-    print('\n###\nDataframe has been created to file dataframe.csv, in current directory.')    
+    print('\n###\nINFO: Success! Dataframe file \'dataframe.csv\' file has been created in current directory.')    
         
