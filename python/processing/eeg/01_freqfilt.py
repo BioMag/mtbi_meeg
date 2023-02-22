@@ -143,8 +143,8 @@ with open_report(fname.report(subject=args.subject)) as report:
     report.save(fname.report_html(subject=args.subject),
                 overwrite=True, open_browser=False)
 
-#TODO: remove hardcoded dependency & name in Finnish
-#TODO: Should this be in another folder?
+# TODO: Once the folder structure is defined, re-code the path depending on where is this expected
+# with open('maxfilter_corrupted_or_missing.txt', 'a') as  
 with open('/net/tera2/home/portae1/biomag/mtbi-eeg/python/processing/eeg/maxfilter_puuttuu.txt', 'a') as file:
     for bad_file in corrupted_raw_files:
         file.write(bad_file+'\n')
