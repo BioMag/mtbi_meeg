@@ -22,7 +22,7 @@ import time
 # Save time of beginning of the execution to measure running time
 start_time = time.time()
 
-from config_eeg import fname, f_bands
+from config_eeg import fname, f_bands, processed_data_dir
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)
@@ -54,7 +54,8 @@ try:
     
     
     #Create a directory to save the .csv files
-    directory = "/net/theta/fishpool/projects/tbi_meg/k22_processed/sub-" + args.subject + "/ses-01/eeg/bandpowers/"
+    #directory = "/net/theta/fishpool/projects/tbi_meg/k22_processed/sub-" + args.subject + "/ses-01/eeg/bandpowers/"
+    directory = f'{processed_data_dir}sub-{args.subject}/ses-01/eeg/bandpowers/'
     Path(directory).mkdir(parents=True, exist_ok=True)
     
     # Calculate the average bandpower for each PSD
@@ -75,7 +76,9 @@ try:
 except:
     print("Psds file corrupted or missing")
     corrupted_psds_files.append(args.subject)
-    
+
+# TODO: Once the folder structure is defined, re-code the path depending on where is this expected
+# with open('psds_corrupted_or_missing.txt', 'a') as  
 with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/psds_corrupted_or_missing.txt', 'a') as file:
     for bad_file in corrupted_psds_files:
         file.write(bad_file+'\n')
