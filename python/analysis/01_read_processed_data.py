@@ -8,14 +8,10 @@ Created on Thu Jun 16 10:21:38 2022
 Reads bandpower data from csv files and creates a matrix whose rows represent each subject. 
 """
 import numpy as np
-import os
 import csv
 import pandas as pd
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from math import log
-from sklearn.preprocessing import scale
 import argparse
+from tqdm import tqdm 
 
 import sys
 sys.path.append('../processing/')
@@ -76,7 +72,7 @@ def create_subjects_and_tasks(chosen_tasks):
     with open('subjects.txt', 'r') as subjects_file:
         subjects = subjects_file.readlines()
         subjects_file.close()
-    subjects = [x[:-1] for x in subjects]
+    subjects = [x.rstrip() for x in subjects]
     
     # Excluse subjects with errors
     for i in to_exclude:
@@ -86,7 +82,7 @@ def create_subjects_and_tasks(chosen_tasks):
     subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks]
     # NOTE: shape(subjects_and_tasks) = n x 2, 
     #       where n = (elements in subjects * columns in chosen_tasks) 
-    print(f'There are {len(subjects_and_tasks)} subject_and_task combinations.')
+    #print(f'There are {len(subjects_and_tasks)} subject_and_task combinations.')
     
     return subjects_and_tasks
 
@@ -94,7 +90,9 @@ def create_subjects_and_tasks(chosen_tasks):
 def read_processed_data(subjects_and_tasks, freq_bands, normalization):
 
     """
-    Read in processed bandpower data for each subject_and_tasks
+    Read in processed bandpower data for each subject_and_tasks from files
+    Create an array
+    
     Create a dataframe to be used by the ROC_AUC.py script
     
     
@@ -162,11 +160,12 @@ def read_processed_data(subjects_and_tasks, freq_bands, normalization):
             #sys.exit(1)    
             
         # Add vector to matrix
-        all_bands_vectors.append(sub_bands_vec)
+        all_bands_vectors.append(sub_bands_vec)    
         
-        
-    print(f'Shape of \'all_bands_vectors\' is {len(all_bands_vectors)} x {len(all_bands_vectors[0])} (note that this is only the length of first column and first row, it does not account for shorter/longer rows/columns).')
-       
+    #print(f'Shape of \'all_bands_vectors\' is {len(all_bands_vectors)} x {len(all_bands_vectors[0])} (note that this is only the length of first column and first row, it does not account for shorter/longer rows/columns).')
+    return all_bands_vectors
+
+def create_data_frame(all_bands_vectors, subjects_and_tasks):
     """
     Creating a data frame
     """
@@ -190,8 +189,9 @@ def read_processed_data(subjects_and_tasks, freq_bands, normalization):
         else:
             groups.append(2) # In case there is a problem
     dataframe.insert(0, 'Group', groups)
-    subs = np.array([s.split('_'+chosen_tasks[0][0:3])[0] for s in indices]) #TODO: horrible bubble-gum quickfix for CV problem
+    #TODO: horrible bubble-gum quickfix for CV problem
     #fixed the line above so that it works for all tasks
+    subs = np.array([s.split('_'+chosen_tasks[0][0:3])[0] for s in indices]) 
     dataframe.insert(1, 'Subject', subs)
     
     return dataframe
@@ -203,29 +203,30 @@ if __name__ == '__main__':
     
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
-    #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="ec")
     parser.add_argument('--freq_bands', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
     parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=False)
+    #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
     
+    # Print out the chosen configuration
+    print(f"Reading in data from task {args.task}, using {args.freq_bands} frequency bands... \n")
+    
+                
     # Define subtasks according to input arguments
     chosen_tasks = define_subtasks(args.task)
     
-    # WIP: Read subjects in and create subjects_and_tasks list
+    # Read in list of subjects from file and create subjects_and_tasks list
     subjects_and_tasks = create_subjects_and_tasks(chosen_tasks)
     
-    # Read in processed data
-    dataframe = read_processed_data(subjects_and_tasks, args.freq_bands, args.normalization)
- 
-    # Print out the chosen configuration
-    print(f"Reading in data from {args.task} task, using {args.freq_bands} frequency bands.")
-    #dataframe = read_data(args.task, args.freq_bands)
+    # Read in processed data from file and create list
+    all_bands_vectors = read_processed_data(subjects_and_tasks, args.freq_bands, args.normalization)
     
+    # Create dataframe
+    dataframe = create_data_frame(all_bands_vectors, subjects_and_tasks)
+
     # Outputs the dataframe file that is needed by the ROC_AUC.py
     #TODO: Add a path to config_common for this folder? Or if data frame is not needed, remove the creation of a file, and rather return a value to be consumed by the ROC function?
-    dataframe.to_csv('dataframe.csv')
-
-#    dataframe.to_csv('/net/tera2/home/portae1/biomag/mtbi-eeg/python/analysis/dataframe.csv', index_label='Index')
-    print('Dataframe has been created to file dataframe.csv, in current directory')    
+    dataframe.to_csv('dataframe.csv', index_label='Index')
+    print('\n###\nDataframe has been created to file dataframe.csv, in current directory.')    
         
