@@ -138,5 +138,5 @@ with open_report(fname.report(subject=args.subject)) as report:
 # Calculate time that the script takes to run
 execution_time = (time.time() - start_time)
 print('\n###################################################\n')
-print(f'Execution time in seconds of 03_psds.py is: {round(execution_time,2)} seconds\n')
+print(f'Execution time of 03_psds.py is: {round(execution_time,2)} seconds\n')
 print('###################################################\n')

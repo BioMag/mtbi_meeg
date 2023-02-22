@@ -131,5 +131,5 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
 # Calculate time that the script takes to run
 execution_time = (time.time() - start_time)
 print('\n###################################################\n')
-print(f'Execution time in seconds of 02_ica is: {round(execution_time,2)} seconds\n')
+print(f'Execution time of 02_ica.py is: {round(execution_time,2)} seconds\n')
 print('###################################################\n')

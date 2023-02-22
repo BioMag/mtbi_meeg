@@ -87,6 +87,6 @@ with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/psd
 # Calculate time that the script takes to run
 execution_time = (time.time() - start_time)
 print('\n###################################################\n')
-print(f'Execution time in seconds of 04_bandpower is: {round(execution_time,2)} seconds\n')
+print(f'Execution time of 04_bandpower.py is: {round(execution_time,2)} seconds\n')
 print('###################################################\n')
 

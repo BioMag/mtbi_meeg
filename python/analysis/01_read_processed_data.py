@@ -16,6 +16,11 @@ import sys
 sys.path.append('../processing/')
 from config_common import processed_data_dir
 
+import time
+
+# Save time of beginning of the execution to measure running time
+start_time = time.time()
+
 def define_subtasks(task):
     """
     Define the subtasks to be used for the analysis
@@ -255,4 +260,10 @@ if __name__ == '__main__':
     # Outputs the dataframe file that is needed by the ROC_AUC.py
     #TODO: Add a path to config_common for this folder? Or if data frame is not needed, remove the creation of a file, and rather return a value to be consumed by the ROC function?
     dataframe.to_csv('dataframe.csv', index_label='Index')
-    print('\n###\nINFO: Success! Dataframe file \'dataframe.csv\' has been created in current directory.')    
+    print('\n###\nINFO: Success! Dataframe file \'dataframe.csv\' has been created in current directory.')
+    
+    # Calculate time that the script takes to run
+    execution_time = (time.time() - start_time)
+    print('\n###################################################\n')
+    print(f'Execution time of 01_read_processed_data.py is: {round(execution_time,2)} seconds\n')
+    print('###################################################\n')
