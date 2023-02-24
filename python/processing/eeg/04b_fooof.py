@@ -106,7 +106,7 @@ for data_obj in list(data.keys()):
     # Initialize a FOOOF object (Here on a rougher scale)
     fm = FOOOF()
     # Set the frequency range to fit the model
-    freq_range = [2, 40]
+    freq_range = [2, 80]
     # Report: fit the model, print the resulting parameters, and plot the reconstruction
     fm.report(freqs, avg_bandpower, freq_range)
 
@@ -122,7 +122,7 @@ global_avg = np.mean(spectra, axis=0)  #Global characteristics OR analysis on so
 fm = FOOOF()
 
 # Set the frequency range to fit the model
-freq_range = [2, 40]
+freq_range = [2, 60]
 
 # Report: fit the model, print the resulting parameters, and plot the reconstruction
 fm.report(freqs, global_avg, freq_range)
