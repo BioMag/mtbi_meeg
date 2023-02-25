@@ -39,7 +39,7 @@ def read_data(task, freq_bands):
     """
     # Get the list of subjects
     # TODO: Where should subjects.txt exist, in current directory? If yes, then let's remove absolute path
-    with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/subjects.txt', 'r') as subjects_file:
+    with open('subjects.txt', 'r') as subjects_file:
         subjects = subjects_file.readlines()
         subjects_file.close()
     subjects = [x[:-1] for x in subjects]
@@ -167,6 +167,6 @@ if __name__ == '__main__':
     print(f"Reading in data from {args.task} task, using {args.freq_bands} frequency bands.")
     dataframe = read_data(args.task, args.freq_bands)
     #TODO: Add a path to config_common for this folder. Or if data frame is not needed, remove the creation of a file, and rather return a value to be consumed by the ROC function
-    dataframe.to_csv('/net/tera2/home/portae1/biomag/mtbi-eeg/python/analysis/dataframe.csv')
+    dataframe.to_csv('dataframe.csv')
     print('Dataframe has been created to file dataframe.csv, in current directory')    
     
