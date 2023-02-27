@@ -102,12 +102,12 @@ matplotlib.use(matplotlib_backend)
 ###############################################################################
 
 ## All subjects for which there is some form of data available
-#all_subjects = os.listdir(raw_data_dir)
-#for s in all_subjects:
-#    s_path = os.path.join(raw_data_dir, s)
-#    if not os.path.isdir(s_path):
-#        all_subjects.remove(s) #TODO: check this! 
-#all_subjects.remove('participants.tsv')  
-#all_subjects = [x.replace('sub-', '') for x in all_subjects]
+all_subjects = os.listdir(raw_data_dir)
+for s in all_subjects:
+    s_path = os.path.join(raw_data_dir, s)
+    if not os.path.isdir(s_path):
+        all_subjects.remove(s) #TODO: check this! 
+all_subjects.remove('participants.tsv')  
+all_subjects = [x.replace('sub-', '') for x in all_subjects]
 ## Tasks performed in the scanner
-#tasks = ['ec', 'eo', 'PASAT']
+tasks = ['ec', 'eo', 'PASAT']
