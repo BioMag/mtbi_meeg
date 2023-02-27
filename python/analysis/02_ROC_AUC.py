@@ -43,11 +43,11 @@ def Kfold_CV_solver(solver, X, y, groups, folds, stratified):
     y : Series
         Classification labels (binary).
     groups : Series
-        Subject. Since there's three observations per subject, we're grouping the measurements according to those subjects
+        Subject. Since there's three observations per subject, we're grouping the measurements according to those subjects.
     folds : int
-        Number of folds in CV
+        Number of folds in CV.
     stratified : bool
-        Defines which CV method is used
+        Defines which CV method is used.
 
     Returns
     -------
@@ -56,17 +56,17 @@ def Kfold_CV_solver(solver, X, y, groups, folds, stratified):
     pred : TYPE
         DESCRIPTION.
     tprs : TYPE
-        DESCRIPTION.
+        True Positive RateS.
     aucs : TYPE
         DESCRIPTION.
     mean_fpr : TYPE
-        DESCRIPTION.
+        False Positive Rate
     average_accuracy : float
         Mean of accuracies
     accuracy_std : float
-        Standard deviation of the accuracies
-    AUC : tuple
-        Contains values of mean AUC and std of AUC
+        Standard deviation of the accuracies.
+    auc : tuple
+        Contains values of mean AUC and std of AUC.
     params : str
         For saving the results
 
@@ -102,7 +102,7 @@ def Kfold_CV_solver(solver, X, y, groups, folds, stratified):
 
         for i, (train_index, test_index) in enumerate(split):
             print(f"Fold {i}:")
-            print(f"  Train: index={train_index}, group={groups[train_index]}")
+            #print(f"  Train: index={train_index}, group={groups[train_index]}")
             print(f"  Test:  index={test_index}, group={groups[test_index]}")
         
         del X['Subject']
@@ -110,13 +110,13 @@ def Kfold_CV_solver(solver, X, y, groups, folds, stratified):
         del X['Subject']
         skf = StratifiedGroupKFold(n_splits=folds, shuffle=True)
         #skf = GroupKFold(n_splits=folds) #Tässä ei saa shufflattua 
-        split = skf.split(X, y, groups) #takes into account the groups (=subjects) when splitting the data
+        split = skf.split(X, y, group) #takes into account the groups (=subjects) when splitting the data
         print("\n###\nStratified = False")
 
         for i, (train_index, test_index) in enumerate(split):
             print(f"Fold {i}:")
-            print(f"  Train: index={train_index}, group={groups[train_index]}")
-            print(f"  Test:  index={test_index}, group={groups[test_index]}")
+            #print(f"  Train: index={train_index}, group={group[train_index]}")
+            print(f"  Test:  index={test_index},\n group=\n{group[test_index]}")
     accuracies =[] # save accuracies
     tprs = [] #save results for plotting
     aucs = []
@@ -318,10 +318,10 @@ if __name__ == "__main__":
     parser.add_argument('--clf', type=str, help="classifier", default="LR")
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
+    # TODO: Check that arguments are the same beetween this and read_data? Or should we call those only once?
 
     # Print out the chosen configuration
     print(f"\nTBIEEG classification is being performed on data from task {args.task}, using {args.clf}... \n")
-    # TODO: Check that arguments are the same beetween this and read_data? Or should we call those only once?
     CV = True    
     dataframe = pd.read_csv('dataframe.csv')
 
