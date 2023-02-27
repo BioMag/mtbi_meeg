@@ -29,6 +29,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('subject', help='The subject to process')
 args = parser.parse_args()
 
+normalize_ch_power = True
 
 # A list for corruprted or missing psds files
 corrupted_psds_files = []
@@ -61,13 +62,21 @@ try:
     # Calculate the average bandpower for each PSD
     for data_obj in list(data.keys()):
         data_bandpower =[] 
+        data_arr = data[data_obj]
+        
+        if normalize_ch_power:
+            ch_tot_powers = np.sum(data_arr, axis = 1)
+            data_arr = data_arr / ch_tot_powers[:,None]
+        
         for band in f_bands:
             fmin, fmax = band[0], band[1]
             
             min_index = np.argmax(freqs > fmin) - 1
             max_index = np.argmax(freqs > fmax) -1
             
-            bandpower = np.trapz(data[data_obj][:, min_index: max_index], freqs[min_index: max_index], axis = 1)
+            #NOTE: trapezoidal rule gives weird results. Changed to mean.
+            #bandpower = np.trapz(data_arr[:, min_index: max_index], freqs[min_index: max_index], axis = 1)
+            bandpower = np.mean(data_arr[:, min_index: max_index],axis=1)
             
             data_bandpower.append(bandpower)
         
@@ -89,4 +98,3 @@ execution_time = (time.time() - start_time)
 print('\n###################################################\n')
 print(f'Execution time of 04_bandpower.py is: {round(execution_time,2)} seconds\n')
 print('###################################################\n')
-

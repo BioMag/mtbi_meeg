@@ -5,7 +5,6 @@ Running:
 import subprocess
 subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.sh', shell=True)
 
-TODO: FOOOFing? https://fooof-tools.github.io/fooof/auto_tutorials/index.html
 """
 
 import argparse
