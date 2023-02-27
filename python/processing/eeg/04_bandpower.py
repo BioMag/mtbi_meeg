@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('subject', help='The subject to process')
 args = parser.parse_args()
 
-normalize_ch_power = True
+normalize_ch_power = False
 
 # A list for corruprted or missing psds files
 corrupted_psds_files = []
