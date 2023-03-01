@@ -10,11 +10,11 @@ In order to execute the scripts in this repository, you should first configure y
 
 Edit the `config_common` by doing the following,
 
-1. Edit the file `python/processing/config_common.py` and add your user and host to the list. There's a commented block you can use as example in line 70.
+1. Edit the file `python/processing/config_common.py` and add your user and host to the list. There's a commented block you can use as example [here](https://version.aalto.fi/gitlab/heikkiv7/mtbi-eeg/-/blob/main/python/processing/config_common.py#L78).
 2. Add the path for input data and the target path where to put processed data (*only for the the preprocessing pipeline. WIP to include also the output from the analysis pipeline*).
 3. Check your system by running the script `python/processing/check_system.py`.
 
-If everything looks ok, you should be ready to execute the pipeline.
+If everything looks ok, you should be ready to execute the pipeline. If folders are missing, please create them. These scripts will not create folders automatically.
 
 ## Data preprocessing pipeline
 
