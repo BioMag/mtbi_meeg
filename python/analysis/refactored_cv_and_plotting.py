@@ -24,14 +24,18 @@ from statistics import mean, stdev
 # Pseudocode:
     # Read in dataframe and create X, y and groups
     # Split data according to the validation method
-    # Visualize folds
-    # If theres only one class in one fold, re-run the split?
+    # Output warning if only one class in fold (probability aaaround 26%)
+        # If theres only one class in one fold, re-run the split?
     # Test with a new subjects.txt where classes are more unbalanced (e.g., 70-30)
     
     # Fit classifier
-    # Cross Validate 
+    # Cross Validate
     # Return validation results as outputs: true_positives, false_positives, accuracy
+    # Would an aggregated confusion matrix from all the splits help out?
     # Plot ROC curves
+    # If using the kernel, how should outputs be parsed?
+    # Could I run one validation for all 4 models?    
+    
 #%% Arguments
 verbosity = False
 # Segments in the chosen task
@@ -40,8 +44,8 @@ segments = 3
 # Define if we want to use CV with only one segment per subject (and no groups)
 one_segment_per_subject = False
 
-# Classifier
-classifier = LinearDiscriminantAnalysis(solver='svd')
+## Classifier
+#classifier = LinearDiscriminantAnalysis(solver='svd')
 
 # List of accuracy?
 accuracies = []
@@ -123,49 +127,59 @@ if one_segment_per_subject == True:
 # Initialize Stratified Group K Fold
 sgkf = StratifiedGroupKFold(n_splits=folds, shuffle=True)
 sgkf_split = sgkf.split(X, y, groups) 
-fig, ax = plt.subplots(figsize=(6, 6))
-for i, (train_index, test_index) in enumerate(sgkf_split):
 
+# Initialize figure for plottting
+fig, ax = plt.subplots(figsize=(6, 6))
+
+# Define classifier
+classifier = SVC(probability=True)
+for split, (train_index, test_index) in enumerate(sgkf_split):
+    # Generate train and test sets for this split
     X_train, X_test = X.iloc[train_index], X.iloc[test_index]
     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-
+    
     # Fit classifier
     classifier.fit(X_train, y_train)
-    # Predict outcome y_pred
-    y_pred = classifier.predict(X_test).astype(int)
-    # Estimate accuracy for this split
-    accuracies.append(accuracy_score(y_test, y_pred))
-   
     
+    # Create Receiver Operator Characteristics from the estimator for current split
     viz = RocCurveDisplay.from_estimator(
         classifier,
         X_test,
         y_test,
-        name=f"ROC fold {i+1}",
-        alpha=0.3,
-        lw=1,
+        drop_intermediate=True,
+        name=f"ROC fold {split+1}",
+        alpha=1, #transparency
+        lw=1, #line width
         ax=ax
     )
+
+    # Predict outcomes
+    y_pred = classifier.predict(X_test).astype(int)
+    # Estimate accuracy for this split (normalized), and append to list of accuracies
+    accuracies.append(accuracy_score(y_test, y_pred))    
+    
+    # Why are we doing interpole_tpr? To build a series of 'y' values that can be corresponded with the series of linspace x 
     interpole_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
+    # Adds intercept just in case I guess
     interpole_tpr[0] = 0.0
-    tprs.append(interpole_tpr)
+    # Dimensions of tprs 90x100. Why 90?
+    tprs.append(interpole_tpr) 
     aucs.append(viz.roc_auc)
 
-    #print(f"Test:  index={test_index},\n{y[test_index]}")
+    # Control if there's only one class in a fold
     values, counts = np.unique(y[test_index], return_counts=True)
     if np.unique(y[test_index]).size == 1:
-        print(f"WARN: Fold {i} has only 1 class! ####")
+        print(f"WARN: Fold {split} has only 1 class! ####")
     elif verbosity == True: 
         fold_size = y[test_index].size
         if counts[0]<=counts[1]:
-            print(f"\nFold {i}:")
+            print(f"\nFold {split}:")
             print(f'Class balance: {round(counts[0]/fold_size*100)}-{round(100-counts[0]/fold_size*100)}')
         else:
-            print(f"\nFold {i}:")
+            print(f"\nFold {split}:")
             print(f'Class balance: {round(counts[1]/fold_size*100)}-{round(100-counts[1]/fold_size*100)}')
-ax.plot([0, 1], [0, 1], "k--", label="chance level (AUC = 0.5)")
 
-
+# Calculate the mean 
 mean_tpr = np.mean(tprs, axis=0)
 mean_tpr[-1] = 1.0
 mean_auc = auc(mean_fpr, mean_tpr)
@@ -181,8 +195,8 @@ ax.plot(
 
 average_accuracy = mean(accuracies)
 accuracy_std = stdev(accuracies)
-AUC = (mean(aucs), stdev(aucs))
-print(f"Average accuracy: {round(average_accuracy,3)} \nStandard deviation of accuracies: {round(accuracy_std,3)}, AUC = {AUC}")
+AUC = (round(mean(aucs),3), round(stdev(aucs), 3))
+print(f"Average accuracy: {round(average_accuracy,3)}, Standard deviation of accuracies: {round(accuracy_std,3)}\nAUC = {AUC}")
 
 std_tpr = np.std(tprs, axis=0)
 tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
@@ -196,6 +210,10 @@ ax.fill_between(
     label=r"$\pm$ 1 std. dev.",
 )
 
+# Plot chance curve
+ax.plot([0, 1], [0, 1], "k--", label="Chance level (AUC = 0.5)")
+
+# Labels and axis
 ax.set(
     xlim=[-0.05, 1.05],
     ylim=[-0.05, 1.05],
@@ -203,7 +221,10 @@ ax.set(
     ylabel="True Positive Rate",
     title="Mean ROC curve with variability\n(Positive label 'Patients')",
 )
+
+# Force square ratio plot
 ax.axis("square")
+# Define legend location
 ax.legend(loc="lower right")
 plt.show()
 
@@ -212,3 +233,17 @@ plt.show()
 
 # https://www.imranabdullah.com/2019-06-01/Drawing-multiple-ROC-Curves-in-a-single-plot 
 # https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc_crossval.html
+
+#  What does roc_curve.from_estimator() object have
+#from pprint import pprint
+#pprint(vars(viz))
+#{'ax_': <matplotlib.axes._subplots.AxesSubplot object at 0x7f15cc85b580>,
+# 'estimator_name': 'ROC fold 10',
+# 'figure_': <Figure size 432x432 with 1 Axes>,
+# 'fpr': array([0.        , 0.11111111, 0.33333333, 0.33333333, 0.44444444,
+#       0.44444444, 1.        , 1.        ]),
+# 'line_': <matplotlib.lines.Line2D object at 0x7f15cc88b280>,
+# 'pos_label': 1,
+# 'roc_auc': 0.4814814814814815,
+# 'tpr': array([0.        , 0.        , 0.        , 0.58333333, 0.58333333,
+#       0.75      , 0.75      , 1.        ])}
