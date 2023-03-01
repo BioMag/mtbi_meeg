@@ -158,11 +158,11 @@ for split, (train_index, test_index) in enumerate(sgkf_split):
     # Estimate accuracy for this split (normalized), and append to list of accuracies
     accuracies.append(accuracy_score(y_test, y_pred))    
     
-    # Why are we doing interpole_tpr? To build a series of 'y' values that can be corresponded with the series of linspace x 
+    # interpolate to build a series of 'y' values that correspond to linspace 'mean_fpr' 
     interpole_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
     # Adds intercept just in case I guess
     interpole_tpr[0] = 0.0
-    # Dimensions of tprs 90x100. Why 90?
+    
     tprs.append(interpole_tpr) 
     aucs.append(viz.roc_auc)
 
@@ -178,6 +178,9 @@ for split, (train_index, test_index) in enumerate(sgkf_split):
         else:
             print(f"\nFold {split}:")
             print(f'Class balance: {round(counts[1]/fold_size*100)}-{round(100-counts[1]/fold_size*100)}')
+
+# plt.scatter(viz.fpr, viz.tpr) shows how this is a step-wise function
+
 
 # Calculate the mean 
 mean_tpr = np.mean(tprs, axis=0)
