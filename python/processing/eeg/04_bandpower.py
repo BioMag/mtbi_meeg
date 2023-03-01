@@ -22,7 +22,7 @@ import time
 # Save time of beginning of the execution to measure running time
 start_time = time.time()
 
-from config_eeg import fname, f_bands, processed_data_dir
+from config_eeg import fname, band_type, f_bands, processed_data_dir
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)
@@ -74,14 +74,16 @@ try:
             min_index = np.argmax(freqs > fmin) - 1
             max_index = np.argmax(freqs > fmax) -1
             
-            #NOTE: trapezoidal rule gives weird results. Changed to mean.
-            #bandpower = np.trapz(data_arr[:, min_index: max_index], freqs[min_index: max_index], axis = 1)
-            bandpower = np.mean(data_arr[:, min_index: max_index],axis=1)
-            
+            if band_type=='thin': 
+                #NOTE: trapezoidal rule gives weird results. Changed to mean.
+                bandpower = np.mean(data_arr[:, min_index: max_index],axis=1)
+            elif band_type=='wide':
+                bandpower = np.trapz(data_arr[:, min_index: max_index], freqs[min_index: max_index], axis = 1)
+           
             data_bandpower.append(bandpower)
         
         # Save the calculated bandpowers
-        np.savetxt(directory + '/' + data_obj + '.csv', data_bandpower, delimiter=',' )
+        np.savetxt(directory + '/'+ band_type +'_'+ data_obj + '.csv', data_bandpower, delimiter=',' )
 except:
     print("Psds file corrupted or missing")
     corrupted_psds_files.append(args.subject)
