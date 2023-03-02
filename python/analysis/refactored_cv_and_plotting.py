@@ -19,8 +19,8 @@ from sklearn.model_selection import train_test_split, StratifiedGroupKFold, Stra
 from sklearn.svm import SVC
 
 from statistics import mean, stdev
-import logging
-logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
+#import logging
+#logging.basicConfig(filename='example2.log', encoding='utf-8', level=logging.DEBUG)
 
 # Pseudocode:
     # Read in dataframe and create X, y and groups
@@ -77,8 +77,21 @@ groups = dataframe.loc[:, 'Subject']
 # Note: There is a 27% chance that there's a fold with only one class. This can impact the classifier (especially LDA)
 # >>> After 999 iterations, we found 267 folds with 1 class
          
-#%% 
+
  
+#%% Split data
+clf = ["LDA", "SVM", "LR", "RF"]
+
+# Initialize figure for plottting
+fig, ax = plt.subplots(figsize=(6, 6))
+
+# Define classifier
+clf =  [LogisticRegression(penalty='l1', solver='liblinear', random_state=0),
+        RandomForestClassifier(),
+        LinearDiscriminantAnalysis(solver='svd'),
+        SVC(probability=True)
+        ]
+classifier = LinearDiscriminantAnalysis(solver='svd')
 
 if one_segment_per_subject == True:
     # TODO: Double check if choosing another segment than the 1st breaks something? It shouldnt
@@ -95,11 +108,9 @@ else:
     sgkf = StratifiedGroupKFold(n_splits=folds, shuffle=True)
     data_split = sgkf.split(X, y, groups)
 
-# Initialize figure for plottting
-fig, ax = plt.subplots(figsize=(6, 6))
 
-# Define classifier
-classifier = SVC(probability=True)
+
+# Fit and do CV
 for split, (train_index, test_index) in enumerate(data_split):
     # Generate train and test sets for this split
     if one_segment_per_subject == True:
@@ -109,8 +120,8 @@ for split, (train_index, test_index) in enumerate(data_split):
         X_train, X_test = X.iloc[train_index], X.iloc[test_index]
         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
      
-    logging.info(f'Shape of X_train is {X_train.shape[0]} x {X_train.shape[1]}')
-    logging.info(f'Shape of X_test is {X_test.shape[0]} x {X_test.shape[1]}')
+    print(f'Shape of X_train is {X_train.shape[0]} x {X_train.shape[1]}')
+    print(f'Shape of X_test is {X_test.shape[0]} x {X_test.shape[1]}')
 
     # Fit classifier
     classifier.fit(X_train, y_train)
@@ -135,14 +146,14 @@ for split, (train_index, test_index) in enumerate(data_split):
     interpole_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
     # Adds intercept just in case I guess
     interpole_tpr[0] = 0.0
-    logging.info(f'AUC for split {split} = {viz.roc_auc}\n')
+    print(f'AUC for split {split} = {viz.roc_auc}\n')
     tprs.append(interpole_tpr) 
     aucs.append(viz.roc_auc)
     
     # Control if there's only one class in a fold
     values, counts = np.unique(y[test_index], return_counts=True)
     if np.unique(y[test_index]).size == 1:
-        logging.warn(f"WARN: Fold {split} has only 1 class! ####")
+        print(f"WARN: Fold {split} has only 1 class! ####")
     elif verbosity == True: 
         fold_size = y[test_index].size
         if counts[0]<=counts[1]:
@@ -154,8 +165,9 @@ for split, (train_index, test_index) in enumerate(data_split):
 
 # plt.scatter(viz.fpr, viz.tpr) shows how this is a step-wise function
 
-
-# Calculate the mean 
+            
+            
+#Calculate the mean 
 mean_tpr = np.mean(tprs, axis=0)
 mean_tpr[-1] = 1.0
 mean_auc = auc(mean_fpr, mean_tpr)
@@ -206,9 +218,30 @@ ax.axis("square")
 ax.legend(loc="lower right")
 plt.show()
 
-
-
-
+#%% Export data from run
+task ='Eyes Closed'
+bands = 'Thin'
+from datetime import datetime
+with open("output_data.txt","w") as file:
+    file.write(f'Date and time of running: {datetime.now()}\n')
+    file.write(f'User: WIP\n')
+    file.write(f'Workstation: WIP \n')
+    file.write(f'Data from dataset: k22 WIP')
+    file.write(f'\nTask: {task} \nBandwidth: {bands} \nNumber of folds in CV: {folds}\n')
+    file.write(f'Classifier model used: {classifier}\n')
+    file.write(f'Other parameters: WIP\n')    
+    file.write(f'**Results:** \nMean accuracy: {accuracy_average} ± {accuracy_std}\nAUC = {AUC_mean} ± {AUC_std}\n')
+    file.write(f'Number of observations used in the classification: {len(X)}\n')
+    file.write(f'Number of features per observation: {X.shape[1]}\n')
+    # Sensitivity
+    # Specificity
+    # Number of controls and patients
+    
+    
+#%% Export CSV
+ 
+#%%
+    
 # https://www.imranabdullah.com/2019-06-01/Drawing-multiple-ROC-Curves-in-a-single-plot 
 # https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc_crossval.html
 
