@@ -7,6 +7,7 @@ Created on Thu Jun 16 10:21:38 2022
 
 Reads bandpower data from csv files and creates a matrix whose rows represent each subject. 
 """
+import re
 import numpy as np
 import csv
 import pandas as pd
@@ -15,6 +16,8 @@ import argparse
 import sys
 sys.path.append('../processing/')
 from config_common import processed_data_dir
+#sys.path.append('../processing/eeg/')
+#from config_eeg import wide_bands
 
 import time
 
@@ -50,8 +53,7 @@ def define_subtasks(task):
         chosen_tasks = tasks[3]
     else:
         raise("Incorrect task")
-    
-    
+       
     return chosen_tasks
 
 def create_subjects_and_tasks(chosen_tasks):
@@ -72,13 +74,18 @@ def create_subjects_and_tasks(chosen_tasks):
     # List of extra controls, dismissed so we'd have equal number of P vs C.
     to_exclude = ['32C', '33C', '34C', '35C', '36C', '37C', '38C', '39C', '40C', '41C']
 
-    # TODO: Check format of subjects.txt file    
-         
-    # Get the list of subjects. File expected in same directory    
-    with open('subjects.txt', 'r') as subjects_file:
-        subjects = subjects_file.readlines()
-        subjects_file.close()
-    subjects = [x.rstrip() for x in subjects]
+    # Get the list of subjects and check the format of the subjets, containing two digits and then a letter P or C    
+    subject_pattern = r'^\d{2}[PC]'   
+    try:
+        with open('subjects.txt', 'r') as subjects_file:
+            subjects = [line.rstrip() for line in subjects_file.readlines()]
+            # Assert that each line has the expected format
+            for line in subjects:
+                assert re.match(subject_pattern, line), f"Subject '{line}' does not have the expected format."
+    except FileNotFoundError as e:
+        # File expected in same directory 
+        print("The file 'subjects.txt' does not exist in the current directory. The program will exit.")
+        raise e
     
     # Excluse subjects with errors
     for i in to_exclude:
@@ -119,7 +126,7 @@ def read_processed_data(subjects_and_tasks, freq_bands, normalization):
     
     # List of freq. indices (Note: if the bands are changed in 04_bandpower.py, these need to be modified too.)
     #TODO: Could we use these from config_eeg? YEs, I can change it
-    wide_bands = [(0,3), (3,7), (7,11), (11,34), (34,40), (40,90)] 
+    #wide_bands = [(0,3), (3,7), (7,11), (11,34), (34,40), (40,90)] 
  
         
     # Initialize a list to store processed data for each unique subject+sub_task combination 
@@ -144,9 +151,7 @@ def read_processed_data(subjects_and_tasks, freq_bands, normalization):
         with open(bandpower_file, 'r') as file:
             reader = csv.reader(file)
             for f_band in reader: #Goes through each frequency band. 
-                sub_bands_list.append([float(f) for f in f_band])  
-            file.close()
-            
+                sub_bands_list.append([float(f) for f in f_band])              
         
         # Convert list to array
         # TODO: Is the 0:90 assuming 'thin' bands?
