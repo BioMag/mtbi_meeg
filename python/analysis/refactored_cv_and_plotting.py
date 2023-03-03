@@ -59,7 +59,7 @@ tprs = []
 aucs = []
 mean_fpr = np.linspace(0, 1, 100)
 
-folds = 5
+folds = 6
 
 #%%
 # Read in dataframe and create X, y and groups
@@ -108,7 +108,7 @@ else:
     sgkf = StratifiedGroupKFold(n_splits=folds, shuffle=True)
     data_split = sgkf.split(X, y, groups)
 
-
+split_indices = []
 
 # Fit and do CV
 for split, (train_index, test_index) in enumerate(data_split):
@@ -120,18 +120,35 @@ for split, (train_index, test_index) in enumerate(data_split):
         X_train, X_test = X.iloc[train_index], X.iloc[test_index]
         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
      
-    print(f'Shape of X_train is {X_train.shape[0]} x {X_train.shape[1]}')
+    split_indices.append((train_index, test_index))
+    
+    print(f'\nSplit {split+1}\nShape of X_train is {X_train.shape[0]} x {X_train.shape[1]}')
     print(f'Shape of X_test is {X_test.shape[0]} x {X_test.shape[1]}')
 
+    
     # Fit classifier
     classifier.fit(X_train, y_train)
+    
+    # Control if there's only one class in a fold
+    values, counts = np.unique(y[test_index], return_counts=True)
+    if np.unique(y[test_index]).size == 1:
+        print(f"WARN: Split {split+1} has only 1 class in the test set, skipping it. ####")
+        continue
+    elif verbosity == True: 
+        fold_size = y[test_index].size
+        if counts[0]<=counts[1]:
+            print(f"\nFold {split}:")
+            print(f'Class balance: {round(counts[0]/fold_size*100)}-{round(100-counts[0]/fold_size*100)}')
+        else:
+            print(f"\nFold {split}:")
+            print(f'Class balance: {round(counts[1]/fold_size*100)}-{round(100-counts[1]/fold_size*100)}')
     
     # Create Receiver Operator Characteristics from the estimator for current split
     viz = RocCurveDisplay.from_estimator(
         classifier,
         X_test,
         y_test,
-        drop_intermediate=True,
+        drop_intermediate=False,
         name=f"ROC fold {split+1}",
         alpha=1, #transparency
         lw=1, #line width
@@ -146,26 +163,13 @@ for split, (train_index, test_index) in enumerate(data_split):
     interpole_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
     # Adds intercept just in case I guess
     interpole_tpr[0] = 0.0
-    print(f'AUC for split {split} = {viz.roc_auc}\n')
+    print(f'AUC for split {split} = {viz.roc_auc}')
     tprs.append(interpole_tpr) 
     aucs.append(viz.roc_auc)
     
-    # Control if there's only one class in a fold
-    values, counts = np.unique(y[test_index], return_counts=True)
-    if np.unique(y[test_index]).size == 1:
-        print(f"WARN: Fold {split} has only 1 class! ####")
-    elif verbosity == True: 
-        fold_size = y[test_index].size
-        if counts[0]<=counts[1]:
-            print(f"\nFold {split}:")
-            print(f'Class balance: {round(counts[0]/fold_size*100)}-{round(100-counts[0]/fold_size*100)}')
-        else:
-            print(f"\nFold {split}:")
-            print(f'Class balance: {round(counts[1]/fold_size*100)}-{round(100-counts[1]/fold_size*100)}')
+
 
 # plt.scatter(viz.fpr, viz.tpr) shows how this is a step-wise function
-
-            
             
 #Calculate the mean 
 mean_tpr = np.mean(tprs, axis=0)
@@ -186,7 +190,7 @@ accuracy_average = round(mean(accuracies), 3)
 accuracy_std = round(stdev(accuracies), 3)
 AUC_mean = round(mean(aucs), 3)
 AUC_std = round(stdev(aucs), 3)
-print(f"Mean accuracy: {accuracy_average} ± {accuracy_std}\nAUC = {AUC_mean} ± {AUC_std}")
+print(f"\nMean accuracy: {accuracy_average} ± {accuracy_std}\nAUC = {AUC_mean} ± {AUC_std}\nCLassifier is: {classifier}")
 
 std_tpr = np.std(tprs, axis=0)
 tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
@@ -258,3 +262,5 @@ with open("output_data.txt","w") as file:
 # 'roc_auc': 0.4814814814814815,
 # 'tpr': array([0.        , 0.        , 0.        , 0.58333333, 0.58333333,
 #       0.75      , 0.75      , 1.        ])}
+
+# By default, roc_curve it uses as many thresholds as there are unique values in the y_score input array. Here is the relevant excerpt from the scikit-learn documentation:

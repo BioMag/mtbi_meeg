@@ -119,21 +119,21 @@ def read_processed_data(subjects_and_tasks, freq_bands, normalization):
             If True, normalization of the PSD data for all channels will be performed   
             
     Output
-    ------
+   -----
     - all_bands_vector: list of np arrays
             Each row contains the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
     """
     
     # List of freq. indices (Note: if the bands are changed in 04_bandpower.py, these need to be modified too.)
     #TODO: Could we use these from config_eeg? YEs, I can change it
-    #wide_bands = [(0,3), (3,7), (7,11), (11,34), (34,40), (40,90)] 
- 
-        
-    # Initialize a list to store processed data for each unique subject+sub_task combination 
+    wide_bands = [(1,3), (3,5.2), (5.2,7.6), (7.6,10.2), (10.2, 13), (13,16),
+               (16,19.2), (19.2,22.6), (22.6,26.2), (26.2,30), (30,34), (34,38.2), (38.2,42.6)] 
+
+    # Initialize a list to store processed data for each unique subject+segment combination 
     all_bands_vectors = [] 
     # NOTE: shape(all_bands_vectors) =  n vectors of length m
     #       where n = (elements in subjects * columns in chosen_tasks)
-    #       and m = (number of channels [64] * number of frequency bands [89 when using 'thin' bands, or 6 when using 'wide' bands]) = 5696 when using thin bands or 384 when using wide bands 
+    #       and m = (number of channels [64] * number of frequency bands [89 when using 'thin' bands, or 13 when using 'wide' bands]) = 5696 when using thin bands or 832 when using wide bands 
     
     # Iterate over all combinations of (subject, subtask) and populate 'all_bands_vectors' with numpy array 'sub_bands_array' containing processed data for each subject_and_tasks
     for pair in subjects_and_tasks:
@@ -153,16 +153,8 @@ def read_processed_data(subjects_and_tasks, freq_bands, normalization):
                 sub_bands_list.append([float(f) for f in f_band])              
         
         # Convert list to array
-        # TODO: Is the 0:90 assuming 'thin' bands?
-        sub_bands_array = np.array(sub_bands_list)[0:90, :] # m x n matrix (m = frequency bands, n=channels)
-        
-        # Aggregate 1 Hz freq bands to conventional delta, theta, alpha, etc.
-        if freq_bands == 'wide':
-            sub_bands_list = []
-            sub_bands_list.append([np.sum(sub_bands_array[slice(*t),:], axis=0) for t in wide_bands])
-            #create array again
-            sub_bands_array = np.array(sub_bands_list)[0] #apparently there is annyoing extra dimension
-        
+        sub_bands_array = np.array(sub_bands_list)
+
         # Normalize each band
         if normalization: 
             ch_tot_powers = np.sum(sub_bands_array, axis = 0)
@@ -241,7 +233,7 @@ if __name__ == '__main__':
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="ec")
-    parser.add_argument('--freq_bands', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
+    parser.add_argument('--freq_bands', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="wide")
     parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=False)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
