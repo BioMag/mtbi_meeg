@@ -59,7 +59,8 @@ tprs = []
 aucs = []
 mean_fpr = np.linspace(0, 1, 100)
 
-folds = 6
+folds = 50.5
+
 
 #%%
 # Read in dataframe and create X, y and groups
@@ -91,7 +92,7 @@ clf =  [LogisticRegression(penalty='l1', solver='liblinear', random_state=0),
         LinearDiscriminantAnalysis(solver='svd'),
         SVC(probability=True)
         ]
-classifier = LinearDiscriminantAnalysis(solver='svd')
+classifier = clf[3]
 
 if one_segment_per_subject == True:
     # TODO: Double check if choosing another segment than the 1st breaks something? It shouldnt
@@ -163,7 +164,7 @@ for split, (train_index, test_index) in enumerate(data_split):
     interpole_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
     # Adds intercept just in case I guess
     interpole_tpr[0] = 0.0
-    print(f'AUC for split {split} = {viz.roc_auc}')
+    print(f'AUC for split {split+1} = {viz.roc_auc}')
     tprs.append(interpole_tpr) 
     aucs.append(viz.roc_auc)
     
@@ -264,3 +265,6 @@ with open("output_data.txt","w") as file:
 #       0.75      , 0.75      , 1.        ])}
 
 # By default, roc_curve it uses as many thresholds as there are unique values in the y_score input array. Here is the relevant excerpt from the scikit-learn documentation:
+
+    
+# https://stackoverflow.com/questions/55968792/why-do-my-models-keep-getting-exactly-0-5-auc

@@ -72,7 +72,7 @@ def create_subjects_and_tasks(chosen_tasks):
 
     """
     # List of extra controls, dismissed so we'd have equal number of P vs C.
-    to_exclude = ['32C', '33C', '34C', '35C', '36C', '37C', '38C', '39C', '40C', '41C']
+    to_exclude = ['32C', '33C', '34C', '35C', '36C', '37C', '38C', '39C', '40C', '41C', '12P']
 
     # Get the list of subjects and check the format of the subjets, containing two digits and then a letter P or C    
     subject_pattern = r'^\d{2}[PC]'   
@@ -147,6 +147,7 @@ def read_processed_data(subjects_and_tasks, freq_bands, normalization):
         sub_bands_list = []
         
         # Read csv file and save the data to f_bands_list
+        
         with open(bandpower_file, 'r') as file:
             reader = csv.reader(file)
             for f_band in reader: #Goes through each frequency band. 
@@ -232,8 +233,8 @@ if __name__ == '__main__':
     
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
-    parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="ec")
-    parser.add_argument('--freq_bands', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="wide")
+    parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="eo")
+    parser.add_argument('--freq_bands', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
     parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=False)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
