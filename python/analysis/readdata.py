@@ -94,7 +94,7 @@ def read_data(task, freq_bands):
         # Get subject & task from subjects_and_tasks
         subject, task = pair[0].rstrip(), pair[1] 
         # Construct reate the path pointing to processed data for subject and task 
-        bandpower_file = f'{processed_data_dir}sub-{subject}/ses-01/eeg/bandpowers/{task}.csv'
+        bandpower_file = f'{processed_data_dir}/sub-{subject}/ses-01/eeg/bandpowers/{freq_bands}_{task}.csv'
 
         # Create a 2D list to which the read data will be added
         sub_bands_list = [] # n_freq x 64 matrix (64 channels, n_freq frequency bands)

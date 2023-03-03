@@ -141,13 +141,12 @@ def read_processed_data(subjects_and_tasks, freq_bands, normalization):
         # Construct the path pointing to where processed data for (subject,task) is stored         
         # TODO: could we change the name of the variable a bit? e.g., path_to_processed_data
         subject, task = pair[0].rstrip(), pair[1] 
-        bandpower_file = f'{processed_data_dir}sub-{subject}/ses-01/eeg/bandpowers/{task}.csv'
-
+        bandpower_file = f'{processed_data_dir}/sub-{subject}/ses-01/eeg/bandpowers/{freq_bands}_{task}.csv'
+        
         # Create a 2D list to which the read data will be added
         sub_bands_list = []
         
         # Read csv file and save the data to f_bands_list
-
         with open(bandpower_file, 'r') as file:
             reader = csv.reader(file)
             for f_band in reader: #Goes through each frequency band. 

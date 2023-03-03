@@ -38,41 +38,41 @@ elif host.endswith('triton.aalto.fi'):
     matplotlib_backend = 'Agg'  # No graphics on triton
 elif host == 'sirius' and user == 'heikkiv' : 
     # Verna's workstation in BioMag
-    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
-    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed/'
-    reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/reports/',user)
-    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/figures/',user)
+    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS'
+    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed'
+    reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/reports',user)
+    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/figures',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
 elif host == 'ypsilon.biomag.hus.fi' and user == 'heikkiv':
-    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
-    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed/'
-    reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/reports/',user)
-    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/reports/',user)
+    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS'
+    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed'
+    reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/reports',user)
+    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/reports',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
 elif host == 'psi' and user == 'aino' :
     # Ainos's workstation in BioMag
-    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
-    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed/'
-    reports_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/python/reports/', user)
-    figures_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/python/figures/',user)
+    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS'
+    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed'
+    reports_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/python/reports', user)
+    figures_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/python/figures',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
 elif host == 'rho' and user == 'portae1' :
     # Estanislao's workstation in BioMag
-    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS/'
-    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed/'
-    reports_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/python/reports/', user)
-    figures_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/python/figures/', user)
+    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS'
+    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed'
+    reports_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/python/reports', user)
+    figures_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/python/figures', user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg' 
 elif host == 'vdiubuntu080' and user == 'portae1' :
     # Estanislao's workstation in VirtualMachine Aalto
-    raw_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed/' #This is not in use actually
-    processed_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed/'
-    reports_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi-eeg/python/reports/'
-    figures_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi-eeg/python/figures/'
+    raw_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed' #This is not in use actually
+    processed_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed'
+    reports_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi-eeg/python/reports'
+    figures_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi-eeg/python/figures'
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg' 
 ## Add new users below
