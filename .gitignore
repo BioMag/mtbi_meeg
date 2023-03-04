@@ -19,6 +19,7 @@ maxfilter_puuttuu.txt
 psds_corrupted_or_missing.txt
 ecg_puuttuu.txt
 subjects.txt
+output_data.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
