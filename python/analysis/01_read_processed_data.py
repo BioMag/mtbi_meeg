@@ -14,6 +14,7 @@ import pandas as pd
 import argparse
 
 import sys
+
 sys.path.append('../processing/')
 from config_common import processed_data_dir
 #sys.path.append('../processing/eeg/')
@@ -56,25 +57,24 @@ def define_subtasks(task):
        
     return chosen_tasks
 
-def create_subjects_and_tasks(chosen_tasks):
+def read_subjects():
+   
     """
-    Read in the list of subjects, and combines it with the chosen task
-    Create a list of subjects_and_tasks
+    Read in the list of subjects from file subjects.txt. Asserts format to contain two digits and then a letter P or C  
     
 
     Parameters
     ----------
-    - chosen_tasks: list of subtaks pertaining to each task 
     
     Returns
     -------
-    - subjects_and_tasks: a list with 2-uples formed by all the combinations of (subjects, tasks)
-
+    - subjects: a list with all the subjects
+ 
     """
-    # List of extra controls, dismissed so we'd have equal number of P vs C.
+     # List of extra controls, dismissed so we'd have equal number of P vs C.
     to_exclude = ['32C', '33C', '34C', '35C', '36C', '37C', '38C', '39C', '40C', '41C', '12P']
 
-    # Get the list of subjects and check the format of the subjets, containing two digits and then a letter P or C    
+    # Get the list of subjects and check the format   
     subject_pattern = r'^\d{2}[PC]'   
     try:
         with open('subjects.txt', 'r') as subjects_file:
@@ -90,7 +90,25 @@ def create_subjects_and_tasks(chosen_tasks):
     # Excluse subjects with errors
     for i in to_exclude:
         subjects.remove(i)
-        
+    return subjects
+
+def create_subjects_and_tasks(chosen_tasks, subjects):
+
+    """
+    Combines the subjects and with the chosen tasks and creates a list of subjects_and_tasks
+    
+
+    Parameters
+    ----------
+    - chosen_tasks: list of subtaks pertaining to each task 
+    - subjects: list of all the subjects
+    
+    Returns
+    -------
+    - subjects_and_tasks: a list with 2-uples formed by all the combinations of (subjects, tasks)
+
+    """
+   
     # Define a list with 2-uples formed by all the combinations of (subjects, tasks)
     subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks]
     # NOTE: shape(subjects_and_tasks) = n x 2, 
@@ -233,8 +251,8 @@ if __name__ == '__main__':
     
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
-    parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="eo")
-    parser.add_argument('--freq_bands', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
+    parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="ec")
+    parser.add_argument('--freq_bands', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="wide")
     parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=False)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
@@ -245,8 +263,11 @@ if __name__ == '__main__':
     # Define subtasks according to input arguments
     chosen_tasks = define_subtasks(args.task)
     
+    # Read in the list of subjects from file subjects.txt
+    subjects = read_subjects()
+    
     # Read in list of subjects from file and create subjects_and_tasks list
-    subjects_and_tasks = create_subjects_and_tasks(chosen_tasks)
+    subjects_and_tasks = create_subjects_and_tasks(chosen_tasks, subjects)
     
     # Read in processed data from file and create list where each row contains all the frquency bands and all channels per subject_and_task
     all_bands_vectors = read_processed_data(subjects_and_tasks, args.freq_bands, args.normalization)
@@ -257,8 +278,11 @@ if __name__ == '__main__':
     # Outputs the dataframe file that is needed by the ROC_AUC.py
     #TODO: Add a path to config_common for this folder? Or if data frame is not needed, remove the creation of a file, and rather return a value to be consumed by the ROC function?
     # TODO: Include the name of the task within the filename?
+    
+    metadata_info = {"task": args.task, "freq_bands": args.freq_bands}
     dataframe.to_csv('dataframe.csv', index_label='Index')
-    print('\n###\nINFO: Success! Dataframe file \'dataframe.csv\' has been created in current directory.')
+    
+    print('INFO: Success! Dataframe file \'dataframe.csv\' has been created in current directory.')
     
     # Calculate time that the script takes to run
     execution_time = (time.time() - start_time)
