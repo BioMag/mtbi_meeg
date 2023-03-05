@@ -43,7 +43,7 @@ verbosity = False
 segments = 3
 
 # Define if we want to use CV with only one segment per subject (and no groups)
-one_segment_per_subject = False
+one_segment_per_subject = True
 
 ## Classifier
 #classifier = LinearDiscriminantAnalysis(solver='svd')
@@ -59,7 +59,6 @@ tprs = []
 aucs = []
 mean_fpr = np.linspace(0, 1, 100)
 
-folds = 50.5
 
 
 #%%
@@ -87,12 +86,15 @@ clf = ["LDA", "SVM", "LR", "RF"]
 fig, ax = plt.subplots(figsize=(6, 6))
 
 # Define classifier
-clf =  [LogisticRegression(penalty='l1', solver='liblinear', random_state=0),
+clf =  [SVC(probability=True),
+        LogisticRegression(penalty='l1', solver='liblinear', random_state=0),
         RandomForestClassifier(),
-        LinearDiscriminantAnalysis(solver='svd'),
-        SVC(probability=True)
+        LinearDiscriminantAnalysis(solver='svd')
+        
         ]
-classifier = clf[3]
+classifier = clf[0]
+folds = 5
+
 
 if one_segment_per_subject == True:
     # TODO: Double check if choosing another segment than the 1st breaks something? It shouldnt
