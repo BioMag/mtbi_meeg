@@ -12,14 +12,16 @@ import numpy as np
 import csv
 import pandas as pd
 import argparse
-
+import os
 import sys
-
-sys.path.append('../processing/')
+# Get the parent directory of the current file 
+processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../processing'))
+sys.path.append(processing_dir)
 from config_common import processed_data_dir
-#sys.path.append('../processing/eeg/')
+#eeg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../processing/eeg'))
+#sys.path.append(eeg_dir)
 #from config_eeg import wide_bands
-
+#%%
 import time
 
 # Save time of beginning of the execution to measure running time
@@ -246,9 +248,7 @@ def create_data_frame(all_bands_vectors, subjects_and_tasks):
 
     
 if __name__ == '__main__':
-    
-    CV = True
-    
+        
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="ec")
