@@ -39,14 +39,11 @@ from statistics import mean, stdev
     
 #%% Arguments
 verbosity = False
+
 # Segments in the chosen task
 segments = 3
-
 # Define if we want to use CV with only one segment per subject (and no groups)
 one_segment_per_subject = False
-
-## Classifier
-#classifier = LinearDiscriminantAnalysis(solver='svd')
 
 # Random seed for the classifier
 # Note that different sklearn versions coudl yield different results
@@ -84,15 +81,13 @@ groups = dataframe.loc[:, 'Subject']
          
 
  
-#%% Split data
-clf = ["LDA", "SVM", "LR", "RF"]
-
+#%% 
 # Initialize figure for plottting
 fig, ax = plt.subplots(figsize=(6, 6))
 
 # Define classifier
 clf =  [SVC(probability=True, random_state=seed),
-        LogisticRegression(penalty='l1', solver='liblinear', random_state=seed),
+        LogisticRegression(penalty='l1', solver='liblinear', C=1e9, random_state=seed),
         RandomForestClassifier(random_state=seed),
         LinearDiscriminantAnalysis(solver='svd')
         
@@ -100,7 +95,7 @@ clf =  [SVC(probability=True, random_state=seed),
 classifier = clf[1]
 folds = 10
 
-
+# Split data
 if one_segment_per_subject == True:
     # TODO: Double check if choosing another segment than the 1st breaks something? It shouldnt
     # Removes (segments-1) rows out of the dataframe X 
