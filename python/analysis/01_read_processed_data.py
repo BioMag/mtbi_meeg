@@ -21,7 +21,7 @@ from config_common import processed_data_dir
 #eeg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../processing/eeg'))
 #sys.path.append(eeg_dir)
 #from config_eeg import wide_bands
-#%%
+
 import time
 
 # Save time of beginning of the execution to measure running time
@@ -92,6 +92,7 @@ def read_subjects():
     # Excluse subjects with errors
     for i in to_exclude:
         subjects.remove(i)
+    
     return subjects
 
 def create_subjects_and_tasks(chosen_tasks, subjects):
@@ -113,91 +114,76 @@ def create_subjects_and_tasks(chosen_tasks, subjects):
    
     # Define a list with 2-uples formed by all the combinations of (subjects, tasks)
     subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks]
-    # NOTE: shape(subjects_and_tasks) = n x 2, 
-    #       where n = (elements in subjects * columns in chosen_tasks) 
+
     print(f'INFO: There are {len(subjects_and_tasks)} subject_and_task combinations.')
     
     return subjects_and_tasks
 
 
-def read_processed_data(subjects_and_tasks, freq_bands, normalization):
+def read_data(subjects_and_tasks, freq_bands_type, normalization, processed_data_dir):
 
     """
     Read in processed bandpower data for each subject_and_tasks from files
-    Create an array
-    
-    Create a dataframe to be used by the ROC_AUC.py script
-    
+    Creates an arrays    
     
     Input parameters
     ----------------
     - subjects_and_tasks: list of 2-uples
             Contains the combinations of subjects and segments (e.g., (Subject1, Task1_segment1), (Subject1, Task1_segment2), ...)
-    - freq_bands: str
+    - freq_bands_type: str
             Frequency bins, 'thin' or 'wide'
     - normalization: boolean
             If True, normalization of the PSD data for all channels will be performed   
-            
+    - processed_data_dir: str
+            path to the processed data directory as defined in config_common
     Output
    -----
     - all_bands_vector: list of np arrays
             Each row contains the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
     """
     
-    # List of freq. indices (Note: if the bands are changed in 04_bandpower.py, these need to be modified too.)
-    #TODO: Could we use these from config_eeg? YEs, I can change it
+    # List of freq. indices 
+    #TODO: Could we use these from config_eeg? No, I am struggling with doing this
     wide_bands = [(1,3), (3,5.2), (5.2,7.6), (7.6,10.2), (10.2, 13), (13,16),
                (16,19.2), (19.2,22.6), (22.6,26.2), (26.2,30), (30,34), (34,38.2), (38.2,42.6)] 
 
     # Initialize a list to store processed data for each unique subject+segment combination 
     all_bands_vectors = [] 
-    # NOTE: shape(all_bands_vectors) =  n vectors of length m
-    #       where n = (elements in subjects * columns in chosen_tasks)
-    #       and m = (number of channels [64] * number of frequency bands [89 when using 'thin' bands, or 13 when using 'wide' bands]) = 5696 when using thin bands or 832 when using wide bands 
-    
+
     # Iterate over all combinations of (subject, subtask) and populate 'all_bands_vectors' with numpy array 'sub_bands_array' containing processed data for each subject_and_tasks
-    for pair in subjects_and_tasks:
-        
+    for pair in subjects_and_tasks:  
         # Construct the path pointing to where processed data for (subject,task) is stored         
-        # TODO: could we change the name of the variable a bit? e.g., path_to_processed_data
         subject, task = pair[0].rstrip(), pair[1] 
-        bandpower_file = f'{processed_data_dir}/sub-{subject}/ses-01/eeg/bandpowers/{freq_bands}_{task}.csv'
+        path_to_processed_data = os.path.join(f'{processed_data_dir}', f'sub-{subject}', 'ses-01', 'eeg', 'bandpowers', f'{freq_bands_type}_{task}.csv')
         
         # Create a 2D list to which the read data will be added
-        sub_bands_list = []
+        subject_and_task_bands_list = []
         
-        # Read csv file and save the data to f_bands_list
-        
-        with open(bandpower_file, 'r') as file:
+        # Read csv file and saves each the data to f_bands_list
+        with open(path_to_processed_data, 'r') as file:
             reader = csv.reader(file)
-            for f_band in reader: #Goes through each frequency band. 
-                sub_bands_list.append([float(f) for f in f_band])              
+            for frequency_band in reader:  
+                subject_and_task_bands_list.append([float(f) for f in frequency_band])              
         
         # Convert list to array
-        sub_bands_array = np.array(sub_bands_list)
+        subject_and_task_bands_array = np.array(subject_and_task_bands_list)
 
         # Normalize each band
         if normalization: 
-            ch_tot_powers = np.sum(sub_bands_array, axis = 0)
-            sub_bands_array = sub_bands_array / ch_tot_powers[None,:]
+            ch_tot_powers = np.sum(subject_and_task_bands_array, axis = 0)
+            subject_and_task_bands_array = subject_and_task_bands_array / ch_tot_powers[None,:]
         
-        sub_bands_vec = np.concatenate(sub_bands_array.transpose())
+        sub_bands_vec = np.concatenate(subject_and_task_bands_array.transpose())
         
 #       Validate_sub_band_vector_length():
-        if freq_bands == 'thin':
-            if (len(sub_bands_vec) != 5696):
-                print(f'ERROR: Processed data for subject {subject} does not meet the expected format when using thin frequency bands.')
-                #raise ValueError(f'Processed data for subject {subject} is does not meet the expected format. \nDifferent band width might have been used for processing.\n####\n')
-                sys.exit(1)    
-        elif freq_bands == 'wide':
-            if (len(sub_bands_vec) != (64 * len(wide_bands)) ):
-                print(f'ERROR: Processed data for subject {subject} does not meet the expected format when using wide frequency bands.')
-                sys.exit(1)
+        if freq_bands_type == 'thin':
+            assert len(sub_bands_vec) == 5696, f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
+        elif freq_bands_type == 'wide':
+            assert len(sub_bands_vec) == (64 * len(wide_bands)), f'Processed data for subject {subject} does not have the expected length when using wide frequency bands.'
             
         # Add vector to matrix
         all_bands_vectors.append(sub_bands_vec)    
 
-#   Validate_all_bands_vectors_shape()     
     print(f'INFO: Success! Shape of \'all_bands_vectors\' is {len(all_bands_vectors)} x {len(all_bands_vectors[0])}, as expected.')
     return all_bands_vectors
 
@@ -252,13 +238,13 @@ if __name__ == '__main__':
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="ec")
-    parser.add_argument('--freq_bands', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="wide")
+    parser.add_argument('--freq_bands_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="wide")
     parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=False)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
     
     # Print out the chosen configuration
-    print(f"\nReading in data from task {args.task}, using {args.freq_bands} frequency bands... \n")
+    print(f"\nReading in data from task {args.task}, using {args.freq_bands_type} frequency bands... \n")
                 
     # Define subtasks according to input arguments
     chosen_tasks = define_subtasks(args.task)
@@ -270,16 +256,13 @@ if __name__ == '__main__':
     subjects_and_tasks = create_subjects_and_tasks(chosen_tasks, subjects)
     
     # Read in processed data from file and create list where each row contains all the frquency bands and all channels per subject_and_task
-    all_bands_vectors = read_processed_data(subjects_and_tasks, args.freq_bands, args.normalization)
+    all_bands_vectors = read_data(subjects_and_tasks, args.freq_bands_type, args.normalization, processed_data_dir)
     
     # Create dataframe
     dataframe = create_data_frame(all_bands_vectors, subjects_and_tasks)
 
-    # Outputs the dataframe file that is needed by the ROC_AUC.py
-    #TODO: Add a path to config_common for this folder? Or if data frame is not needed, remove the creation of a file, and rather return a value to be consumed by the ROC function?
-    # TODO: Include the name of the task within the filename?
-    
-    metadata_info = {"task": args.task, "freq_bands": args.freq_bands}
+    # Outputs the dataframe file that is needed by the ROC_AUC.py    
+    metadata_info = {"task": args.task, "freq_bands_type": args.freq_bands_type}
     dataframe.to_csv('dataframe.csv', index_label='Index')
     
     print('INFO: Success! Dataframe file \'dataframe.csv\' has been created in current directory.')
