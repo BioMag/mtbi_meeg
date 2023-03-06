@@ -18,7 +18,10 @@ import seaborn as sns
 #So each df row now has [ch1_freq1, ..., ch64_freq89, ch2_freq1, ..., ch64_freq1, ...ch64_freq64] 
 
 #-> revert these
-df = pd.read_csv('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/analysis/dataframe.csv')
+df = pd.read_csv('dataframe.csv')
+segments = 3
+df = df[0:len(df):segments]
+
 
 subject_array_list = [];
 global_averages = [];
