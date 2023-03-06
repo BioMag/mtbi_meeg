@@ -34,7 +34,7 @@ from statistics import mean, stdev
     # Return validation results as outputs: true_positives, false_positives, accuracy
     # Would an aggregated confusion matrix from all the splits help out?
     # Plot ROC curves
-    # If using the kernel, how should outputs be parsed?
+    # If using the cluster, how should outputs be parsed?
     # Could I run one validation for all 4 models?    
     
 #%% Arguments
@@ -43,10 +43,15 @@ verbosity = False
 segments = 3
 
 # Define if we want to use CV with only one segment per subject (and no groups)
-one_segment_per_subject = True
+one_segment_per_subject = False
 
 ## Classifier
 #classifier = LinearDiscriminantAnalysis(solver='svd')
+
+# Random seed for the classifier
+# Note that different sklearn versions coudl yield different results
+seed = 1
+
 
 # List containing the accuracy of the fit for each split 
 accuracies = []
@@ -86,14 +91,14 @@ clf = ["LDA", "SVM", "LR", "RF"]
 fig, ax = plt.subplots(figsize=(6, 6))
 
 # Define classifier
-clf =  [SVC(probability=True),
-        LogisticRegression(penalty='l1', solver='liblinear', random_state=0),
-        RandomForestClassifier(),
+clf =  [SVC(probability=True, random_state=seed),
+        LogisticRegression(penalty='l1', solver='liblinear', random_state=seed),
+        RandomForestClassifier(random_state=seed),
         LinearDiscriminantAnalysis(solver='svd')
         
         ]
-classifier = clf[0]
-folds = 5
+classifier = clf[1]
+folds = 10
 
 
 if one_segment_per_subject == True:
@@ -104,11 +109,12 @@ if one_segment_per_subject == True:
     groups_one_segment = groups[0:len(groups):segments]
     
     # Initialize Stratified K Fold
-    skf = StratifiedKFold(n_splits=folds, shuffle=True)
+#    skf = StratifiedKFold(n_splits=folds, shuffle=True)
+    skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
     data_split = skf.split(X_one_segment, y_one_segment, groups_one_segment)
 else:
     # Initialize Stratified Group K Fold
-    sgkf = StratifiedGroupKFold(n_splits=folds, shuffle=True)
+    sgkf = StratifiedGroupKFold(n_splits=folds, shuffle=True, random_state=seed)
     data_split = sgkf.split(X, y, groups)
 
 split_indices = []
@@ -166,6 +172,7 @@ for split, (train_index, test_index) in enumerate(data_split):
     interpole_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
     # Adds intercept just in case I guess
     interpole_tpr[0] = 0.0
+    print(f'Accuracy for split {split+1} is {round(accuracy_score(y_test, y_pred), 2)}')
     print(f'AUC for split {split+1} = {viz.roc_auc}')
     tprs.append(interpole_tpr) 
     aucs.append(viz.roc_auc)
