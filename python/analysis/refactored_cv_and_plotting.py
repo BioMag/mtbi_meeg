@@ -43,7 +43,7 @@ verbosity = False
 segments = 3
 
 # Define if we want to use CV with only one segment per subject (and no groups)
-one_segment_per_subject = False
+one_segment_per_subject = True
 
 ## Classifier
 #classifier = LinearDiscriminantAnalysis(solver='svd')

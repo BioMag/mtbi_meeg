@@ -20,7 +20,7 @@ import seaborn as sns
 #-> revert these
 df = pd.read_csv('dataframe.csv')
 segments = 3
-df = df[0:len(df):segments]
+df = df[2:len(df):segments]
 
 
 subject_array_list = [];
