@@ -173,16 +173,16 @@ def read_data(subjects_and_tasks, freq_bands_type, normalization, processed_data
             ch_tot_powers = np.sum(subject_and_task_bands_array, axis = 0)
             subject_and_task_bands_array = subject_and_task_bands_array / ch_tot_powers[None,:]
         
-        sub_bands_vec = np.concatenate(subject_and_task_bands_array.transpose())
+        subject_and_task_bands_vector = np.concatenate(subject_and_task_bands_array.transpose())
         
-#       Validate_sub_band_vector_length():
+#      Validate subject_and_task_bands_vector length:
         if freq_bands_type == 'thin':
-            assert len(sub_bands_vec) == 5696, f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
+            assert len(subject_and_task_bands_vector) == 5696, f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
         elif freq_bands_type == 'wide':
-            assert len(sub_bands_vec) == (64 * len(wide_bands)), f'Processed data for subject {subject} does not have the expected length when using wide frequency bands.'
+            assert len(subject_and_task_bands_vector) == (64 * len(wide_bands)), f'Processed data for subject {subject} does not have the expected length when using wide frequency bands.'
             
         # Add vector to matrix
-        all_bands_vectors.append(sub_bands_vec)    
+        all_bands_vectors.append(subject_and_task_bands_vector)    
 
     print(f'INFO: Success! Shape of \'all_bands_vectors\' is {len(all_bands_vectors)} x {len(all_bands_vectors[0])}, as expected.')
     return all_bands_vectors
@@ -238,7 +238,7 @@ if __name__ == '__main__':
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="ec")
-    parser.add_argument('--freq_bands_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="wide")
+    parser.add_argument('--freq_bands_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
     parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=False)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
