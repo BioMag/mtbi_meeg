@@ -43,7 +43,7 @@ verbosity = False
 # Segments in the chosen task
 segments = 3
 # Define if we want to use CV with only one segment per subject (and no groups)
-one_segment_per_subject = False
+one_segment_per_subject = True
 
 # Random seed for the classifier
 # Note that different sklearn versions coudl yield different results
