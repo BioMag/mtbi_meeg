@@ -103,7 +103,7 @@ for index,  row in plot_df.iterrows():
         col = 'green'
     data = row[2:]
     ax1.plot(freqs, data.T, color = col, alpha = 0.2)
-    ax1.text(90, data.values.T[-1], row['Subject'], horizontalalignment='left', size='small', color = col)
+    ax1.text(x = 90, y = data.values.T[-1], s = row['Subject'], horizontalalignment='left', size='small', color = col)
 
 ax1.set_ylabel('PSD (dB)')
 
