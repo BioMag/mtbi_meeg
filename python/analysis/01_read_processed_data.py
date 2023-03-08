@@ -239,26 +239,28 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="ec")
     parser.add_argument('--freq_bands_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
-    parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=False)
+    parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=True)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
     
     # Print out the chosen configuration
-    print(f"\nReading in data from task {args.task}, using {args.freq_bands_type} frequency bands... \n")
-                
-    # Define subtasks according to input arguments
+    if args.normalization == True:
+        print(f"\nReading in data from task {args.task}, using {args.freq_bands_type} frequency bands. Data will be normalized. \n")
+    else:
+        print(f"\nReading in data from task {args.task}, using {args.freq_bands_type} frequency bands. Data will NOT be normalized. \n")            
+    # 1 - Define subtasks according to input arguments
     chosen_tasks = define_subtasks(args.task)
     
-    # Read in the list of subjects from file subjects.txt
+    # 2 - Read in the list of subjects from file subjects.txt
     subjects = read_subjects()
     
-    # Read in list of subjects from file and create subjects_and_tasks list
+    # 3 - Read in list of subjects from file and create subjects_and_tasks list
     subjects_and_tasks = create_subjects_and_tasks(chosen_tasks, subjects)
     
-    # Read in processed data from file and create list where each row contains all the frquency bands and all channels per subject_and_task
+    # 4 - Read in processed data from file and create list where each row contains all the frquency bands and all channels per subject_and_task
     all_bands_vectors = read_data(subjects_and_tasks, args.freq_bands_type, args.normalization, processed_data_dir)
     
-    # Create dataframe
+    # 5 - Create dataframe
     dataframe = create_data_frame(all_bands_vectors, subjects_and_tasks)
 
     # Outputs the dataframe file that is needed by the ROC_AUC.py    
