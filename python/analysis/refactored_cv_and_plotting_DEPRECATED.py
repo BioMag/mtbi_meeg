@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Feb 27 11:58:23 2023
-
+NOTE: This file is kinda useless apart from the averaging and means per each fold. 
+It's been replaced by 03_fit_classifier_and_plot.py
 @author: portae1
 """
 import numpy as np
@@ -43,7 +44,7 @@ verbosity = False
 # Segments in the chosen task
 segments = 3
 # Define if we want to use CV with only one segment per subject (and no groups)
-one_segment_per_subject = True
+one_segment_per_subject = False
 
 # Random seed for the classifier
 # Note that different sklearn versions coudl yield different results
@@ -83,7 +84,7 @@ groups = dataframe.loc[:, 'Subject']
  
 #%% 
 # Initialize figure for plottting
-fig, ax = plt.subplots(figsize=(6, 6))
+fig, ax = plt.subplots(2, 2, figsize=(6, 6))
 
 # Define classifier
 clf =  [SVC(probability=True, random_state=seed),
@@ -92,7 +93,7 @@ clf =  [SVC(probability=True, random_state=seed),
         LinearDiscriminantAnalysis(solver='svd')
         
         ]
-classifier = clf[1]
+classifier = clf[0]
 folds = 10
 
 # Split data
@@ -129,10 +130,7 @@ for split, (train_index, test_index) in enumerate(data_split):
     print(f'\nSplit {split+1}\nShape of X_train is {X_train.shape[0]} x {X_train.shape[1]}')
     print(f'Shape of X_test is {X_test.shape[0]} x {X_test.shape[1]}')
 
-    
-    # Fit classifier
-    classifier.fit(X_train, y_train)
-    
+        
     # Control if there's only one class in a fold
     values, counts = np.unique(y[test_index], return_counts=True)
     if np.unique(y[test_index]).size == 1:
@@ -146,6 +144,9 @@ for split, (train_index, test_index) in enumerate(data_split):
         else:
             print(f"\nFold {split}:")
             print(f'Class balance: {round(counts[1]/fold_size*100)}-{round(100-counts[1]/fold_size*100)}')
+    
+    # Fit classifier
+    classifier.fit(X_train, y_train)
     
     # Create Receiver Operator Characteristics from the estimator for current split
     viz = RocCurveDisplay.from_estimator(
