@@ -16,11 +16,16 @@ from mne.preprocessing import create_eog_epochs, create_ecg_epochs, ICA
 from mne import open_report
 import datetime
 import time
+import os
+import sys
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
+from config_eeg import get_all_fnames, task_from_fname, fname, ecg_channel
+
 
 # Save time of beginning of the execution to measure running time
 start_time = time.time()
-
-from config_eeg import get_all_fnames, task_from_fname, fname, ecg_channel
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)

@@ -17,12 +17,15 @@ from mne import open_report, find_layout, pick_info, pick_types, set_log_level
 import matplotlib.pyplot as plt
 import datetime
 import time
+import os
+import sys
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
+from config_eeg import fname, n_fft, get_all_fnames, task_from_fname
 
 # Save time of beginning of the execution to measure running time
 start_time = time.time()
-
-
-from config_eeg import fname, n_fft, get_all_fnames, task_from_fname
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)

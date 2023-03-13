@@ -18,11 +18,15 @@ import h5py
 import numpy as np
 from pathlib import Path
 import time
+import os
+import sys
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
+from config_eeg import fname, f_bands, processed_data_dir
 
 # Save time of beginning of the execution to measure running time
 start_time = time.time()
-
-from config_eeg import fname, f_bands, processed_data_dir
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)

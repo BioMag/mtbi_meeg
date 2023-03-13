@@ -14,17 +14,23 @@ from mne.io import read_raw_fif
 from mne import open_report, set_log_level
 import datetime
 import time
+import os
+import sys
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
 
 # Save time of beginning of the execution to measure running time
 start_time = time.time()
 
+from config_common import processed_data_dir
 from config_eeg import get_all_fnames, fname, ec_bads, eo_bads, pasat1_bads, pasat2_bads, fmin, fmax, fnotch
 
 #TODO: fix 35C channels (WHAT'S THIS???)
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('subject', help='The subject to process')
+parser.add_argument('subject', help='The subject to process', default='10C')
 args = parser.parse_args()
 
 # Along the way, we collect figures for quality control

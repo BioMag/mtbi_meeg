@@ -63,16 +63,16 @@ elif host == 'rho' and user == 'portae1' :
     # Estanislao's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS'
     processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed'
-    reports_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/python/reports', user)
-    figures_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/python/figures', user)
+    reports_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/src/reports', user)
+    figures_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/src/figures', user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg' 
 elif host == 'vdiubuntu080' and user == 'portae1' :
     # Estanislao's workstation in VirtualMachine Aalto
     raw_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed' #This is not in use actually
     processed_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed'
-    reports_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi-eeg/python/reports'
-    figures_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi-eeg/python/figures'
+    reports_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi-eeg/src/reports'
+    figures_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi-eeg/src/figures'
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg' 
 ## Add new users below
