@@ -47,7 +47,8 @@ verbosity = False
 
 # Random seed for the classifier
 # Note: different sklearn versions could yield different results
-seed = 1
+seed = 8
+
 metadata_info["seed"] = seed
 
 ## List containing the accuracy of the fit for each split 
@@ -58,12 +59,13 @@ metadata_info["seed"] = seed
 
 # Define classifiers
 classifiers = [
-        ('Support Vector Machine', SVC(probability=True, random_state=seed)),
+        ('Support Vector Machine', SVC(kernel = 'rbf', probability=True, random_state=seed)),
         ('Logistic Regression', LogisticRegression(penalty='l1', solver='liblinear', random_state=seed)),
         #('Logistic Regression', LogisticRegression(penalty='l2', solver='liblinear', C=1e9, random_state=seed)),
         ('Random Forest', RandomForestClassifier(random_state=seed)),
         ('Linear Discriminant Analysis', LinearDiscriminantAnalysis(solver='svd'))
 ]
+
 # Number of folds to be used during Cross Validation
 folds = 10
 metadata_info["folds"] = folds
@@ -90,7 +92,7 @@ groups = dataframe.loc[:, 'Subject']
 
 
 #%%     
-# Split data
+# Slice data
 if one_segment_per_subject == True:
     # Removes aa number equal to (segments-1) rows out of the dataframe X 
     X_one_segment = X[which_segment:len(X):segments]
@@ -181,11 +183,14 @@ for ax, (name, clf) in zip(axs.flat, classifiers):
     ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
             label='Chance', alpha=.8)
     
+    values_test, counts_test = np.unique(y[test_index], return_counts=True)
+    values_train, counts_train = np.unique(y[test_index], return_counts=True)
     if ii ==0:
-        print(f'\nINFO: Class balance in training sets (C-P): {round(counts[0]/(y[test_index].size)*100)}-{round(counts[1]/(y[test_index].size)*100)}')
+        print(f'\nINFO: Class balance in test set (C-P): {round(counts_test[0]/(y[test_index].size)*100)}-{round(counts_test[1]/(y[test_index].size)*100)}')
+        print(f'\nINFO: Class balance in training set (C-P): {round(counts_train[0]/(y[test_index].size)*100)}-{round(counts_train[1]/(y[test_index].size)*100)}')
     ii =+1
     print(f'\nClassifier = {clf}')
-    print(f'AUC = %0.2f \u00B1 %0.2f' % (mean_auc, std_auc))
+    print('AUC = %0.2f \u00B1 %0.2f' % (mean_auc, std_auc))
 
 axs[0,0].set(ylabel = 'False Positive Rate')
 axs[1,0].set(ylabel = 'False Positive Rate')
@@ -199,14 +204,42 @@ metadata_info["Title"] = figure_title
 
 # Add filename and save the figure
 figure_filename = f'{metadata_info["task"]}_{metadata_info["freq_bands_type"]}_{metadata_info["normalization"]}.png'
-fig.savefig(os.path.join(figures_dir, figure_filename), metadata = metadata_info)
+
+metadata_str = {key: str(value) for key, value in metadata_info.items()}
+plt.savefig(os.path.join(figures_dir, figure_filename), metadata = metadata_str)
 print(f'\nINFO: Success! Figure "{figure_filename}" has been saved to folder {figures_dir}/')
 
-#%% Export data from run
-def output_data():
-    # Create / print out the CSV file with the data
-    pass
+# from PIL import Image, PngImagePlugin
 
+# # Load the image without metadata
+# pil_image = Image.open(os.path.join(figures_dir, figure_filename))
+
+# png_info = PngImagePlugin.PngInfo()
+# for key, value in metadata_str.items():
+#     png_info.add_text(key, value)
+
+# # Save the image with the metadata
+# output_filename = "output_papa.png"
+# pil_image.save(output_filename, "PNG", pnginfo=png_info)
+
+# #%% Export data from run
+# def output_data():
+#     # Create / print out the CSV file with the data
+#     pass
+# def test_image_with_metadata():
+
+#     # Load the PNG image with metadata    
+#     figure_test = plt.imread("output_papa.png")
+#     pil_image_with_metadata = Image.open("output_papa.png")
+#     # Retrieve the metadata from the image
+#     metadata_test = PngImagePlugin.PngInfo(pil_image_with_metadata.info).items()    
+#     # Print the metadata
+#     print(metadata_test)
+    
+#     # Display the image
+#     plt.imshow(figure_test)
+#     plt.show()
+    
 # Info to be added to the metadata
 #metadata = {
 #        "Creation Time": datetime.now(),

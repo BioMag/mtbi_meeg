@@ -18,7 +18,6 @@ import pickle
 
 # TODO: Split in modules
 # TODO: implement wide-frequency bands with boxplot?
-# TODO: Implement logic for number of segments derived from using EC/EO or PASAT
 # TODO: Remove hardcoded values of frequency
 # TODO: violin plots?
 # TODO: ROIs. Check this out for rois: https://www.nature.com/articles/s41598-021-02789-9
@@ -35,7 +34,7 @@ with open("output.pickle", "rb") as fin:
 if metadata_info["freq_bands_type"] == 'thin':
     freqs = np.array([x for x in range(1, 90)])
 elif metadata_info["freq_bands_type"] == 'wide':
-   freqs = np.array([1, 3, 5.2, 7.6, 10.2, 13, 16, 19.2, 22.6, 26.2, 30, 34, 38.2]).T
+    freqs = np.array([1, 3, 5.2, 7.6, 10.2, 13, 16, 19.2, 22.6, 26.2, 30, 34, 38.2]).T
 
 # Define the number of segments per task
 if (metadata_info["task"] in ('eo', 'ec')):
@@ -45,7 +44,7 @@ elif (metadata_info["task"] in ('PASAT_1', 'PASAT_2')):
 metadata_info["segments"] = segments
 
 # Define the number of segment which one wants to plot: 0 for first, 1 for second, 2 for third (if applicable)
-segment_to_plot = 0
+segment_to_plot = 2
 #%%
 # Initialize variables
 subject_array_list = []
@@ -53,8 +52,6 @@ global_averages = []
 
 drop_subs = False
 ROI = 'All' #One of 'All', 'Frontal', 'Occipital', 'FTC', 'Centro-parietal'
-
-
 
 #%%
 
@@ -104,7 +101,7 @@ f, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
 # Define style
 plt.style.use('seaborn-darkgrid')
 # Add title
-f.suptitle(f'Average PSD over all channel vs frequency with {metadata_info["normalization"]} freq bands, for task "{metadata_info["task"]}"\nUsing segment {segment_to_plot+1} out of {segments} \nRegion of interest: {ROI}. Data is normalized')
+f.suptitle(f'Average PSD over all channel vs frequency with {metadata_info["normalization"]} and {metadata_info["freq_bands_type"]} freq bands, for task "{metadata_info["task"]}"\nUsing segment {segment_to_plot+1} out of {segments} \nRegion of interest: {ROI}. Data is normalized')
 
 # Subplot 1
 # Iterate over rows in dataframe: define color based on group and plot in subplot (1, 1)

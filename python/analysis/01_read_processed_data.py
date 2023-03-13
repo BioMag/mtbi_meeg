@@ -245,7 +245,7 @@ def export_data(dataframe, metadata):
     """
     with open("output.pickle", "wb") as f:
         pickle.dump((dataframe, metadata), f)
-    print('INFO: Success! Dataframe file "dataframe.csv" has been created in current directory.')
+    print('INFO: Success! Processed data has been read in and parsed into dataframe.csv. CSV data and metadata have been bundled into file "output.pickle".')
     
     
 if __name__ == '__main__':
@@ -254,7 +254,7 @@ if __name__ == '__main__':
     
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
-    parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="ec")
+    parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="PASAT_1")
     parser.add_argument('--freq_bands_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="wide")
     parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=True)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
