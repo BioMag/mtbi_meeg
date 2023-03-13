@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pickle
 
 # TODO: Split in modules
 # TODO: implement wide-frequency bands with boxplot?
@@ -22,27 +23,38 @@ import seaborn as sns
 # TODO: violin plots?
 # TODO: ROIs. Check this out for rois: https://www.nature.com/articles/s41598-021-02789-9
 
-#%% 
 
+#%%
+# Read in dataframe and metadata
+with open("output.pickle", "rb") as fin:
+    df, metadata_info = pickle.load(fin)
+
+#vectorized data back to matrix (n*m), from which we should calculate global powers
+#So each df row now has [ch1_freq1, ..., ch64_freq[N], ch2_freq1, ..., ch64_freq1, ...ch64_freq[N]] where N = 89 if freq_bands = thin or N = 13 if freq_bands = 'wide'
+
+if metadata_info["freq_bands_type"] == 'thin':
+    freqs = np.array([x for x in range(1, 90)])
+elif metadata_info["freq_bands_type"] == 'wide':
+   freqs = np.array([1, 3, 5.2, 7.6, 10.2, 13, 16, 19.2, 22.6, 26.2, 30, 34, 38.2]).T
+
+# Define the number of segments per task
+if (metadata_info["task"] in ('eo', 'ec')):
+    segments = 3
+elif (metadata_info["task"] in ('PASAT_1', 'PASAT_2')):
+    segments = 2
+metadata_info["segments"] = segments
+
+# Define the number of segment which one wants to plot: 0 for first, 1 for second, 2 for third (if applicable)
+segment_to_plot = 0
+#%%
 # Initialize variables
 subject_array_list = []
 global_averages = []
-freqs = np.array([x for x in range(1, 90)])
 
 drop_subs = False
 ROI = 'All' #One of 'All', 'Frontal', 'Occipital', 'FTC', 'Centro-parietal'
 
-# Define the number of segments per task
-number_of_segments = 3
-# Define the number of segment which one wants to plot: 0 for first, 1 for second, 2 for third (if applicable)
-segment_to_plot = 0
 
-#%%
-
-# Read in dataframe, using the column named 'index' as index column
-df = pd.read_csv('dataframe.csv', index_col = 'Index')
-#vectorized data back to matrix (n*m), from which we should calculate global powers
-#So each df row now has [ch1_freq1, ..., ch64_freq89, ch2_freq1, ..., ch64_freq1, ...ch64_freq89] 
 
 #%%
 
@@ -52,8 +64,8 @@ for idx in df.index:
     subj_arr = np.array(df.loc[idx])[2:]
     # Change to logscale
     subj_arr = 10*np.log10(subj_arr.astype(float))
-    #reshape to 2D array again where rows=channels, cols=freqbands
-    subj_arr = np.reshape(subj_arr, (64, 89))
+    # Reshape to 2D array again where rows=channels, cols=freqbands
+    subj_arr = np.reshape(subj_arr, (64, freqs.size))
     
     #TODO: check these channels
     if ROI == 'frontal': 
@@ -73,7 +85,7 @@ plot_df.insert(0, "Subject", df['Subject'])
 plot_df.insert(1, "Group", df['Group'])
 
 # Slice the array based on which segment to plot
-plot_df = plot_df[segment_to_plot:len(df):number_of_segments]
+plot_df = plot_df[segment_to_plot:len(df):segments]
 
 #%% 
 
@@ -88,11 +100,11 @@ if drop_subs:
 
 # Plot a figure with two subplots: one with individual patients and another with group means and SD
 # Initialize figure and two subplots ax1 and ax2
-f, (ax1, ax2) = plt.subplots(2, 1)
+f, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
 # Define style
 plt.style.use('seaborn-darkgrid')
 # Add title
-f.suptitle(f'Average PSD over all channel vs frequency\nUsing segment {segment_to_plot+1} out of {number_of_segments}\nRegion of interest: {ROI}. Data is normalized')
+f.suptitle(f'Average PSD over all channel vs frequency with {metadata_info["normalization"]} freq bands, for task "{metadata_info["task"]}"\nUsing segment {segment_to_plot+1} out of {segments} \nRegion of interest: {ROI}. Data is normalized')
 
 # Subplot 1
 # Iterate over rows in dataframe: define color based on group and plot in subplot (1, 1)
@@ -103,7 +115,7 @@ for index,  row in plot_df.iterrows():
         col = 'green'
     data = row[2:]
     ax1.plot(freqs, data.T, color = col, alpha = 0.2)
-    ax1.text(x = 90, y = data.values.T[-1], s = row['Subject'], horizontalalignment='left', size='small', color = col)
+    ax1.text(x = freqs[-1], y = data.values.T[-1], s = row['Subject'], horizontalalignment='left', size='small', color = col)
 
 ax1.set_ylabel('PSD (dB)')
 

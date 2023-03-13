@@ -5,9 +5,8 @@ Created on Mon Feb 27 11:58:23 2023
 
 @author: portae1
 
-# TODO: Try with wide-bands, try with other segments than the first
+# TODO: Try with other segments than the first
 # TODO: Make modular
-# TODO: logic for reading in dataframe.csv. Identify task, bands, normalized
 # TODO: Return validation results as outputs: true_positives, false_positives, accuracy
 # TODO: Embed metadata to image and/or as output file
 # TODO: Create a report?
@@ -20,6 +19,7 @@ import pandas as pd
 import argparse
 import matplotlib.pyplot as plt
 import csv
+import pickle
 
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
@@ -36,34 +36,27 @@ sys.path.append(processing_dir)
 from config_common import reports_dir, figures_dir
 if not os.path.isdir(figures_dir):
     os.makedirs(figures_dir)
-    
-task = ('Pasat 2', 'PASAT_2')
-bands = 'Thin'
-    
-#%% Arguments
+
+#%%
+# Read in dataframe and metadata
+with open("output.pickle", "rb") as fin:
+    dataframe, metadata_info = pickle.load(fin)
+
+#%% Initialize variables and define arguments
 verbosity = False
 
-# Segments in the chosen task
-segments = 3
-# Define if we want to use CV with only one segment per subject (and no groups)
-one_segment_per_subject = False
-
 # Random seed for the classifier
-# Note that different sklearn versions coudl yield different results
+# Note: different sklearn versions could yield different results
 seed = 1
+metadata_info["seed"] = seed
 
-# List containing the accuracy of the fit for each split 
-accuracies = []
+## List containing the accuracy of the fit for each split 
+#accuracies = []
+#
+## Interpoling True Positive Rate
+#interpole_tpr = []
 
-# Interpoling True Positive Rate
-interpole_tpr = []
-
-# True Positive RateS
-tprs = []
-aucs = []
-mean_fpr = np.linspace(0, 1, 100)
-
-
+# Define classifiers
 classifiers = [
         ('Support Vector Machine', SVC(probability=True, random_state=seed)),
         ('Logistic Regression', LogisticRegression(penalty='l1', solver='liblinear', random_state=seed)),
@@ -71,32 +64,38 @@ classifiers = [
         ('Random Forest', RandomForestClassifier(random_state=seed)),
         ('Linear Discriminant Analysis', LinearDiscriminantAnalysis(solver='svd'))
 ]
-
+# Number of folds to be used during Cross Validation
 folds = 10
+metadata_info["folds"] = folds
 
-#%%
-# Read in dataframe and create X, y and groups
-dataframe = pd.read_csv('dataframe.csv', index_col = 'Index')
+# Segments in the chosen task
+if (metadata_info["task"] in ('eo', 'ec')):
+    segments = 3
+elif (metadata_info["task"] in ('PASAT_1', 'PASAT_2')):
+    segments = 2
+metadata_info["segments"] = segments
+
+# Define if we want to use CV with only one segment per subject (and no groups)
+one_segment_per_subject = False
+metadata_info["one_segment_per_subject"] = one_segment_per_subject
+
+# Which segment to be used when using only one segment for fitting
+which_segment = 0
+metadata_info["which_segment"] = which_segment
+
 ## Define features, classes and groups
 X = dataframe.iloc[:,2:]
 y = dataframe.loc[:, 'Group']
 groups = dataframe.loc[:, 'Subject']
 
 
-#%% 
-## (Optional)
-    # Define what strategy to use based on the subjects balance
-
-# Note: There is a 27% chance that there's a fold with only one class. This can impact the classifier (especially LDA)
-# >>> After 999 iterations, we found 267 folds with 1 class
-         
-
- # Split data
+#%%     
+# Split data
 if one_segment_per_subject == True:
-    # Removes (segments-1) rows out of the dataframe X 
-    X_one_segment = X[0:len(X):segments]
-    y_one_segment = y[0:len(y):segments]
-    groups_one_segment = groups[0:len(groups):segments]
+    # Removes aa number equal to (segments-1) rows out of the dataframe X 
+    X_one_segment = X[which_segment:len(X):segments]
+    y_one_segment = y[which_segment:len(y):segments]
+    groups_one_segment = groups[which_segment:len(groups):segments]
     
     # Initialize Stratified K Fold
     skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
@@ -109,12 +108,14 @@ else:
 #%% 
 # Initialize figure for plottting
 fig, axs = plt.subplots(nrows=2, ncols=2, sharex = True, sharey = True, figsize=(10,10))
+tpr_per_classifier = []
+ii=0
 
 for ax, (name, clf) in zip(axs.flat, classifiers):
     tprs = []
     aucs = []
     mean_fpr = np.linspace(0, 1, 100)
-    print(f'\n##### Classifier = {clf} ####')
+    
     # Fit and do CV
     for split, (train_index, test_index) in enumerate(data_split):
         # Generate train and test sets for this split
@@ -125,8 +126,8 @@ for ax, (name, clf) in zip(axs.flat, classifiers):
             X_train, X_test = X.iloc[train_index], X.iloc[test_index]
             y_train, y_test = y.iloc[train_index], y.iloc[test_index]
              
-        print(f'Split {split+1}\nShape of X_train is {X_train.shape[0]} x {X_train.shape[1]}')
-        print(f'Shape of X_test is {X_test.shape[0]} x {X_test.shape[1]}')
+        #print(f'Split {split+1}\nShape of X_train is {X_train.shape[0]} x {X_train.shape[1]}')
+        #print(f'Shape of X_test is {X_test.shape[0]} x {X_test.shape[1]}')
     
         # Control if there's only one class in a fold
         values, counts = np.unique(y[test_index], return_counts=True)
@@ -148,6 +149,7 @@ for ax, (name, clf) in zip(axs.flat, classifiers):
 
         # Compute ROC curve and area the curve
         fpr, tpr, thresholds = roc_curve(y_test, probas_[:, 1])
+        # Append the tpr vs fpr values interpolated over the mean_fpr linspace
         tprs.append(np.interp(mean_fpr, fpr, tpr))
         tprs[-1][0] = 0.0
         roc_auc = auc(fpr, tpr)
@@ -157,6 +159,8 @@ for ax, (name, clf) in zip(axs.flat, classifiers):
 
     mean_tpr = np.mean(tprs, axis=0)
     mean_tpr[-1] = 1.0
+    tpr_per_classifier.append(mean_tpr.T)
+
     mean_auc = auc(mean_fpr, mean_tpr)
     std_auc = np.std(aucs)
     ax.plot(mean_fpr, mean_tpr, color='b',
@@ -176,46 +180,50 @@ for ax, (name, clf) in zip(axs.flat, classifiers):
     # Plot chance curve
     ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
             label='Chance', alpha=.8)
+    
+    if ii ==0:
+        print(f'\nINFO: Class balance in training sets (C-P): {round(counts[0]/(y[test_index].size)*100)}-{round(counts[1]/(y[test_index].size)*100)}')
+    ii =+1
+    print(f'\nClassifier = {clf}')
+    print(f'AUC = %0.2f \u00B1 %0.2f' % (mean_auc, std_auc))
 
 axs[0,0].set(ylabel = 'False Positive Rate')
 axs[1,0].set(ylabel = 'False Positive Rate')
 axs[1,0].set(xlabel = 'True Positive Rate') 
 axs[1,1].set(xlabel = 'True Positive Rate') 
-fig.suptitle(f'Task: {task[0]}, Band type: {bands}, Channel data normalized: True')
-figname = f'{task[1]}_{bands}_normalized'
-fig.savefig(os.path.join(figures_dir, figname))
+
+# Add figure title and save it to metadata
+figure_title = f'Task: {metadata_info["task"]}, Band type: {metadata_info["freq_bands_type"]}, Channel data: {metadata_info["normalization"]}'
+fig.suptitle(figure_title)
+metadata_info["Title"] = figure_title
+
+# Add filename and save the figure
+figure_filename = f'{metadata_info["task"]}_{metadata_info["freq_bands_type"]}_{metadata_info["normalization"]}.png'
+fig.savefig(os.path.join(figures_dir, figure_filename), metadata = metadata_info)
+print(f'\nINFO: Success! Figure "{figure_filename}" has been saved to folder {figures_dir}/')
 
 #%% Export data from run
-
-def create_metadata():
+def output_data():
+    # Create / print out the CSV file with the data
     pass
 
-
-metadata = {
-        "Timestamp": datetime.now(),
-        "User": "WIP",
-        "Workstation": "WIP",
-        "Dataset": "k22",
-        "Task": task,
-        "Bandwidth": bands,
-        "Channel data normalized": "normalization",
-        "Number of folds": folds,
-        "Population of subjects": "WIP",
-        "Class balance": "WIP",
-        "Number of observations used in classification": len(X),
-        "Number of features per observation": X.shape[1],
-        # Per clf:
-        "Sensitivity": "WIP",
-        "Specifictiy":"WIP",
-        }
-#%%% 
-def export_csv_data():
-    pass
-
-#%%%
-def save_fig():
-    pass
-
+# Info to be added to the metadata
+#metadata = {
+#        "Creation Time": datetime.now(),
+#        "Author": "WIP",
+#        "Workstation": "WIP",
+#        "License": "project_license", 
+#        "Dataset": "k22",
+#        "Population of subjects": "WIP",
+#        "Class balance": "WIP",
+#        "Number of observations used in classification": len(X),
+#        "Number of features per observation": X.shape[1],
+#        # Per clf:
+#        "Sensitivity": "WIP",
+#        "Specifictiy":"WIP",
+#        }
+#
+#
 #with open("output_data.txt","w") as file:
 #    file.write(f'Date and time of running: {datetime.now()}\n')
 #    file.write(f'User: WIP\n')
@@ -235,9 +243,6 @@ def save_fig():
  
 #%%
     
-# https://www.imranabdullah.com/2019-06-01/Drawing-multiple-ROC-Curves-in-a-single-plot 
-# https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc_crossval.html
-
 #  What does roc_curve.from_estimator() object have
 #from pprint import pprint
 #pprint(vars(viz))
@@ -254,5 +259,9 @@ def save_fig():
 
 # By default, roc_curve it uses as many thresholds as there are unique values in the y_score input array. Here is the relevant excerpt from the scikit-learn documentation:
 
-    
-# https://stackoverflow.com/questions/55968792/why-do-my-models-keep-getting-exactly-0-5-auc
+# ## (Optional)
+    # Define what strategy to use based on the subjects balance
+
+# Note: There is a 27% chance that there's a fold with only one class. This can impact the classifier (especially LDA)
+# >>> After 999 iterations, we found 267 folds with 1 class
+     

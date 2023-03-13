@@ -14,6 +14,9 @@ import pandas as pd
 import argparse
 import os
 import sys
+import pickle
+import time
+
 # Get the parent directory of the current file 
 processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../processing'))
 sys.path.append(processing_dir)
@@ -21,11 +24,6 @@ from config_common import processed_data_dir
 #eeg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../processing/eeg'))
 #sys.path.append(eeg_dir)
 #from config_eeg import wide_bands
-
-import time
-
-# Save time of beginning of the execution to measure running time
-start_time = time.time()
 
 def define_subtasks(task):
     """
@@ -202,8 +200,6 @@ def create_data_frame(all_bands_vectors, subjects_and_tasks):
     ------
     - dataframe: panda dataframe
             Each row contains the subject_and_task label, the group which it belongs to, and the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
-    
-    Creating a data frame
     """
     
     # Create indices for dataframe
@@ -232,22 +228,49 @@ def create_data_frame(all_bands_vectors, subjects_and_tasks):
     
     return dataframe
 
+def export_data(dataframe, metadata):
+    """
+    Creates a pickle object containing the csv and the metadata so that other scripts using the CSV data can have the information on how was the data collected (e.g., input arguments or other variables).
+    
+    Input parameters
+    ----------------
+    - dataframe: pandas dataframe
+            Each row contains the subject_and_task label, the group which it belongs to, and the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
+    - metadata: dictonary
+                Contains the input arguments parsed when running the script     
+    Output
+    ------
+    - "output.pkl": pickle object
+            pickle object which contains the dataframe and the metadata
+    """
+    with open("output.pickle", "wb") as f:
+        pickle.dump((dataframe, metadata), f)
+    print('INFO: Success! Dataframe file "dataframe.csv" has been created in current directory.')
+    
     
 if __name__ == '__main__':
-        
+    # Save time of beginning of the execution to measure running time
+    start_time = time.time()
+    
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="ec")
-    parser.add_argument('--freq_bands_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
+    parser.add_argument('--freq_bands_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="wide")
     parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=True)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
     
+    #Create dictonary with metadata information
+    metadata_info = {"task": args.task, "freq_bands_type": args.freq_bands_type, "normalization": args.normalization}
     # Print out the chosen configuration
     if args.normalization == True:
         print(f"\nReading in data from task {args.task}, using {args.freq_bands_type} frequency bands. Data will be normalized. \n")
+        metadata_info["normalization"] = 'normalized'
     else:
-        print(f"\nReading in data from task {args.task}, using {args.freq_bands_type} frequency bands. Data will NOT be normalized. \n")            
+        print(f"\nReading in data from task {args.task}, using {args.freq_bands_type} frequency bands. Data will NOT be normalized. \n")    
+        metadata_info["normalization"] = 'not-normalized'        
+    
+    # Execute the submethods:
     # 1 - Define subtasks according to input arguments
     chosen_tasks = define_subtasks(args.task)
     
@@ -263,11 +286,8 @@ if __name__ == '__main__':
     # 5 - Create dataframe
     dataframe = create_data_frame(all_bands_vectors, subjects_and_tasks)
 
-    # Outputs the dataframe file that is needed by the ROC_AUC.py    
-    metadata_info = {"task": args.task, "freq_bands_type": args.freq_bands_type}
-    dataframe.to_csv('dataframe.csv', index_label='Index')
-    
-    print('INFO: Success! Dataframe file \'dataframe.csv\' has been created in current directory.')
+    # 6 - Outputs the dataframe file with metadata to be used by 02_plot_processed_data.py and 03_fit_classifier_and_plot.py   
+    export_data(dataframe = dataframe, metadata = metadata_info)
     
     # Calculate time that the script takes to run
     execution_time = (time.time() - start_time)
