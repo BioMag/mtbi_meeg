@@ -10,9 +10,10 @@ sys.path.append('../')
 from fnames import FileNames
 
 from config_common import (raw_data_dir, processed_data_dir, figures_dir,
-                           reports_dir, all_subjects, tasks)
+                           reports_dir, all_subjects)
 
 
+tasks = ['ec', 'eo', 'PASAT']
 ###############################################################################
 # Parameters that should be mentioned in the paper
 
