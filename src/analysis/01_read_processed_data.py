@@ -18,12 +18,10 @@ import pickle
 import time
 
 # Get the parent directory of the current file 
-processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../processing'))
+processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(processing_dir)
 from config_common import processed_data_dir
-#eeg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../processing/eeg'))
-#sys.path.append(eeg_dir)
-#from config_eeg import wide_bands
+from config_eeg import wide_bands
 
 def define_subtasks(task):
     """
@@ -140,11 +138,6 @@ def read_data(subjects_and_tasks, freq_bands_type, normalization, processed_data
             Each row contains the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
     """
     
-    # List of freq. indices 
-    #TODO: Could we use these from config_eeg? No, I am struggling with doing this
-    wide_bands = [(1,3), (3,5.2), (5.2,7.6), (7.6,10.2), (10.2, 13), (13,16),
-               (16,19.2), (19.2,22.6), (22.6,26.2), (26.2,30), (30,34), (34,38.2), (38.2,42.6)] 
-
     # Initialize a list to store processed data for each unique subject+segment combination 
     all_bands_vectors = [] 
 
@@ -223,7 +216,7 @@ def create_data_frame(all_bands_vectors, subjects_and_tasks):
     dataframe.insert(0, 'Group', groups)
     #TODO: horrible bubble-gum quickfix for CV problem
     #fixed the line above so that it works for all tasks
-    subs = np.array([s.split('_'+chosen_tasks[0][0:3])[0] for s in indices]) 
+    subs = np.array([s.split('_' + chosen_tasks[0][0:3])[0] for s in indices]) 
     dataframe.insert(1, 'Subject', subs)
     
     return dataframe

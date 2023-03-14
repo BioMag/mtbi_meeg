@@ -19,7 +19,6 @@ user = getuser()  # Username of the user running the scripts
 host = gethostname()  # Hostname of the machine running the scripts
 
 # You want to add your machine to this list
-# TODO: change them to match current users?
 if host == 'nbe-077' and user == 'heikkiv7':
     # Verna's workstation in Aalto
     raw_data_dir = '/m/nbe/scratch/tbi-meg/verna/BIDS'
@@ -96,18 +95,18 @@ import matplotlib
 matplotlib.use(matplotlib_backend)
 
 
-###############################################################################
-# These are all the relevant parameters that are common to both the EEG and MEG
-# analysis pipelines.
-###############################################################################
+################################################################################
+## These are all the relevant parameters that are common to both the EEG and MEG
+## analysis pipelines.
+################################################################################
 
 ## All subjects for which there is some form of data available
 all_subjects = os.listdir(raw_data_dir)
-for s in all_subjects:
-    s_path = os.path.join(raw_data_dir, s)
-    if not os.path.isdir(s_path):
-        all_subjects.remove(s) #TODO: check this! 
-all_subjects.remove('participants.tsv')  
+# Filter in directories-only
+all_subjects = [s for s in all_subjects if os.path.isdir(os.path.join(raw_data_dir, s))] # filter out non-directories
+# Remove file 'participants.tsv' if it exists
+if 'participants.tsv' in all_subjects:
+    all_subjects.remove('participants.tsv')
+# Remove the 'sub-' prefix from the list
 all_subjects = [x.replace('sub-', '') for x in all_subjects]
-## Tasks performed in the scanner
-tasks = ['ec', 'eo', 'PASAT']
+
