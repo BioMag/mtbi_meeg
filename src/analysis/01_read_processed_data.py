@@ -23,6 +23,9 @@ sys.path.append(processing_dir)
 from config_common import processed_data_dir
 from config_eeg import wide_bands
 
+# TODO: Move method 'define_subtask()' to config_eeg
+# TODO: Where to define 'subjects_to_exclude'?
+
 def define_subtasks(task):
     """
     Define the subtasks to be used for the analysis
@@ -248,7 +251,7 @@ if __name__ == '__main__':
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="PASAT_1")
-    parser.add_argument('--freq_bands_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="wide")
+    parser.add_argument('--freq_bands_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
     parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=True)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
@@ -258,10 +261,8 @@ if __name__ == '__main__':
     # Print out the chosen configuration
     if args.normalization == True:
         print(f"\nReading in data from task {args.task}, using {args.freq_bands_type} frequency bands. Data will be normalized. \n")
-        metadata_info["normalization"] = 'normalized'
     else:
         print(f"\nReading in data from task {args.task}, using {args.freq_bands_type} frequency bands. Data will NOT be normalized. \n")    
-        metadata_info["normalization"] = 'not-normalized'        
     
     # Execute the submethods:
     # 1 - Define subtasks according to input arguments
