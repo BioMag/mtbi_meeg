@@ -1,12 +1,40 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Feb 27 11:58:23 2023
+#################################
+# 03_fit_classifier_and_plot.py #
+#################################
 
-@author: portae1
+@authors: Verna Heikkinen, Aino Kuusi, Estanislao Porta
 
-# TODO: Try with other segments than the first
-# TODO: Make modular
+Takes the processed data, splits it in folds according to KFold cross validation and fits a classifier.
+It evaluates the performance of the fit by plotting each classifiers mean ROC curve. 
+
+Arguments
+---------
+    - output.pkl : pickle object
+        Object of pickle format containing the dataframe with the data and the metadata with the information about the arguments used to run the 01_read_processed_data script.    
+        
+    - seed : int
+        
+    - folds : str
+        
+    - scaling : bool
+    - scaling_method : str
+    - one_segment_per_task : bool
+        whether one or all segments of the task will be used
+    - which_segment : int
+        If one_segment_per_task is True, this defines which of the segments will be used
+        
+Returns
+-------
+
+    - figure  : pickle object 
+        Object of pickle format containing the dataframe with the data and the metadata with the information about the arguments used to run this script.
+    - metadata?
+
+
+
 # TODO: Return validation results as outputs: true_positives, false_positives, accuracy
 # TODO: Embed metadata to image and/or as output file
 # TODO: Create a report?
@@ -74,8 +102,8 @@ def initialize_variables(metadata):
     metadata["segments"] = segments
     
     # Define if we want to use CV with only one segment per subject (and no groups)
-    one_segment_per_subject = False
-    metadata["one_segment_per_subject"] = one_segment_per_subject
+    one_segment_per_task = False
+    metadata["one_segment_per_task"] = one_segment_per_task
     
     # Which segment to be used when using only one segment for fitting
     which_segment = 0
@@ -99,7 +127,7 @@ def initialize_cv(dataframe, metadata):
     groups = dataframe.loc[:, 'Subject']
     
     # Slice data
-    if metadata["one_segment_per_subject"] == True:
+    if metadata["one_segment_per_task"] == True:
         # Removes (segments-1) rows out of the dataframe 
         X = X[metadata["which_segment"]:len(X):metadata["segments"]]
         y = y[metadata["which_segment"]:len(y):metadata["segments"]]
@@ -220,9 +248,9 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
     
     # Add figure title and save it to metadata
     if metadata["scaling"]:
-        figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_subject"]}, Scaling: {metadata["scaling"]}, RobustScaler'
+        figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}, RobustScaler'
     else:
-        figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_subject"]}, Scaling: {metadata["scaling"]}'
+        figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}'
     fig.suptitle(figure_title)
     metadata["Title"] = figure_title
     

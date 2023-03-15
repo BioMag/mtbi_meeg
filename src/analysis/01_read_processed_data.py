@@ -1,11 +1,32 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jun 16 10:21:38 2022
+#############################
+# 01_read_processed_data.py #
+#############################
 
-@author: aino
+@authors: Verna Heikkinen, Aino Kuusi, Estanislao Porta
 
-Reads bandpower data from csv files and creates a matrix whose rows represent each subject. 
+Reads in EEG data from CSV files and creates a dataframe whose rows represent each subject's the bandpower per channel and per frequency band. The dataframe and the metadata on the arguments.
+
+Arguments
+---------
+    - task : str
+        Each of the four tasks that have been measured for this experiment: Eyes Closed (ec), Eyes Open (eo), Paced Auditory Serial Addition Test 1 or 2 (PASAT_1 or PASAT_2)
+    
+    - freq_band_type : str
+        Frequency bands used in the binning of the subject information. Thin bands 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. 
+    
+    - normalization : bool
+        Defines whether channel data is normalized for all the channels
+
+Returns
+-------
+
+    - output.pickle : pickle object 
+        Object of pickle format containing the dataframe with the data and the metadata with the information about the arguments used to run this script.
+
+
 """
 import re
 import numpy as np
@@ -21,52 +42,13 @@ import time
 processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(processing_dir)
 from config_common import processed_data_dir
-from config_eeg import wide_bands
-
-# TODO: Move method 'define_subtask()' to config_eeg
-# TODO: Where to define 'subjects_to_exclude'?
-
-def define_subtasks(task):
-    """
-    Define the subtasks to be used for the analysis
-    
-    
-    Input parameters
-    ---------
-    - task: chosen task (eyes open, eyes closed, Paced Auditory Serial Addition Test 1 or PASAT 2)
-    
-    Returns
-    -------
-    - chosen_tasks: The list of chosen subtasks
-    """
-    tasks = [['ec_1', 'ec_2', 'ec_3'], 
-             ['eo_1', 'eo_2', 'eo_3'], 
-             ['PASAT_run1_1', 'PASAT_run1_2'], 
-             ['PASAT_run2_1', 'PASAT_run2_2']]
-       
-    # Define which files to read for each subject
-    if task == 'ec':
-        chosen_tasks = tasks[0]
-    elif task == 'eo':
-        chosen_tasks = tasks[1]
-    elif task == 'PASAT_1':
-        chosen_tasks = tasks[2]
-    elif task == 'PASAT_2': 
-        chosen_tasks = tasks[3]
-    else:
-        raise("Incorrect task")
-       
-    return chosen_tasks
+from config_eeg import thin_bands, wide_bands, select_tasks, channels
 
 def read_subjects():
    
     """
-    Read in the list of subjects from file subjects.txt. Asserts format to contain two digits and then a letter P or C  
-    
-
-    Parameters
-    ----------
-    
+    Reads in the list of subjects from file subjects.txt. Asserts format to contain two digits and then a letter P or C for Patients or Controls. 
+        
     Returns
     -------
     - subjects: a list with all the subjects
@@ -171,9 +153,9 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
         
 #      Validate subject_and_task_bands_vector length:
         if freq_band_type == 'thin':
-            assert len(subject_and_task_bands_vector) == 5696, f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
+            assert len(subject_and_task_bands_vector) == (channels * len(thin_bands)), f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
         elif freq_band_type == 'wide':
-            assert len(subject_and_task_bands_vector) == (64 * len(wide_bands)), f'Processed data for subject {subject} does not have the expected length when using wide frequency bands.'
+            assert len(subject_and_task_bands_vector) == (channels * len(wide_bands)), f'Processed data for subject {subject} does not have the expected length when using wide frequency bands.'
             
         # Add vector to matrix
         all_bands_vectors.append(subject_and_task_bands_vector)    
@@ -266,7 +248,7 @@ if __name__ == '__main__':
     
     # Execute the submethods:
     # 1 - Define subtasks according to input arguments
-    chosen_tasks = define_subtasks(args.task)
+    chosen_tasks = select_tasks(args.task)
     
     # 2 - Read in the list of subjects from file subjects.txt
     subjects = read_subjects()

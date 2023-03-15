@@ -3,17 +3,16 @@ These are all the relevant parameters that are unique to the EEG analysis
 pipeline.
 """
 
-# Some relevant files are in the parent folder.
-import sys
-sys.path.append('../')
-
+import os 
 from fnames import FileNames
-
 from config_common import (raw_data_dir, processed_data_dir, figures_dir,
-                           reports_dir, all_subjects)
+                           reports_dir)
 
-
+# TODO: Is this used?
 tasks = ['ec', 'eo', 'PASAT']
+
+channels = 64
+
 ###############################################################################
 # Parameters that should be mentioned in the paper
 
@@ -47,6 +46,18 @@ elif band_type == 'thin':
 # bad_subjects = [
 #     24, 29,  # No EEG data present
 # ]
+
+## All subjects for which there is some form of data available
+all_subjects = os.listdir(raw_data_dir)
+# Filter in directories-only
+all_subjects = [s for s in all_subjects if os.path.isdir(os.path.join(raw_data_dir, s))] # filter out non-directories
+# Remove file 'participants.tsv' if it exists
+if 'participants.tsv' in all_subjects:
+    all_subjects.remove('participants.tsv')
+# Remove the 'sub-' prefix from the list
+all_subjects = [x.replace('sub-', '') for x in all_subjects]
+
+
 bad_subjects= []
 # Analysis is performed on these subjects
 subjects = [subject for subject in all_subjects if subject not in bad_subjects]
@@ -463,3 +474,37 @@ def task_from_fname(fname):
         return f'{task}_run{run}'
     else:
         return task
+
+def select_tasks(task):
+    """
+    Define the task segments to be used for the analysis
+    
+    
+    Input parameters
+    ---------
+    - task : str
+        Each of the four tasks that have been measured for this experiment: Eyes Closed (ec), Eyes Open (eo), Paced Auditory Serial Addition Test 1 or 2 (PASAT_1 or PASAT_2)
+    
+    Returns
+    -------
+    - chosen_tasks: The list of chosen task's segments 
+    """
+    # Segments present in each of the tasks
+    tasks = [['ec_1', 'ec_2', 'ec_3'], 
+             ['eo_1', 'eo_2', 'eo_3'], 
+             ['PASAT_run1_1', 'PASAT_run1_2'], 
+             ['PASAT_run2_1', 'PASAT_run2_2']]
+       
+    # Define which files to read for each subject
+    if task == 'ec':
+        chosen_tasks = tasks[0]
+    elif task == 'eo':
+        chosen_tasks = tasks[1]
+    elif task == 'PASAT_1':
+        chosen_tasks = tasks[2]
+    elif task == 'PASAT_2': 
+        chosen_tasks = tasks[3]
+    else:
+        raise("Incorrect task")
+       
+    return chosen_tasks

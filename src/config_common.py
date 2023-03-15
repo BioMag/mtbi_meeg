@@ -93,20 +93,3 @@ os.environ['OMP_NUM_THREADS'] = str(n_jobs)
 # Configure the graphics backend
 import matplotlib
 matplotlib.use(matplotlib_backend)
-
-
-################################################################################
-## These are all the relevant parameters that are common to both the EEG and MEG
-## analysis pipelines.
-################################################################################
-
-## All subjects for which there is some form of data available
-all_subjects = os.listdir(raw_data_dir)
-# Filter in directories-only
-all_subjects = [s for s in all_subjects if os.path.isdir(os.path.join(raw_data_dir, s))] # filter out non-directories
-# Remove file 'participants.tsv' if it exists
-if 'participants.tsv' in all_subjects:
-    all_subjects.remove('participants.tsv')
-# Remove the 'sub-' prefix from the list
-all_subjects = [x.replace('sub-', '') for x in all_subjects]
-

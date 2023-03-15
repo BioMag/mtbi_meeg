@@ -13,6 +13,7 @@ reports/
 *.xlsx
 *slurm*
 .doit*
+*.html
 
 # Specific files
 maxfilter_puuttuu.txt
