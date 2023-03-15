@@ -220,9 +220,9 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
     
     # Add figure title and save it to metadata
     if metadata["scaling"]:
-        figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_bands_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_subject"]}, Scaling: {metadata["scaling"]}, RobustScaler'
+        figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_subject"]}, Scaling: {metadata["scaling"]}, RobustScaler'
     else:
-        figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_bands_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_subject"]}, Scaling: {metadata["scaling"]}'
+        figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_subject"]}, Scaling: {metadata["scaling"]}'
     fig.suptitle(figure_title)
     metadata["Title"] = figure_title
     
@@ -242,11 +242,11 @@ def save_figure(metadata):
     """
     # Deefine filename
     if metadata["normalization"] and not metadata["scaling"]:
-        figure_filename = f'{metadata["task"]}_{metadata["freq_bands_type"]}_normalized_not-scaled.png'
+        figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_normalized_not-scaled.png'
     elif not metadata["normalization"] and metadata["scaling"]:
-        figure_filename = f'{metadata["task"]}_{metadata["freq_bands_type"]}_not-normalized_scaled.png'
+        figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_not-normalized_scaled.png'
     elif not metadata["normalization "] and not metadata["scaling"]:
-        figure_filename = f'{metadata["task"]}_{metadata["freq_bands_type"]}_not-normalized_not-scaled.png'
+        figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_not-normalized_not-scaled.png'
         
     #figures_dir = "." # Delete after testing
     # Save the figure

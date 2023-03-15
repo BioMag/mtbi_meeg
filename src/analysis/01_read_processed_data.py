@@ -119,7 +119,7 @@ def create_subjects_and_tasks(chosen_tasks, subjects):
     return subjects_and_tasks
 
 
-def read_data(subjects_and_tasks, freq_bands_type, normalization, processed_data_dir):
+def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_dir):
 
     """
     Read in processed bandpower data for each subject_and_tasks from files
@@ -129,7 +129,7 @@ def read_data(subjects_and_tasks, freq_bands_type, normalization, processed_data
     ----------------
     - subjects_and_tasks: list of 2-uples
             Contains the combinations of subjects and segments (e.g., (Subject1, Task1_segment1), (Subject1, Task1_segment2), ...)
-    - freq_bands_type: str
+    - freq_band_type: str
             Frequency bins, 'thin' or 'wide'
     - normalization: boolean
             If True, normalization of the PSD data for all channels will be performed   
@@ -148,7 +148,7 @@ def read_data(subjects_and_tasks, freq_bands_type, normalization, processed_data
     for pair in subjects_and_tasks:  
         # Construct the path pointing to where processed data for (subject,task) is stored         
         subject, task = pair[0].rstrip(), pair[1] 
-        path_to_processed_data = os.path.join(f'{processed_data_dir}', f'sub-{subject}', 'ses-01', 'eeg', 'bandpowers', f'{freq_bands_type}_{task}.csv')
+        path_to_processed_data = os.path.join(f'{processed_data_dir}', f'sub-{subject}', 'ses-01', 'eeg', 'bandpowers', f'{freq_band_type}_{task}.csv')
         
         # Create a 2D list to which the read data will be added
         subject_and_task_bands_list = []
@@ -170,9 +170,9 @@ def read_data(subjects_and_tasks, freq_bands_type, normalization, processed_data
         subject_and_task_bands_vector = np.concatenate(subject_and_task_bands_array.transpose())
         
 #      Validate subject_and_task_bands_vector length:
-        if freq_bands_type == 'thin':
+        if freq_band_type == 'thin':
             assert len(subject_and_task_bands_vector) == 5696, f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
-        elif freq_bands_type == 'wide':
+        elif freq_band_type == 'wide':
             assert len(subject_and_task_bands_vector) == (64 * len(wide_bands)), f'Processed data for subject {subject} does not have the expected length when using wide frequency bands.'
             
         # Add vector to matrix
@@ -251,18 +251,18 @@ if __name__ == '__main__':
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="PASAT_1")
-    parser.add_argument('--freq_bands_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
+    parser.add_argument('--freq_band_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
     parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=True)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
     
     #Create dictonary with metadata information
-    metadata_info = {"task": args.task, "freq_bands_type": args.freq_bands_type, "normalization": args.normalization}
+    metadata_info = {"task": args.task, "freq_band_type": args.freq_band_type, "normalization": args.normalization}
     # Print out the chosen configuration
     if args.normalization == True:
-        print(f"\nReading in data from task {args.task}, using {args.freq_bands_type} frequency bands. Data will be normalized. \n")
+        print(f"\nReading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will be normalized. \n")
     else:
-        print(f"\nReading in data from task {args.task}, using {args.freq_bands_type} frequency bands. Data will NOT be normalized. \n")    
+        print(f"\nReading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will NOT be normalized. \n")    
     
     # Execute the submethods:
     # 1 - Define subtasks according to input arguments
@@ -275,7 +275,7 @@ if __name__ == '__main__':
     subjects_and_tasks = create_subjects_and_tasks(chosen_tasks, subjects)
     
     # 4 - Read in processed data from file and create list where each row contains all the frquency bands and all channels per subject_and_task
-    all_bands_vectors = read_data(subjects_and_tasks, args.freq_bands_type, args.normalization, processed_data_dir)
+    all_bands_vectors = read_data(subjects_and_tasks, args.freq_band_type, args.normalization, processed_data_dir)
     
     # 5 - Create dataframe
     dataframe = create_data_frame(all_bands_vectors, subjects_and_tasks)
