@@ -90,7 +90,7 @@ def initialize_cv(dataframe, metadata):
     return X, y, groups, metadata, data_split
     """
     ## Define features, classes and groups
-    X = dataframe.iloc[:,2:]
+    X = dataframe.iloc[:, 2:]
     y = dataframe.loc[:, 'Group']
     groups = dataframe.loc[:, 'Subject']
     
@@ -121,7 +121,7 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
     # Initialize figure for plottting
     fig, axs = plt.subplots(nrows=2, ncols=2, 
                             sharex = True, sharey = True, 
-                            figsize=(10,10))
+                            figsize=(10, 10))
     tpr_per_classifier = []
     ii=0
     
@@ -210,14 +210,14 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
         print(f'\nClassifier = {clf}')
         print('AUC = %0.2f \u00B1 %0.2f' % (mean_auc, std_auc))
     
-    axs[0,0].set(ylabel = 'False Positive Rate')
-    axs[1,0].set(ylabel = 'False Positive Rate')
-    axs[1,0].set(xlabel = 'True Positive Rate') 
-    axs[1,1].set(xlabel = 'True Positive Rate') 
+    axs[0, 0].set(ylabel = 'False Positive Rate')
+    axs[1, 0].set(ylabel = 'False Positive Rate')
+    axs[1, 0].set(xlabel = 'True Positive Rate') 
+    axs[1, 1].set(xlabel = 'True Positive Rate') 
     
     # Add figure title and save it to metadata
     if metadata["scaling"]:
-        figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}, RobustScaler'
+        figure_title = f'Task: {metadata["task"]}, Freq band: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}, RobustScaler'
     else:
         figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}'
     fig.suptitle(figure_title)
@@ -286,17 +286,17 @@ if __name__ == "__main__":
     metadata["scaling"] = args.scaling
     metadata["scaling_method"] = args.scaling_method
     metadata["one_segment_per_task"] = args.one_segment_per_task
-    # Segments in the chosen task
-    if (metadata["task"] in ('eo', 'ec')):
-        segments = 3
-    elif (metadata["task"] in ('PASAT_1', 'PASAT_2')):
-        segments = 2
-    metadata["segments"] = segments
+#    # Segments in the chosen task
+#    if (metadata["task"] in ('eo', 'ec')):
+#        segments = 3
+#    elif (metadata["task"] in ('PASAT_1', 'PASAT_2')):
+#        segments = 2
+#    metadata["segments"] = segments
     # Which segment to be used when using only one segment for fitting 
     if  args.one_segment_per_task:
         metadata["which_segment"] = (args.which_segment)
-    elif args.which_segment > segments:
-        raise TypeError(f'The segment you chose is larger than the number of available segments for task {metadata["task"]}. Please choose a value between 1 and {segments}.')
+    elif args.which_segment > metadata["segments"]:
+        raise TypeError(f'The segment you chose is larger than the number of available segments for task {metadata["task"]}. Please choose a value between 1 and {metadata["segments"]}.')
           
         
     # TODO: Does this need to be deleted?

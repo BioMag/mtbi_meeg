@@ -239,7 +239,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     #Create dictonary with metadata information
-    metadata_info = {"task": args.task, "freq_band_type": args.freq_band_type, "normalization": args.normalization}
+    metadata = {"task": args.task, "freq_band_type": args.freq_band_type, "normalization": args.normalization}
+    # Define the number of segments per task
+    if (metadata["task"] in ('eo', 'ec')):
+        segments = 3
+    elif (metadata["task"] in ('PASAT_1', 'PASAT_2')):
+        segments = 2
+    metadata["segments"] = segments
+    
     # Print out the chosen configuration
     if args.normalization == True:
         print(f"\nReading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will be normalized. \n")
@@ -263,7 +270,7 @@ if __name__ == '__main__':
     dataframe = create_data_frame(all_bands_vectors, subjects_and_tasks)
 
     # 6 - Outputs the pickle object composed by the dataframe file and metadata to be used by 02_plot_processed_data.py and 03_fit_classifier_and_plot.py   
-    export_data(dataframe = dataframe, metadata = metadata_info)
+    export_data(dataframe = dataframe, metadata = metadata)
     
     # Calculate time that the script takes to run
     execution_time = (time.time() - start_time)
