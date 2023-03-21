@@ -234,7 +234,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="PASAT_1")
     parser.add_argument('--freq_band_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
-    parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=True)
+    parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=False)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
     
@@ -262,7 +262,7 @@ if __name__ == '__main__':
     # 5 - Create dataframe
     dataframe = create_data_frame(all_bands_vectors, subjects_and_tasks)
 
-    # 6 - Outputs the dataframe file with metadata to be used by 02_plot_processed_data.py and 03_fit_classifier_and_plot.py   
+    # 6 - Outputs the pickle object composed by the dataframe file and metadata to be used by 02_plot_processed_data.py and 03_fit_classifier_and_plot.py   
     export_data(dataframe = dataframe, metadata = metadata_info)
     
     # Calculate time that the script takes to run

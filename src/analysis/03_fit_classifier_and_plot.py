@@ -7,18 +7,15 @@
 
 @authors: Verna Heikkinen, Aino Kuusi, Estanislao Porta
 
-Takes the processed data, splits it in folds according to KFold cross validation and fits a classifier.
-It evaluates the performance of the fit by plotting each classifiers mean ROC curve. 
+Takes the processed data, fits four different ML classifiers, performs cross validation and evaluates the performance of the classification using mean ROC curves.
+
+Data is split it in folds according to 10-fold StratifiedGroupKFold (when using all segments of a task). If only one segment of a task is to be used, CV is done using StratifiedKFold CV.
 
 Arguments
 ---------
     - output.pkl : pickle object
-        Object of pickle format containing the dataframe with the data and the metadata with the information about the arguments used to run the 01_read_processed_data script.    
-        
-    - seed : int
-        
-    - folds : str
-        
+        Object of pickle format containing the dataframe with the data and the metadata with the information about the arguments used to run the 01_read_processed_data script.           
+    - seed : int      
     - scaling : bool
     - scaling_method : str
     - one_segment_per_task : bool
@@ -28,26 +25,26 @@ Arguments
         
 Returns
 -------
-
-    - figure  : pickle object 
+    - Prints out figure
+    - figure : pickle object 
         Object of pickle format containing the dataframe with the data and the metadata with the information about the arguments used to run this script.
     - metadata?
+    - report?
 
-
-
+# TODO: Should printing the figure be optional?
+# TODO: Save_figure logic
 # TODO: Return validation results as outputs: true_positives, false_positives, accuracy
 # TODO: Embed metadata to image and/or as output file
-# TODO: Create a report?
+# TODO: Create a report
 # TODO: Add logging?
 """
 import sys
 import os
 import numpy as np
-import pandas as pd
 import argparse
 import matplotlib.pyplot as plt
-import csv
 import pickle
+import time
 
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
@@ -85,36 +82,7 @@ def initialize_variables(metadata):
     return metadata
     """
 
-    # Random seed for the classifier
-    # Note: different sklearn versions could yield different results
-    seed = 8
-    metadata["seed"] = seed
-       
-    # Number of folds to be used during Cross Validation
-    folds = 10
-    metadata["folds"] = folds
-    
-    # Segments in the chosen task
-    if (metadata["task"] in ('eo', 'ec')):
-        segments = 3
-    elif (metadata["task"] in ('PASAT_1', 'PASAT_2')):
-        segments = 2
-    metadata["segments"] = segments
-    
-    # Define if we want to use CV with only one segment per subject (and no groups)
-    one_segment_per_task = False
-    metadata["one_segment_per_task"] = one_segment_per_task
-    
-    # Which segment to be used when using only one segment for fitting
-    which_segment = 0
-    metadata["which_segment"] = which_segment
-    
-    # Standardize data
-    scaling = False
-    metadata["scaling"] = scaling
-    scaling_method = [StandardScaler(), MinMaxScaler(), RobustScaler()]
-    metadata["scaling_method"] = scaling_method[2]
-    return metadata
+    pass
 
 def initialize_cv(dataframe, metadata):
     """
@@ -180,6 +148,7 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
                 X_test = scaler.transform(X_test)
             elif metadata["scaling"] and metadata["normalization"]:
                 raise TypeError("You are trying to scale data that has been already normalized.")
+            # TODO: Define if we want to print all of these.
             #print(f'Split {split+1}\nShape of X_train is {X_train.shape[0]} x {X_train.shape[1]}')
             #print(f'Shape of X_test is {X_test.shape[0]} x {X_test.shape[1]}')
         
@@ -188,7 +157,7 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
             if np.unique(y[test_index]).size == 1:
                 print(f"WARN: Split {split+1} has only 1 class in the test set, skipping it. ####")
                 continue
-            elif verbosity == True: 
+            elif metadata["verbosity"] == True: 
                 fold_size = y[test_index].size
                 if counts[0]<=counts[1]:
                     print(f"\nFold {split}:")
@@ -257,11 +226,11 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
     return metadata
 
 def save_figure(metadata):
+    # TODO: make sure it is the correct figure?
     """
     Transforms  metadata to string dict
     
-    Saves figure to file with metadata (WIP)
-    
+    Saves ACTIVE figure to file with metadata (WIP)
     Inputs:
         - save_figure : bool
                 Defines whether the figure should be saved to disk or not
@@ -289,29 +258,80 @@ def output_results(metadata):
 
 if __name__ == "__main__":
     
-    #%% Initialize variables and define arguments
-    verbosity = False
+    # Save time of beginning of the execution to measure running time
+    start_time = time.time()
     
+    
+    # Add arguments to be parsed from command line    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbosity', type=bool, help="Define the verbosity of the output. Default is False", metavar='', default=False)
+    parser.add_argument('-s', '--seed', type=int, help="Seed value used for CV splits, and for classifiers and for CV splits. Default value is 8, and gives 50/50 class balance in Training and Test sets.", metavar='int', default=8) # Note: different sklearn versions could yield different results
+    parser.add_argument('--scaling', type=bool, help='Scaling of data before fitting. Can only be used if data is not normalized. Default is True', metavar='', default=True)
+    # Scaling methods
+    scaling_methods = [StandardScaler(), MinMaxScaler(), RobustScaler()]
+    parser.add_argument('--scaling_method', choices=scaling_methods, help='Method for scaling data, choose from the options. Default is RobustScaler.', default=scaling_methods[2])
+    parser.add_argument('--one_segment_per_task', type=bool, help='Utilize only one of the segments from the tasks. Default is False', metavar='', default=False)
+    parser.add_argument('--which_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=1)    
+    #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
+    args = parser.parse_args()
+    
+    
+    # Execute the submethods:
+    # 1 - Read data
     dataframe, metadata = load_data()
-    metadata = initialize_variables(metadata)
+    
+    # 2 - Add the input arguments to the metadata dictionary
+    metadata["verbosity"] = args.verbosity
+    metadata["seed"] = args.seed
+    metadata["scaling"] = args.scaling
+    metadata["scaling_method"] = args.scaling_method
+    metadata["one_segment_per_task"] = args.one_segment_per_task
+    # Segments in the chosen task
+    if (metadata["task"] in ('eo', 'ec')):
+        segments = 3
+    elif (metadata["task"] in ('PASAT_1', 'PASAT_2')):
+        segments = 2
+    metadata["segments"] = segments
+    # Which segment to be used when using only one segment for fitting 
+    if  args.one_segment_per_task:
+        metadata["which_segment"] = (args.which_segment)
+    elif args.which_segment > segments:
+        raise TypeError(f'The segment you chose is larger than the number of available segments for task {metadata["task"]}. Please choose a value between 1 and {segments}.')
+          
+        
+    # TODO: Does this need to be deleted?
+    #metadata = initialize_variables(metadata)
+    # Number of folds to be used during Cross Validation
+    # TODO: move to config?
+    folds = 10
+    metadata["folds"] = folds
     
     # Define classifiers
+    # TODO: Move to config?
     classifiers = [
-            ('Support Vector Machine', SVC(kernel = 'rbf', probability=True, random_state=metadata["seed"])),
-            ('Logistic Regression', LogisticRegression(penalty='l1', solver='liblinear', random_state=metadata["seed"])),
-            ('Random Forest', RandomForestClassifier(random_state=metadata["seed"])),
-            ('Linear Discriminant Analysis', LinearDiscriminantAnalysis(solver='svd'))
+        ('Support Vector Machine', SVC(kernel = 'rbf', probability=True, random_state=metadata["seed"])),
+        ('Logistic Regression', LogisticRegression(penalty='l1', solver='liblinear', random_state=metadata["seed"])),
+        ('Random Forest', RandomForestClassifier(random_state=metadata["seed"])),
+        ('Linear Discriminant Analysis', LinearDiscriminantAnalysis(solver='svd'))
     ]
-    # Define input data, initialize CV and get data split
+    
+    print(f'Input parameters: \n\tTask: {metadata["task"]}, \n\tBand type: {metadata["freq_band_type"]}, \n\tChannel data normalization: {metadata["normalization"]}, \n\tUsing one-segment: {metadata["one_segment_per_task"]}, \n\tScaling: {metadata["scaling"]}, \n\tScaler method: metadata["scaling_method"] \n\nData is being split and fitted, please wait a moment... \n')
+    # 2 - Define input data, initialize CV and get data split
     X, y, groups, data_split = initialize_cv(dataframe, metadata)
     
-    # Fit classifiers and plot
+    # 3 - Fit classifiers and plot
     metadata = fit_and_plot(X, y, groups, classifiers, data_split, metadata)
     
-    # Save the figure to file
+    # 4 - Save the figure to disk
     save_figure(metadata)
     
-    # Output results
+    # TODO: 5 - Output report
+
+    # Calculate time that the script takes to run
+    execution_time = (time.time() - start_time)
+    print('\n###################################################\n')
+    print(f'Execution time of 03_fit_classifier_and_plot.py: {round(execution_time, 2)} seconds\n')
+    print('###################################################\n')
 #%% 
 
 

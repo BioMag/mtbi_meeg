@@ -66,7 +66,7 @@ elif host == 'rho' and user == 'portae1' :
     figures_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/src/figures', user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg' 
-elif host == 'vdiubuntu080' and user == 'portae1' :
+elif 'vdiubuntu' in host and user == 'portae1' :
     # Estanislao's workstation in VirtualMachine Aalto
     raw_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed' #This is not in use actually
     processed_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed'
