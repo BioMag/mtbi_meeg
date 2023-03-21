@@ -221,8 +221,8 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
     else:
         figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}'
     fig.suptitle(figure_title)
-    metadata["Title"] = figure_title
-    
+    metadata["title"] = figure_title
+
     return metadata
 
 def save_figure(metadata):
@@ -244,11 +244,11 @@ def save_figure(metadata):
         figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_not-normalized_scaled.png'
     elif not metadata["normalization "] and not metadata["scaling"]:
         figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_not-normalized_not-scaled.png'
-        
-    #figures_dir = "." # Delete after testing
+    # metadata_str = {key: str(value) for key, value in metadata.items()}
+ 
     # Save the figure
-    metadata_str = {key: str(value) for key, value in metadata.items()}
-    plt.savefig(os.path.join(figures_dir, figure_filename), metadata = metadata_str)
+    metadata["roc-plots"] = figure_filename
+    plt.savefig(os.path.join(figures_dir, figure_filename))
     print(f'\nINFO: Success! Figure "{figure_filename}" has been saved to folder {figures_dir}')
 
 def output_results(metadata):
@@ -315,7 +315,7 @@ if __name__ == "__main__":
         ('Linear Discriminant Analysis', LinearDiscriminantAnalysis(solver='svd'))
     ]
     
-    print(f'Input parameters: \n\tTask: {metadata["task"]}, \n\tBand type: {metadata["freq_band_type"]}, \n\tChannel data normalization: {metadata["normalization"]}, \n\tUsing one-segment: {metadata["one_segment_per_task"]}, \n\tScaling: {metadata["scaling"]}, \n\tScaler method: metadata["scaling_method"] \n\nData is being split and fitted, please wait a moment... \n')
+    print(f'Input parameters: \n\tTask: {metadata["task"]}, \n\tBand type: {metadata["freq_band_type"]}, \n\tChannel data normalization: {metadata["normalization"]}, \n\tUsing one-segment: {metadata["one_segment_per_task"]}, \n\tScaling: {metadata["scaling"]}, \n\tScaler method: {metadata["scaling_method"]} \n\nData is being split and fitted, please wait a moment... \n')
     # 2 - Define input data, initialize CV and get data split
     X, y, groups, data_split = initialize_cv(dataframe, metadata)
     

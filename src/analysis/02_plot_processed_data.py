@@ -154,7 +154,9 @@ def save_fig(metadata):
     else:
         fig_filename = f'psd-control-plot_{metadata["task"]}_{metadata["freq_band_type"]}_not-normalized.png'
     plt.savefig(os.path.join(figures_dir, fig_filename))
+    metadata["psd-control-plot"] = fig_filename
     print(f'\nINFO: Success! Figure "{fig_filename}" has been saved to folder {figures_dir}')
+    return metadata
 
 def export_data(dataframe, metadata):
     """
@@ -189,7 +191,7 @@ if __name__ == '__main__':
     parser.add_argument('--drop_subs', type=bool, help='Drop some subjects from the plotting. Default is False', metavar='', default=False)
     
     parser.add_argument('--one_segment_per_task', type=bool, help='Utilize only one of the segments from the tasks. Default is False', metavar='', default=True)
-    parser.add_argument('--control_plot_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=3)    
+    parser.add_argument('--control_plot_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=1)    
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
     
@@ -217,7 +219,7 @@ if __name__ == '__main__':
     plot_control_figures(plot_df, metadata)
     
     # 7 - Save active figure and add information to metadata
-    save_fig(metadata)
+    metadata = save_fig(metadata)
     
     # 8 - Export pickle object
     export_data(dataframe, metadata)
