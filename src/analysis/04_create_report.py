@@ -38,9 +38,7 @@ def create_report(metadata):
     	<title>mTBI-EEG - Analysis</title>
     </head>
     <body>
-    	<h1>mTBI-EEG report</h1>
-        <p>Metadata:</p>
-    
+    	<h1>mTBI-EEG report</h1>    
     ''')  
     # Include the PSD Control Plots
     
@@ -56,13 +54,15 @@ def create_report(metadata):
     
     if "roc-plots" in metadata:
         roc_plots = os.path.join(figures_dir, metadata["roc-plots"])
+        print(roc_plots)
         report.write(f'''   
         <h2>ROC Plots</h2>
         <p>Processed data was analyzed using four different ML classifiers. Validation was done using Stratified KFold Cross Validation. The subplots below show the ROC curves obtained using each of the classifiers.</p>
         <img src="{roc_plots}" class="center">
         ''')
+        print('I did something with the roc-plots')
                          
-    report.write('<p> All metadata values shown below</p>')
+    report.write('<h3> All metadata values shown below</h3>')
     # Loop over the dictionary items and write each key-value pair in a separate row
     for key, value in metadata.items():
         report.write(f'<p>{key}: {value}</p>\n')

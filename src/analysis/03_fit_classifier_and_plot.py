@@ -251,10 +251,24 @@ def save_figure(metadata):
     plt.savefig(os.path.join(figures_dir, figure_filename))
     print(f'\nINFO: Success! Figure "{figure_filename}" has been saved to folder {figures_dir}')
 
-def output_results(metadata):
+def export_data(dataframe, metadata):
     """
-   Creates a report? Or outputs data
+    Creates a pickle object containing the csv and the metadata so that other scripts using the CSV data can have the information on how was the data collected (e.g., input arguments or other variables).
+    
+    Input parameters
+    ----------------
+    - dataframe: pandas dataframe
+            Each row contains the subject_and_task label, the group which it belongs to, and the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
+    - metadata: dictonary
+                Contains the input arguments parsed when running the script     
+    Output
+    ------
+    - "output.pkl": pickle object
+            pickle object which contains the dataframe and the metadata
     """
+    with open("output.pickle", "wb") as f:
+        pickle.dump((dataframe, metadata), f)
+    print('INFO: Success! CSV data and metadata have been bundled into file "output.pickle".')
 
 if __name__ == "__main__":
     
@@ -325,8 +339,9 @@ if __name__ == "__main__":
     # 4 - Save the figure to disk
     save_figure(metadata)
     
-    # TODO: 5 - Output report
-
+    # 5 - Export metadata
+    export_data(dataframe, metadata)
+    
     # Calculate time that the script takes to run
     execution_time = (time.time() - start_time)
     print('\n###################################################\n')
@@ -363,11 +378,7 @@ if __name__ == "__main__":
 #     metadata_test = PngImagePlugin.PngInfo(pil_image_with_metadata.info).items()    
 #     # Print the metadata
 #     print(metadata_test)
-    
-#     # Display the image
-#     plt.imshow(figure_test)
-#     plt.show()
-    
+
 # Info to be added to the metadata
 #metadata = {
 #        "Creation Time": datetime.now(),
@@ -383,24 +394,7 @@ if __name__ == "__main__":
 #        "Sensitivity": "WIP",
 #        "Specifictiy":"WIP",
 #        }
-#
-#
-#with open("output_data.txt","w") as file:
-#    file.write(f'Date and time of running: {datetime.now()}\n')
-#    file.write(f'User: WIP\n')
-#    file.write(f'Workstation: WIP \n')
-#    file.write(f'Data from dataset: k22 WIP')
-#    file.write(f'\nTask: {task} \nBandwidth: {bands} \nNumber of folds in CV: {folds}\n')
-#    #file.write(f'Classifier model used: {classifier}\n')
-#    file.write(f'Other parameters: WIP\n')    
-##    file.write(f'**Results:** \nMean accuracy: {accuracy_average} ± {accuracy_std}\nAUC = {AUC_mean} ± {AUC_std}\n')
-#    file.write(f'Number of observations used in the classification: {len(X)}\n')
-#    file.write(f'Number of features per observation: {X.shape[1]}\n')
-#    # Sensitivity
-#    # Specificity
-#    # Number of controls and patients
-#    
-    
+
  
 #%%
     
