@@ -193,11 +193,11 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
         values_test, counts_test = np.unique(y[test_index], return_counts=True)
         values_train, counts_train = np.unique(y[test_index], return_counts=True)
         if ii ==0:
-            print(f'\nINFO: Class balance in test set (C-P): {round(counts_test[0]/(y[test_index].size)*100)}-{round(counts_test[1]/(y[test_index].size)*100)}')
+            print(f'INFO: Class balance in test set (C-P): {round(counts_test[0]/(y[test_index].size)*100)}-{round(counts_test[1]/(y[test_index].size)*100)}')
             print(f'INFO: Class balance in training set (C-P): {round(counts_train[0]/(y[test_index].size)*100)}-{round(counts_train[1]/(y[test_index].size)*100)}')
         ii =+1
-        print(f'\nClassifier = {clf}')
-        print('AUC = %0.2f \u00B1 %0.2f' % (mean_auc, std_auc))
+        print(f'\nINFO: Classifier = {clf}')
+        print('\tAUC = %0.2f \u00B1 %0.2f' % (mean_auc, std_auc))
     
     axs[0, 0].set(ylabel = 'False Positive Rate')
     axs[1, 0].set(ylabel = 'False Positive Rate')
@@ -227,7 +227,7 @@ def save_figure(metadata):
         figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_normalized_not-scaled.png'
     elif not metadata["normalization"] and metadata["scaling"]:
         figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_not-normalized_scaled.png'
-    elif not metadata["normalization "] and not metadata["scaling"]:
+    elif not metadata["normalization"] and not metadata["scaling"]:
         figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_not-normalized_not-scaled.png'
     # metadata_str = {key: str(value) for key, value in metadata.items()}
  
@@ -266,7 +266,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbosity', type=bool, help="Define the verbosity of the output. Default is False", metavar='', default=False)
     parser.add_argument('-s', '--seed', type=int, help="Seed value used for CV splits, and for classifiers and for CV splits. Default value is 8, and gives 50/50 class balance in Training and Test sets.", metavar='int', default=8) # Note: different sklearn versions could yield different results
-    parser.add_argument('--scaling', type=bool, help='Scaling of data before fitting. Can only be used if data is not normalized. Default is True', metavar='', default=True)
+    parser.add_argument('--scaling', type=bool, help='Scaling of data before fitting. Can only be used if data is not normalized. Default is True', metavar='', default=False)
     
     parser.add_argument('--scaling_method', choices=scaling_methods, help='Method for scaling data, choose from the options. Default is RobustScaler.', default=scaling_methods[2])
     parser.add_argument('--one_segment_per_task', type=bool, help='Utilize only one of the segments from the tasks. Default is False', metavar='', default=False)
@@ -304,7 +304,7 @@ if __name__ == "__main__":
         ('Linear Discriminant Analysis', LinearDiscriminantAnalysis(solver='svd'))
     ]
     
-    print(f'Input parameters: \n\tTask: {metadata["task"]}, \n\tBand type: {metadata["freq_band_type"]}, \n\tChannel data normalization: {metadata["normalization"]}, \n\tUsing one-segment: {metadata["one_segment_per_task"]}, \n\tScaling: {metadata["scaling"]}, \n\tScaler method: {metadata["scaling_method"]} \n\nData is being split and fitted, please wait a moment... \n')
+    print(f'INFO: Input parameters: \n\tTask: {metadata["task"]}, \n\tBand type: {metadata["freq_band_type"]}, \n\tChannel data normalization: {metadata["normalization"]}, \n\tUsing one-segment: {metadata["one_segment_per_task"]}, \n\tScaling: {metadata["scaling"]}, \n\tScaler method: {metadata["scaling_method"]} \n\nINFO: Data is being split and fitted, please wait a moment... \n')
     # 3 - Define input data, initialize CV and get data split
     X, y, groups, data_split = initialize_cv(dataframe, metadata)
     

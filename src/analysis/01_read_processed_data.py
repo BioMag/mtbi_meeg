@@ -236,7 +236,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="PASAT_1")
     parser.add_argument('--freq_band_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
-    parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=False)
+    parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=True)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
     
@@ -249,11 +249,12 @@ if __name__ == '__main__':
         segments = 2
     metadata["segments"] = segments
     
+    print('######## \nINFO: Starting to run 01_read_processed_data.py')
     # Print out the chosen configuration
     if args.normalization == True:
-        print(f"\nReading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will be normalized. \n")
+        print(f"\nINFO: Reading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will be normalized. \n")
     else:
-        print(f"\nReading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will NOT be normalized. \n")    
+        print(f"\nINFO: Reading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will NOT be normalized. \n")    
     
     # Execute the submethods:
     # 1 - Define subtasks according to input arguments

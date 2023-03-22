@@ -43,8 +43,8 @@ def create_report(metadata):
     	<title>mTBI-EEG - Analysis</title>
     </head>
     <body>
-    	<h1>mTBI-EEG report</h1>
-        <h2>{report_filename}</h2>
+    	<h1>mTBI-EEG report: {metadata["task"]} - {metadata["freq_band_type"]}</h1>
+        <h2>Normalized - Not scaled</h2>
     ''')  
     # Include the PSD Control Plots  
     if "psd-control-plot-filename" in metadata:
@@ -82,8 +82,9 @@ def create_report(metadata):
         </html>
         ''')
     report.close()
-    print('Success! Report created')
-
+    print(f'INFO: Success! File "{report_filename}" created')
+    print('\n***\n')
 if __name__ == "__main__":
     dataframe, metadata = load_data()
     create_report(metadata)
+    
