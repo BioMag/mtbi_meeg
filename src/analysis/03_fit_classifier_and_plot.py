@@ -32,10 +32,8 @@ Returns
     - report?
 
 # TODO: Should printing the figure be optional?
-# TODO: Save_figure logic
+# TODO: Shold saving the figure be optionsl? 
 # TODO: Return validation results as outputs: true_positives, false_positives, accuracy
-# TODO: Embed metadata to image and/or as output file
-# TODO: Create a report
 # TODO: Add logging?
 """
 import sys
@@ -59,7 +57,7 @@ from datetime import datetime
 
 processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(processing_dir)
-from config_common import reports_dir, figures_dir
+from config_common import figures_dir
 if not os.path.isdir(figures_dir):
     os.makedirs(figures_dir)
 
@@ -75,18 +73,10 @@ def load_data():
         dataframe, metadata = pickle.load(fin)
         
     return dataframe, metadata
-    
-def initialize_variables(metadata):
-    """
-    Initializes variables 
-    return metadata
-    """
-
-    pass
 
 def initialize_cv(dataframe, metadata):
     """
-    Initialize CrossValidation and get data splits as a list
+    Initialize Cross Validation and get data splits as a list
     return X, y, groups, metadata, data_split
     """
     ## Define features, classes and groups
@@ -112,10 +102,9 @@ def initialize_cv(dataframe, metadata):
     return X, y, groups, data_split
 
 def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
-    # I could get classifiers from config_eeg and avoid defining that here
     """
     Loops over all classifiers and accordinat to the CV.
-    Plots the results in subplots, saves figure
+    Plots the results in subplots
     return metadata
     """
     # Initialize figure for plottting
@@ -205,7 +194,7 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
         values_train, counts_train = np.unique(y[test_index], return_counts=True)
         if ii ==0:
             print(f'\nINFO: Class balance in test set (C-P): {round(counts_test[0]/(y[test_index].size)*100)}-{round(counts_test[1]/(y[test_index].size)*100)}')
-            print(f'\nINFO: Class balance in training set (C-P): {round(counts_train[0]/(y[test_index].size)*100)}-{round(counts_train[1]/(y[test_index].size)*100)}')
+            print(f'INFO: Class balance in training set (C-P): {round(counts_train[0]/(y[test_index].size)*100)}-{round(counts_train[1]/(y[test_index].size)*100)}')
         ii =+1
         print(f'\nClassifier = {clf}')
         print('AUC = %0.2f \u00B1 %0.2f' % (mean_auc, std_auc))
@@ -217,27 +206,23 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
     
     # Add figure title and save it to metadata
     if metadata["scaling"]:
-        figure_title = f'Task: {metadata["task"]}, Freq band: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}, RobustScaler'
+        figure_title = f'Task: {metadata["task"]}, Freq band: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, \nUsing one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}, RobustScaler'
     else:
-        figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, Using one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}'
+        figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, \nUsing one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}'
     fig.suptitle(figure_title)
-    metadata["title"] = figure_title
+    #metadata["title"] = figure_title
 
     return metadata
 
 def save_figure(metadata):
-    # TODO: make sure it is the correct figure?
+    """    
+    Saves ACTIVE figure to disk
+    Input parameters:
+    -----------------
+        - save_figure : bool WIP
+                Defines whether the figure should be saved to disk or not    
     """
-    Transforms  metadata to string dict
-    
-    Saves ACTIVE figure to file with metadata (WIP)
-    Inputs:
-        - save_figure : bool
-                Defines whether the figure should be saved to disk or not
-    Outputs:
-    
-    """
-    # Deefine filename
+    # Define filename
     if metadata["normalization"] and not metadata["scaling"]:
         figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_normalized_not-scaled.png'
     elif not metadata["normalization"] and metadata["scaling"]:
@@ -247,7 +232,7 @@ def save_figure(metadata):
     # metadata_str = {key: str(value) for key, value in metadata.items()}
  
     # Save the figure
-    metadata["roc-plots"] = figure_filename
+    metadata["roc-plots-filename"] = figure_filename
     plt.savefig(os.path.join(figures_dir, figure_filename))
     print(f'\nINFO: Success! Figure "{figure_filename}" has been saved to folder {figures_dir}')
 
@@ -257,13 +242,13 @@ def export_data(dataframe, metadata):
     
     Input parameters
     ----------------
-    - dataframe: pandas dataframe
+    - dataframe : pandas dataframe
             Each row contains the subject_and_task label, the group which it belongs to, and the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
     - metadata: dictonary
                 Contains the input arguments parsed when running the script     
     Output
     ------
-    - "output.pkl": pickle object
+    - output.pkl : pickle object
             pickle object which contains the dataframe and the metadata
     """
     with open("output.pickle", "wb") as f:
@@ -274,21 +259,20 @@ if __name__ == "__main__":
     
     # Save time of beginning of the execution to measure running time
     start_time = time.time()
-    
+    # Scaling methods
+    scaling_methods = [StandardScaler(), MinMaxScaler(), RobustScaler()]
     
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbosity', type=bool, help="Define the verbosity of the output. Default is False", metavar='', default=False)
     parser.add_argument('-s', '--seed', type=int, help="Seed value used for CV splits, and for classifiers and for CV splits. Default value is 8, and gives 50/50 class balance in Training and Test sets.", metavar='int', default=8) # Note: different sklearn versions could yield different results
     parser.add_argument('--scaling', type=bool, help='Scaling of data before fitting. Can only be used if data is not normalized. Default is True', metavar='', default=True)
-    # Scaling methods
-    scaling_methods = [StandardScaler(), MinMaxScaler(), RobustScaler()]
+    
     parser.add_argument('--scaling_method', choices=scaling_methods, help='Method for scaling data, choose from the options. Default is RobustScaler.', default=scaling_methods[2])
     parser.add_argument('--one_segment_per_task', type=bool, help='Utilize only one of the segments from the tasks. Default is False', metavar='', default=False)
     parser.add_argument('--which_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=1)    
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
-    
     
     # Execute the submethods:
     # 1 - Read data
@@ -300,21 +284,12 @@ if __name__ == "__main__":
     metadata["scaling"] = args.scaling
     metadata["scaling_method"] = args.scaling_method
     metadata["one_segment_per_task"] = args.one_segment_per_task
-#    # Segments in the chosen task
-#    if (metadata["task"] in ('eo', 'ec')):
-#        segments = 3
-#    elif (metadata["task"] in ('PASAT_1', 'PASAT_2')):
-#        segments = 2
-#    metadata["segments"] = segments
     # Which segment to be used when using only one segment for fitting 
     if  args.one_segment_per_task:
         metadata["which_segment"] = (args.which_segment)
     elif args.which_segment > metadata["segments"]:
         raise TypeError(f'The segment you chose is larger than the number of available segments for task {metadata["task"]}. Please choose a value between 1 and {metadata["segments"]}.')
           
-        
-    # TODO: Does this need to be deleted?
-    #metadata = initialize_variables(metadata)
     # Number of folds to be used during Cross Validation
     # TODO: move to config?
     folds = 10
@@ -330,16 +305,16 @@ if __name__ == "__main__":
     ]
     
     print(f'Input parameters: \n\tTask: {metadata["task"]}, \n\tBand type: {metadata["freq_band_type"]}, \n\tChannel data normalization: {metadata["normalization"]}, \n\tUsing one-segment: {metadata["one_segment_per_task"]}, \n\tScaling: {metadata["scaling"]}, \n\tScaler method: {metadata["scaling_method"]} \n\nData is being split and fitted, please wait a moment... \n')
-    # 2 - Define input data, initialize CV and get data split
+    # 3 - Define input data, initialize CV and get data split
     X, y, groups, data_split = initialize_cv(dataframe, metadata)
     
-    # 3 - Fit classifiers and plot
+    # 4 - Fit classifiers and plot
     metadata = fit_and_plot(X, y, groups, classifiers, data_split, metadata)
     
-    # 4 - Save the figure to disk
+    # 5 - Save the figure to disk
     save_figure(metadata)
     
-    # 5 - Export metadata
+    # 6 - Export metadata
     export_data(dataframe, metadata)
     
     # Calculate time that the script takes to run
@@ -347,10 +322,8 @@ if __name__ == "__main__":
     print('\n###################################################\n')
     print(f'Execution time of 03_fit_classifier_and_plot.py: {round(execution_time, 2)} seconds\n')
     print('###################################################\n')
+
 #%% 
-
-
-
 
 # from PIL import Image, PngImagePlugin
 

@@ -24,7 +24,7 @@ Returns
 -------
 
     - output.pickle : pickle object 
-        Object of pickle format containing the dataframe with the data and the metadata with the information about the arguments used to run this script.
+        Object of pickle format containing the dataframe with the data as well as the metadata with the information about the arguments used to run this script.
 
 
 """
@@ -142,8 +142,9 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
                 subject_and_task_bands_list.append([float(f) for f in frequency_band])              
         
         # Convert list to array
-        subject_and_task_bands_array = np.array(subject_and_task_bands_list)
-
+        subject_and_task_bands_array = np.array(subject_and_task_bands_list[0:38])
+        #subject_and_task_bands_array = np.array(subject_and_task_bands_list)
+        
         # Normalize each band
         if normalization: 
             ch_tot_powers = np.sum(subject_and_task_bands_array, axis = 0)
@@ -153,7 +154,8 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
         
 #      Validate subject_and_task_bands_vector length:
         if freq_band_type == 'thin':
-            assert len(subject_and_task_bands_vector) == (channels * len(thin_bands)), f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
+            assert len(subject_and_task_bands_vector) == (channels * 38), f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
+            #assert len(subject_and_task_bands_vector) == (channels * len(thin_bands)), f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
         elif freq_band_type == 'wide':
             assert len(subject_and_task_bands_vector) == (channels * len(wide_bands)), f'Processed data for subject {subject} does not have the expected length when using wide frequency bands.'
             
