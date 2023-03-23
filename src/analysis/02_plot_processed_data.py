@@ -7,9 +7,9 @@
 
 @authors: Verna Heikkinen, Aino Kuusi, Estanislao Porta
 
-Plots the processed EEG data of the PSD intensity (averaged across all channels) vs frequency for each subject (first subplot) and averaged for the groups (second subplot). It is used for visual assessment of individual subjects and general group behaviour
+Plots the processed EEG data of the PSD intensity (averaged across all channels) vs frequency for each subject and for each group.
 
-Information is added to the metadata object according to the arguments used to run this script
+It is used for visual assessment of individual subjects and general group behaviour. Arguments used to run the script are added to pickle object.
 
 Arguments
 ---------
@@ -31,25 +31,25 @@ Returns
     - output.pickle : pickle object 
         Object of pickle format containing the dataframe with the data as well as the metadata with the information about the arguments used to run this script.
 
+# TODO: Remove hardcoded values of frequency and use from config_eeg
+# TODO: violin plots?
+# TODO: ROIs. Check this out for rois: https://www.nature.com/articles/s41598-021-02789-9
 """
+import time
+import argparse
+import os
+import sys
+import pickle
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import pickle
-import time
-import argparse
-import os
-import sys
+
 src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(src_dir)
 from config_common import figures_dir
 
-# TODO: Double check the modularity
-# TODO: Remove hardcoded values of frequency and use from config_eeg
-# TODO: violin plots?
-# TODO: ROIs. Check this out for rois: https://www.nature.com/articles/s41598-021-02789-9
 
 def load_data():  
     # Read in dataframe and metadata
@@ -58,9 +58,6 @@ def load_data():
 
     return dataframe, metadata
 
-#vectorized data back to matrix (n*m), from which we should calculate global powers
-#So each df row now has [ch1_freq1, ..., ch64_freq[N], ch2_freq1, ..., ch64_freq1, ...ch64_freq[N]] where N = 89 if freq_bands = thin or N = 13 if freq_bands = 'wide'
-
 def define_freq_bands(metadata):
     if metadata["freq_band_type"] == 'thin':
         freqs = np.array([x for x in range(1, 39)])
@@ -68,28 +65,20 @@ def define_freq_bands(metadata):
         freqs = np.array([1, 3, 5.2, 7.6, 10.2, 13, 16, 19.2, 22.6, 26.2, 30, 34, 38.2]).T
 
     return freqs
-
-#%%
-    
+ 
 def global_averaging(df, metadata, freqs):
-    # Initialize variables
 #    subject_array_list = []
     global_averages = []
      
-    #%%  
-    # Calculate averages across all channels per subject 
+    # Transform data to array, change to logscale and re-shape to 2D. Calculate average across all channels per subject 
     for idx in df.index:
-        # Transform the data of each subject to np array 
         subj_arr = np.array(df.loc[idx])[2:]
-        # Change to logscale
         subj_arr = 10*np.log10(subj_arr.astype(float))
-        # Reshape to 2D array again where rows=channels, cols=freqbands
         subj_arr = np.reshape(subj_arr, (64, freqs.size))
         #subj_arr  = subj_arr[:, 0:37]
         #TODO: check these channels
         if metadata["roi"] == 'Frontal': 
             subj_arr = subj_arr[0:22, :]
-        # Calculate global average power accross all channels
         GA = np.mean(subj_arr, axis=0)
         global_averages.append(GA)
         #TODO: same for ROIs?
@@ -97,7 +86,6 @@ def global_averaging(df, metadata, freqs):
     return global_averages
      
 def create_df_for_plotting(df, metadata, freqs, global_averages):   
-    #Create the DataFrame to be used for plotting
     #shoo=np.array(global_averages)
     plot_df = pd.DataFrame(np.array(global_averages), columns=freqs)
     plot_df = plot_df.set_index(df.index)
@@ -118,9 +106,9 @@ def create_df_for_plotting(df, metadata, freqs, global_averages):
     return plot_df 
      
 def plot_control_figures(plot_df, metadata):
-  
-    # Plot a figure with two subplots: one with individual patients and another with group means and SD
-    # Initialize figure and two subplots ax1 and ax2
+    '''
+    Plot a figure with two subplots: one with individual patients and another with group means and SD
+    '''  
     f, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
     # Define style
     plt.style.use('seaborn-darkgrid')  
@@ -130,7 +118,6 @@ def plot_control_figures(plot_df, metadata):
     f.suptitle(figure_title)
     
     # Subplot 1
-    # Iterate over rows in dataframe: define color based on group and plot in subplot (1, 1)
     for index,  row in plot_df.iterrows():
         if row['Group'] == 1:
             col = 'red'
@@ -144,21 +131,17 @@ def plot_control_figures(plot_df, metadata):
     ax1.set_ylabel('PSD (dB)')
     
     # Subplot 2
-    #Calculate means of each group 
+    #Calculate means of each group & plot
     group_means = plot_df.groupby('Group').mean(numeric_only=True)
-    
-    # Plot means in subplot (2, 1)
     ax2.plot(freqs, group_means.iloc[0, :], 'g--', linewidth=1, label='Controls')
     ax2.plot(freqs, group_means.iloc[1, :], 'r-.', linewidth=1, label='Patients')
-    
+
     ax2.set_xlabel('Frequency (Hz)')
     ax2.set_ylabel('PSD (dB)') #only if no channel scaling
     ax2.legend()
     
-    # Calculate SD of each group
+    # Calculate SD of each group & plot around means
     group_sd = plot_df.groupby('Group').std(numeric_only=True)
-    
-    # Add SD around the group means
     c_plus = group_means.iloc[0, :] + group_sd.iloc[0, :]
     c_minus = group_means.iloc[0, :] - group_sd.iloc[0, :]
     ax2.fill_between(freqs, c_plus, c_minus, color='g', alpha=.2, linewidth=.5)
@@ -247,4 +230,3 @@ if __name__ == '__main__':
     print('\n###################################################\n')
     print(f'Execution time of 02_plot_processed_data.py: {round(execution_time, 2)} seconds\n')
     print('###################################################\n')
-       

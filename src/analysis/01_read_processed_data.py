@@ -7,7 +7,7 @@
 
 @authors: Verna Heikkinen, Aino Kuusi, Estanislao Porta
 
-Reads in EEG data from CSV files and creates a dataframe whose rows represent each subject's the bandpower per channel and per frequency band. The dataframe and the metadata on the arguments.
+Reads in EEG data from CSV files and creates a dataframe whose rows represent each subject's the bandpower per channel and per frequency band. The dataframe and the arguments used to run the script are added to pickle object.
 
 Arguments
 ---------
@@ -26,23 +26,27 @@ Returns
     - output.pickle : pickle object 
         Object of pickle format containing the dataframe with the data as well as the metadata with the information about the arguments used to run this script.
 
-
+#TODO: Ask verna if line 199 with bubblegum fix is ok
+#TODO: Define use of thinbands
+#TODO: Export pkl should be a separate class?
 """
+
+import os
+import sys
+import argparse
+import pickle
+import time
 import re
+
 import numpy as np
 import csv
 import pandas as pd
-import argparse
-import os
-import sys
-import pickle
-import time
 
-# Get the parent directory of the current file 
 processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(processing_dir)
 from config_common import processed_data_dir
 from config_eeg import thin_bands, wide_bands, select_tasks, channels
+
 
 def read_subjects():
    
@@ -57,7 +61,6 @@ def read_subjects():
      # List of extra controls, dismissed so we'd have equal number of P vs C.
     to_exclude = ['32C', '33C', '34C', '35C', '36C', '37C', '38C', '39C', '40C', '41C', '12P']
 
-    # Get the list of subjects and check the format   
     subject_pattern = r'^\d{2}[PC]'   
     try:
         with open('subjects.txt', 'r') as subjects_file:
@@ -66,7 +69,6 @@ def read_subjects():
             for line in subjects:
                 assert re.match(subject_pattern, line), f"Subject '{line}' does not have the expected format."
     except FileNotFoundError as e:
-        # File expected in same directory 
         print("The file 'subjects.txt' does not exist in the current directory. The program will exit.")
         raise e
     
@@ -93,13 +95,10 @@ def create_subjects_and_tasks(chosen_tasks, subjects):
 
     """
    
-    # Define a list with 2-uples formed by all the combinations of (subjects, tasks)
     subjects_and_tasks = [(x,y) for x in subjects for y in chosen_tasks]
-
     print(f'INFO: There are {len(subjects_and_tasks)} subject_and_task combinations.')
     
     return subjects_and_tasks
-
 
 def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_dir):
 
@@ -143,6 +142,7 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
         
         # Convert list to array
         subject_and_task_bands_array = np.array(subject_and_task_bands_list[0:38])
+        #TODO: Keep line above if using 'sliced' thin bands is ok. 
         #subject_and_task_bands_array = np.array(subject_and_task_bands_list)
         
         # Normalize each band

@@ -9,7 +9,8 @@
 
 Takes the processed data, fits four different ML classifiers, performs cross validation and evaluates the performance of the classification using mean ROC curves.
 
-Data is split it in folds according to 10-fold StratifiedGroupKFold (when using all segments of a task). If only one segment of a task is to be used, CV is done using StratifiedKFold CV.
+Data is split it in folds according to 10-fold StratifiedGroupKFold (when using all segments of a task). If only one segment of a task is to be used, CV is done using StratifiedKFold CV. Arguments used to run the script are added to pickle object.
+
 
 Arguments
 ---------
@@ -35,15 +36,17 @@ Returns
 # TODO: Shold saving the figure be optionsl? 
 # TODO: Return validation results as outputs: true_positives, false_positives, accuracy
 # TODO: Add logging?
+# TODO: Folds, Seed, Classifiers and scaling methods in config_eeg? If we want to move the clfs we also need to move the seed
+
 """
 import sys
 import os
-import numpy as np
 import argparse
-import matplotlib.pyplot as plt
 import pickle
 import time
 
+import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -51,18 +54,14 @@ from sklearn.metrics import roc_curve, accuracy_score, RocCurveDisplay, auc
 from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
-
 from statistics import mean, stdev
 from datetime import datetime
 
 processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(processing_dir)
 from config_common import figures_dir
-if not os.path.isdir(figures_dir):
-    os.makedirs(figures_dir)
 
-#%%
-    
+   
 def load_data():
     """
     Load pickle data and initialize variables 
@@ -137,10 +136,7 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
                 X_test = scaler.transform(X_test)
             elif metadata["scaling"] and metadata["normalization"]:
                 raise TypeError("You are trying to scale data that has been already normalized.")
-            # TODO: Define if we want to print all of these.
-            #print(f'Split {split+1}\nShape of X_train is {X_train.shape[0]} x {X_train.shape[1]}')
-            #print(f'Shape of X_test is {X_test.shape[0]} x {X_test.shape[1]}')
-        
+      
             # Control if there's only one class in a fold
             values, counts = np.unique(y[test_index], return_counts=True)
             if np.unique(y[test_index]).size == 1:
@@ -210,8 +206,13 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
     else:
         figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, \nUsing one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}'
     fig.suptitle(figure_title)
-    #metadata["title"] = figure_title
+    
 
+    return metadata
+
+def add_timestamp(metadata):
+    """Adds timestamp to metadata"""
+    metadata["timestamp"] = datetime.now()
     return metadata
 
 def save_figure(metadata):
@@ -259,6 +260,11 @@ if __name__ == "__main__":
     
     # Save time of beginning of the execution to measure running time
     start_time = time.time()
+    
+    # Create directory if it doesn't exist
+    if not os.path.isdir(figures_dir):
+        os.makedirs(figures_dir)
+    
     # Scaling methods
     scaling_methods = [StandardScaler(), MinMaxScaler(), RobustScaler()]
     
@@ -296,7 +302,6 @@ if __name__ == "__main__":
     metadata["folds"] = folds
     
     # Define classifiers
-    # TODO: Move to config?
     classifiers = [
         ('Support Vector Machine', SVC(kernel = 'rbf', probability=True, random_state=metadata["seed"])),
         ('Logistic Regression', LogisticRegression(penalty='l1', solver='liblinear', random_state=metadata["seed"])),
@@ -311,10 +316,13 @@ if __name__ == "__main__":
     # 4 - Fit classifiers and plot
     metadata = fit_and_plot(X, y, groups, classifiers, data_split, metadata)
     
-    # 5 - Save the figure to disk
+    # 5 -  Add timestamp
+    metadata = add_timestamp(metadata)
+    
+    # 6 - Save the figure to disk
     save_figure(metadata)
     
-    # 6 - Export metadata
+    # 7 - Export metadata
     export_data(dataframe, metadata)
     
     # Calculate time that the script takes to run
