@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mTBI-EEG"
+version = "0.0.1"
+authors = [
+  { name="Heikkinen Verna", email="verna.heikkinen@aalto.fi" },
+  { name="Mia Liljestrom", email="mia.liljestrom@hus.fi" },
+  { name="Estanislao Porta", email="estanislao.porta@aalto.fi" }
+]
+description = "Pipeline to analyze EEG data and determine minor Trauma Brain Injuries"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = []
+
+[project.urls]
+"Homepage" = "https://github.com/pypa/sampleproject"
+"Bug Tracker" = "https://github.com/pypa/sampleproject/issues"
+
+
