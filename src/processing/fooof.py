@@ -1,17 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 14 12:29:27 2022
+Created on Thu Mar 23 15:10:10 2023
 
 @author: aino
-
-Calculates log band power (absolute) for each subject
-
-Running:
-import subprocess
-subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.sh', shell=True)
 """
-
 
 import argparse
 import h5py

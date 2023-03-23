@@ -37,7 +37,7 @@ figures = defaultdict(list)
 
 # Not all subjects have files for all conditions. These functions grab the
 # files that do exist for the subject.
-exclude = ['emptyroom'] #these don't have eye blinks.
+exclude = ['emptyroom', 'PASAT','eo'] #these don't have eye blinks.
 bad_subjects = ['01P', '02P', '03P', '04P', '05P', '06P', '07P']#these ica need to be done manually
 all_fnames = zip(
     get_all_fnames(args.subject, kind='filt', exclude=exclude),
@@ -49,6 +49,7 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
     task = task_from_fname(filt_fname)
     #TODO: crop first and last 2-5 s
     raw_filt = read_raw_fif(filt_fname, preload=True)
+    raw_filt = raw_filt.copy().crop(tmin=30, tmax=90)
     
     # Reduce logging level (technically, one could define it in the read_raw_fif function, but it seems to be buggy)
     # More info about the bug can be found here: https://github.com/mne-tools/mne-python/issues/8872
@@ -91,7 +92,7 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
     with open_report(fname.report(subject=args.subject)) as report:
         if len(bads_eog)>0:
             report.add_ica(ica=ica, 
-                            title=f' {task}' + ' EOG', 
+                            title=f' {task}' + ' EOG' + date_time, 
                             inst=raw_filt, 
                             picks=bads_eog,
                             eog_evoked=eog_events.average(),
@@ -102,7 +103,7 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
         if ecg_exists:
             if len(bads_ecg)>0:
                 report.add_ica(ica=ica, 
-                                title=f' {task}' + ' ECG', 
+                                title=f' {task}' + ' ECG' + date_time, 
                                 inst=raw_filt, 
                                 picks=bads_ecg,
                                 ecg_evoked=ecg_events.average(),
