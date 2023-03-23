@@ -14,10 +14,6 @@ sys.path.append(src_dir)
 from config_common import figures_dir, reports_dir
 if not os.path.isdir(reports_dir):
     os.makedirs(reports_dir)
-# Create report
-# Put header (static) - General metadata?
-
-# Section 1: If control plot exists, add small desciption and control plot (specific metadata?)
 
 # Section 2: plot of all the four ROC AUCs. It would be nice to plot the subplots separately eh? Put metadata specific for this? 
 # Could add accuracies, TPR and something else here
@@ -29,12 +25,11 @@ def load_data():
     return dataframe, metadata
 
 def create_report(metadata):
-    # Define filename
+    # Define filename & open HTML file
     report_filename = f'report_{metadata["roc-plots-filename"][:-4]}.html'
-    
     report_path = os.path.join(reports_dir, report_filename)
-    # HTML report
     report = open(report_path, 'w')
+    
     # General header
     report.write(f'''
     <!DOCTYPE html>
@@ -55,12 +50,11 @@ def create_report(metadata):
         <p>In the second subplot, the PSD for each frequency bin was averaged accross all the channels and all the subjects within each group. The standard deviation for both groups is also displayed.</p>
         <img src="{control_plots}" class="center">
         ''')
-    
+    # Include the ROC plots
     if "roc-plots-filename" in metadata:
         roc_plots = os.path.join(figures_dir, metadata["roc-plots-filename"])
         #TODO: check that file exists
-        print(roc_plots)
-        
+        print(roc_plots)       
         report.write(f'''   
         <h2>ROC Plots</h2>
         <p>Processed data was analyzed using four different ML classifiers. Validation was done using Stratified KFold Cross Validation. The subplots below show the ROC curves obtained using each of the classifiers.</p>
