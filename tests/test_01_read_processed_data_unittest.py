@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Mar  5 16:58:55 2023
+#############################
+# test_01_read_processed_data.py #
+#############################
+@author: Estanislao Porta 
 
-@author: portae1
+Tests the functions from module 01_read_processed_data.py
+
 """
 
 import unittest
@@ -14,14 +18,15 @@ import tempfile
 import shutil
 import numpy as np
 
-# Get the parent directory of the current file 
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# Add the directory to the Python path
-sys.path.append(parent_dir)
+src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.append(src_dir)
+from config_eeg import channels
 
-# Use importlib to import the module as a string to avoid conflicts with the numbers
-module_name = "01_read_processed_data"
+analysis_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'analysis'))
+sys.path.append(analysis_dir)
+module_name = "01_read_processed_data" # Use importlib to import the module as a string to avoid conflicts with the numbers
 read_processed_data = importlib.import_module(module_name)
+
 
 class TestCreateSubjectsAndTasks(unittest.TestCase):
     def test_create_subjects_and_tasks(self):
@@ -40,8 +45,8 @@ class TestCreateSubjectsAndTasks(unittest.TestCase):
             self.assertIsInstance(element, tuple)
             self.assertEqual(len(element), 2)
 
-class TestReadProcessedData(unittest.TestCase):
-    def test_read_processed_data(self):
+class TestReadData(unittest.TestCase):
+    def test_read_data(self):
         # Create temporary directory and dummy data
         tmp_dir = tempfile.mkdtemp()
         subjects_and_tasks = [('01P', 'ec_1'), ('01P', 'ec_2'), ('01P', 'ec_3')]
@@ -63,11 +68,14 @@ class TestReadProcessedData(unittest.TestCase):
         result = read_processed_data.read_data(subjects_and_tasks, freq_bands, normalization, processed_data_dir)
     
         # Check that the output has the expected shape
-        expected_shape = (len(subjects_and_tasks), 5696)
+        expected_shape = (len(subjects_and_tasks), channels*38)
         assert np.shape(result) == expected_shape, f"Output has shape {np.shape(result)}, but expected shape is {expected_shape}"
     
         # Remove the temporary directory
         shutil.rmtree(tmp_dir)
+
+class TestCreateDataFrame(self):
+    create_data_frame
 
 if __name__ == '__main__':
     unittest.main()
