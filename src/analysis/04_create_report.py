@@ -20,7 +20,7 @@ if not os.path.isdir(reports_dir):
 
 def load_data():  
     # Read in dataframe and metadata
-    with open("output.pickle", "rb") as fin:
+    with open("eeg_tmp_data.pickle", "rb") as fin:
         dataframe, metadata = pickle.load(fin)
     return dataframe, metadata
 

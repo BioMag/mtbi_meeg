@@ -14,7 +14,7 @@ Data is split it in folds according to 10-fold StratifiedGroupKFold (when using 
 
 Arguments
 ---------
-    - output.pkl : pickle object
+    - eeg_tmp_data.pickle : pickle object
         Object of pickle format containing the dataframe with the data and the metadata with the information about the arguments used to run the 01_read_processed_data script.           
     - seed : int      
     - scaling : bool
@@ -68,7 +68,7 @@ def load_data():
     return dataframe, metadata
     """
     # Read in dataframe and metadata
-    with open("output.pickle", "rb") as fin:
+    with open("eeg_tmp_data.pickle", "rb") as fin:
         dataframe, metadata = pickle.load(fin)
         
     return dataframe, metadata
@@ -249,12 +249,12 @@ def export_data(dataframe, metadata):
                 Contains the input arguments parsed when running the script     
     Output
     ------
-    - output.pkl : pickle object
+    - eeg_tmp_data. pickle : pickle object
             pickle object which contains the dataframe and the metadata
     """
-    with open("output.pickle", "wb") as f:
+    with open("eeg_tmp_data.pickle", "wb") as f:
         pickle.dump((dataframe, metadata), f)
-    print('INFO: Success! CSV data and metadata have been bundled into file "output.pickle".')
+    print('INFO: Success! CSV data and metadata have been bundled into file "eeg_tmp_data.pickle".')
 
 if __name__ == "__main__":
     

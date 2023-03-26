@@ -8,6 +8,7 @@
 @authors: Verna Heikkinen, Aino Kuusi, Estanislao Porta
 
 Reads in EEG data from CSV files and creates a dataframe whose rows represent each subject's the bandpower per channel and per frequency band. The dataframe and the arguments used to run the script are added to pickle object.
+## NOTE: While we're reading in 'thin' freq bands with 89 freq bins, this script transforms it to the first 38 bins, so that the lower and upper range of the frequencies are identical  for 'thin' and 'wide' type of bands
 
 Arguments
 ---------
@@ -23,10 +24,9 @@ Arguments
 Returns
 -------
 
-    - output.pickle : pickle object 
+    - eeg_tmp_data.pickle : pickle object 
         Object of pickle format containing the dataframe with the data as well as the metadata with the information about the arguments used to run this script.
 
-#TODO: Ask verna if line 199 with bubblegum fix is ok
 #TODO: Define use of thinbands
 #TODO: Export pkl should be a separate class?
 """
@@ -138,7 +138,10 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
         with open(path_to_processed_data, 'r') as file:
             reader = csv.reader(file)
             for frequency_band in reader:  
-                subject_and_task_bands_list.append([float(f) for f in frequency_band])              
+                try:
+                    subject_and_task_bands_list.append([float(f) for f in frequency_band])
+                except ValueError:
+                    raise ValueError("Invalid data: could not convert to float")              
         
         # Convert list to array
         subject_and_task_bands_array = np.array(subject_and_task_bands_list[0:38])
@@ -165,45 +168,46 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
     print(f'INFO: Success! Shape of \'all_bands_vectors\' is {len(all_bands_vectors)} x {len(all_bands_vectors[0])}, as expected.')
     return all_bands_vectors
 
-def create_data_frame(all_bands_vectors, subjects_and_tasks):
+def create_data_frame(subjects_and_tasks, all_bands_vectors):
     """
     Create a dataframe structure to be used by the model_testing and ROC_AUC.py scripts
     
     
     Input parameters
     ----------------
+    - chosen_tasks: list
+            The segments within the chosen task
     - all_bands_vector: list of np arrays
             Each row contains the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
     - subjects_and_tasks: list of 2-uples
-                Contains the combinations of subjects and segments (e.g., (Subject1, Task1_segment1), (Subject1, Task1_segment2), ...)    
+            Contains the combinations of subjects and segments (e.g., (Subject1, Task1_segment1), (Subject1, Task1_segment2), ...)    
     Output
     ------
     - dataframe: panda dataframe
             Each row contains the subject_and_task label, the group which it belongs to, and the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
     """
+    if not subjects_and_tasks:
+        raise ValueError("The list of subject-task combinations cannot be empty.")
+    if len(all_bands_vectors) == 0:
+        raise ValueError("The list of PSD data cannot be empty.")        
     
-    # Create indices for dataframe
-    indices = []
-    for i in subjects_and_tasks:
-        j = i[0].rstrip()+'_'+i[1]
-        indices.append(j)
-    
+    # Create a list of indices of format 'subject_segment'
+    indices = [i[0].rstrip() + '_' + i[1] for i in subjects_and_tasks]
+  
     # Convert list to numpy array to dataframe 
-    dataframe = pd.DataFrame(np.array(all_bands_vectors, dtype = object), indices ) 
+    dataframe = pd.DataFrame(np.array(all_bands_vectors, dtype = object), index=indices) 
     
-    # Add column 'Group'
     groups = []
-    for subject in indices:
-        if 'P' in subject[2]:
+    subs = []
+    for subject, _ in subjects_and_tasks:
+        subs.append(subject)
+        if 'P' in subject:
             groups.append(1)
-        elif 'C' in subject[2]:
+        elif 'C' in subject:
             groups.append(0)
         else:
             groups.append(2) # In case there is a problem
     dataframe.insert(0, 'Group', groups)
-    #TODO: horrible bubble-gum quickfix for CV problem
-    #fixed the line above so that it works for all tasks
-    subs = np.array([s.split('_' + chosen_tasks[0][0:3])[0] for s in indices]) 
     dataframe.insert(1, 'Subject', subs)
     
     return dataframe
@@ -220,12 +224,12 @@ def export_data(dataframe, metadata):
                 Contains the input arguments parsed when running the script     
     Output
     ------
-    - "output.pkl": pickle object
+    - "eeg_tmp_data.pickle": pickle object
             pickle object which contains the dataframe and the metadata
     """
-    with open("output.pickle", "wb") as f:
+    with open("eeg_tmp_data.pickle", "wb") as f:
         pickle.dump((dataframe, metadata), f)
-    print('INFO: Success! Processed data has been read in and parsed into dataframe.csv. CSV data and metadata have been bundled into file "output.pickle".')
+    print('INFO: Success! Processed data has been read in and parsed into dataframe.csv. CSV data and metadata have been bundled into file "eeg_tmp_data.pickle".')
     
     
 if __name__ == '__main__':
@@ -270,7 +274,7 @@ if __name__ == '__main__':
     all_bands_vectors = read_data(subjects_and_tasks, args.freq_band_type, args.normalization, processed_data_dir)
     
     # 5 - Create dataframe
-    dataframe = create_data_frame(all_bands_vectors, subjects_and_tasks)
+    dataframe = create_data_frame(subjects_and_tasks, all_bands_vectors)
 
     # 6 - Outputs the pickle object composed by the dataframe file and metadata to be used by 02_plot_processed_data.py and 03_fit_classifier_and_plot.py   
     export_data(dataframe = dataframe, metadata = metadata)

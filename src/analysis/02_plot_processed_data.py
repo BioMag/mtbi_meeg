@@ -13,7 +13,7 @@ It is used for visual assessment of individual subjects and general group behavi
 
 Arguments
 ---------
-    - output.pickle : pickle object 
+    - eeg_tmp_data.pickle : pickle object 
         Object of pickle format containing the dataframe with the data as well as the metadata with the arguments used to run the 01_read_processed_data.py script.
     
     - control_plot_segment : int
@@ -28,7 +28,7 @@ Arguments
 Returns
 -------
 
-    - output.pickle : pickle object 
+    - eeg_tmp_data.pickle : pickle object 
         Object of pickle format containing the dataframe with the data as well as the metadata with the information about the arguments used to run this script.
 
 # TODO: Remove hardcoded values of frequency and use from config_eeg
@@ -52,8 +52,7 @@ from config_common import figures_dir
 
 
 def load_data():  
-    # Read in dataframe and metadata
-    with open("output.pickle", "rb") as fin:
+    with open("eeg_tmp_data.pickle", "rb") as fin:
         dataframe, metadata = pickle.load(fin)
 
     return dataframe, metadata
@@ -85,7 +84,8 @@ def global_averaging(df, metadata, freqs):
         
     return global_averages
      
-def create_df_for_plotting(df, metadata, freqs, global_averages):   
+def create_df_for_plotting(df, metadata, freqs, global_averages):  
+
     #shoo=np.array(global_averages)
     plot_df = pd.DataFrame(np.array(global_averages), columns=freqs)
     plot_df = plot_df.set_index(df.index)
@@ -173,12 +173,12 @@ def export_data(dataframe, metadata):
                 Contains the input arguments parsed when running the script     
     Output
     ------
-    - "output.pkl": pickle object
+    - eeg_tmp_data.pickle : pickle object
             pickle object which contains the dataframe and the metadata
     """
-    with open("output.pickle", "wb") as f:
+    with open("eeg_tmp_data.pickle", "wb") as f:
         pickle.dump((dataframe, metadata), f)
-    print('INFO: Success! CSV data and metadata have been bundled into file "output.pickle".')
+    print('INFO: Success! CSV data and metadata have been bundled into file "eeg_tmp_data.pickle".')
     
 if __name__ == '__main__':
     
