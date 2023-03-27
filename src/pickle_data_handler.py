@@ -43,5 +43,12 @@ class PickleDataHandler:
             print(f'An error occurred: {e}')
             return False
         
+        if dataframe.empty:
+            raise ValueError("The dataframe is empty.")
+        if not isinstance(metadata, dict):
+            raise ValueError("Metadata must be a dictionary.")
+        if not metadata:
+            raise ValueError("The metadata file cannot be empty.")
+            
         print('INFO: Success! CSV data and metadata have been read in from file "eeg_tmp_data.pickle".')
         return dataframe, metadata
