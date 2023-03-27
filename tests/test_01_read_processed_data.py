@@ -86,12 +86,7 @@ def test_create_data_frame():
     assert dataframe.shape == (len(subjects_and_tasks), channels*38 + 2), "Dimensions of DataFrame are wrong"
     assert dataframe["Subject"].dtype == 'object', "Some subjects are not strings"
     assert dataframe["Group"].dtype == 'int64', "Some groups are not integers"
-    # What to assert about the df? Is it a df? Dimensions. Strings where group and subjects go. 
-    # Should I run the function again with different subjects_and_tasks? Or smth similar
-    # Give an empty list
-    # Give it a wrong type of input, e.g., dataframe of strings or whatnot
-    
-    # Current code complains if subjects_and_tasks is empty. Should I create a test case for this to 'pass' if the code raises an exception correctly?
+
 def test_create_data_frame_empty_subjects_and_tasks():
     all_bands_vectors = np.random.rand(4, channels*38)
     subjects_and_tasks = []

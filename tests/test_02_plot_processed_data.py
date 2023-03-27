@@ -41,13 +41,12 @@ def test_define_freq_bands():
 def test_global_averaging_with_sample_data():
     # TODO: Test for wide freqs!
     freqs = np.array([x for x in range(1, 39)])   
-
-    array_subjects = np.random.rand(3, len(freqs) * channels)
-    df = pd.DataFrame({'Group': [1, 0, 1], 'Subjects': ["26P", "01C", "02P"]})
-    df = pd.concat([df, pd.DataFrame(array_subjects)], axis=1)
+    eeg_data = np.random.rand(3, len(freqs) * channels)
+    df = pd.DataFrame({'Group': [1, 0, 1], 'Subject': ["26P", "01C", "02P"]})
+    df = pd.concat([df, pd.DataFrame(eeg_data)], axis=1)
     metadata = {"roi": 'All'}
-    expected_output = []
     
+    expected_output = []
     for idx in df.index:
         subj_arr = np.array(df.loc[idx])[2:]
         subj_arr = 10*np.log10(subj_arr.astype(float))
@@ -64,26 +63,46 @@ def test_global_averaging_with_sample_data():
     
 def test_global_averaging_with_empty_dataframe():
     # The pickle data handler should already be considering these issues
-#    metadata = {"roi": 'All'}
-#    freqs = np.array([x for x in range(1, 39)])   
-#    array_subjects = np.empty(3, len(freqs) * channels)
-#    df = pd.DataFrame({'Group': [1, 0, 1], 'Subjects': ["26P", "01C", "02P"]})
-#    df = pd.concat([df, pd.DataFrame(array_subjects)], axis=1)
-#    assert plot_processed_data.global_averaging(df, metadata, freqs) == []
-    pass
+    metadata = {"roi": 'All'}
+    freqs = np.array([x for x in range(1, 39)])   
+    eeg_data = []
+    df = pd.DataFrame({'Group': [1, 0, 1], 'Subject': ["26P", "01C", "02P"]})
+    df = pd.concat([df, pd.DataFrame(eeg_data)], axis=1)
+    
+    with pytest.raises(ValueError) as e:
+        plot_processed_data.global_averaging(df, metadata, freqs)
+    assert str(e.value) == "Error: Empty data array."
+
 def test_global_averaging_with_nan_values():
-#    df = pd.DataFrame({'A': [np.nan, np.nan, np.nan], 'B': [np.nan, np.nan, np.nan], 'C': [np.nan, np.nan, np.nan], 'D': [np.nan, np.nan, np.nan]})
-#    metadata = {'sample_rate': 1000, 'channels': 64}
-#    freqs = np.array([x for x in range(1, 39)])   
-#
-#    assert plot_processed_data.global_averaging(df, metadata, freqs) == []
-    pass
-def test_global_averaging_with_different_frequencies():
-    # Try with wide freqs
-    pass
+    # The pickle data handler should already be considering this
+    metadata = {"roi": 'All'}
+    freqs = np.array([x for x in range(1, 39)])   
+    eeg_data = np.full((3, len(freqs) * channels), np.nan)
+    df = pd.DataFrame({'Group': [1, 0, 1], 'Subject': ["26P", "01C", "02P"]})
+    df = pd.concat([df, pd.DataFrame(eeg_data)], axis=1)
+    
+    with pytest.raises(ValueError) as e:
+        plot_processed_data.global_averaging(df, metadata, freqs)
+    assert str(e.value) == "Error: There is at least one NaN value."
 
 def test_create_df_for_plotting():
-    pass
+    metadata = {"control_plot_segment": 1, "segments": 2}
+    freqs = np.array([x for x in range(1, 39)])   
+    eeg_data = np.random.rand(3, len(freqs) * channels)
+    df = pd.DataFrame({'Group': [1, 0, 1], 'Subject': ["26P", "01C", "02P"]})
+    df = pd.concat([df, pd.DataFrame(eeg_data)], axis=1)
+    
+    global_averages = []
+    for idx in df.index:
+        subj_arr = np.array(df.loc[idx])[2:]
+        subj_arr = 10 * np.log10(subj_arr.astype(float))
+        subj_arr = np.reshape(subj_arr, (channels, freqs.size))
+
+        GA = np.mean(subj_arr, axis=0)
+        global_averages.append(GA)
+    
+    df_for_plotting = plot_processed_data.create_df_for_plotting(df, metadata, freqs, global_averages)
+    assert isinstance(df_for_plotting, pd.DataFrame)
 
 def test_plot_control_figures():
     pass

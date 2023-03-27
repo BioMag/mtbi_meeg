@@ -19,9 +19,6 @@ Arguments
     - control_plot_segment : int
         Define which of the segments from the task will be used for plotting.
     
-    - drop_subs : bool
-        Defines whether some subjects need to be excluded before plotting.
-    
     - roi : str 
         Defines the Region Of Interest for more localized information (WIP - Not currently functional).
         
@@ -105,13 +102,6 @@ def create_df_for_plotting(df, metadata, freqs, global_averages):
     segment_index = metadata["control_plot_segment"]-1
     plot_df = plot_df[segment_index:len(df):metadata["segments"]] 
     
-    # Drop subjects if needed
-    # The following subjects have very low power in PASAT_1:
-    subs_to_drop = ['15P', '19P', '31P', '36C', '08P', '31C']
-    if metadata["drop_subs"]:
-        for sub in subs_to_drop:
-            plot_df = plot_df.drop(plot_df[plot_df['Subject']==sub].index)
-   
     return plot_df 
      
 def plot_control_figures(plot_df, metadata):
@@ -203,7 +193,6 @@ if __name__ == '__main__':
     
     roi_areas = ['All', 'Frontal', 'Occipital', 'FTC', 'Centro-parietal']
     parser.add_argument('--roi', type=str, choices=roi_areas, help="ROI areas to be plotted. Default value is 'All'.", metavar='', default='All')
-    parser.add_argument('--drop_subs', type=bool, help='Drop some subjects from the plotting. Default is False', metavar='', default=False)
     parser.add_argument('--control_plot_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=1)    
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
@@ -217,7 +206,6 @@ if __name__ == '__main__':
     if metadata["control_plot_segment"] > metadata["segments"]:
         raise IndexError(f'List index out of range. The segment you chose is not allowed for task {metadata["task"]}. Please choose a value between 1 and {metadata["segments"]}.')
     metadata["roi"] = args.roi
-    metadata["drop_subs"] = args.drop_subs
     
     # 3 - Define Frequency bands
     freqs = define_freq_bands(metadata)
