@@ -39,6 +39,7 @@ def test_define_freq_bands():
 
 
 def test_global_averaging_with_sample_data():
+    channels = 64
     freqs = np.array([x for x in range(1, 39)])   
 
     array_subjects = np.random.rand(3, len(freqs) * channels)
@@ -46,8 +47,17 @@ def test_global_averaging_with_sample_data():
     df = pd.concat([df, pd.DataFrame(array_subjects)], axis=1)
     metadata = {"roi": 'All'}
     
+    
     # This is wrong: its giving out one average per subject, but it should give out 39 avrargs per subject
-    expected_output = [np.mean(np.reshape(10 * np.log10(np.array(df.loc[idx])[2:].astype(float)), (channels, len(freqs)))) for idx in df.index]
+    
+    subset_means = []
+    for i in range(0, len(freqs)*channels, len(freqs)):
+        subset = array_subjects[:, i:i+len(freqs)]
+        subset_mean = np.mean(subset)
+        subset_means.append(subset_mean)
+        
+    expected_output = pd.concat([df, pd.DataFrame(subset_means)], axis=1)
+    
 
     actual_output = plot_processed_data.global_averaging(df, metadata, freqs)
     assert len(expected_output) == len(actual_output)
