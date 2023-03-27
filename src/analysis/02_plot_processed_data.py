@@ -34,6 +34,7 @@ Returns
 # TODO: Remove hardcoded values of frequency and use from config_eeg
 # TODO: violin plots?
 # TODO: ROIs. Check this out for rois: https://www.nature.com/articles/s41598-021-02789-9
+
 """
 import time
 import argparse
@@ -64,17 +65,26 @@ def define_freq_bands(metadata):
         freqs = np.array([1, 3, 5.2, 7.6, 10.2, 13, 16, 19.2, 22.6, 26.2, 30, 34, 38.2]).T
 
     return freqs
- 
+# TODO: Would rename to 'channel' averaging
 def global_averaging(df, metadata, freqs):
-#    subject_array_list = []
+    
+    if df.isnull().values.any():
+        raise ValueError("Error: There is at least one NaN value.") 
+    
     global_averages = []
-     
-    # Transform data to array, change to logscale and re-shape to 2D. Calculate average across all channels per subject 
+    
+     # Transform data to array, change to logscale and re-shape to 2D. Calculate average across all channels per subject 
     for idx in df.index:
         subj_arr = np.array(df.loc[idx])[2:]
-        subj_arr = 10*np.log10(subj_arr.astype(float))
-        subj_arr = np.reshape(subj_arr, (64, freqs.size))
-        #subj_arr  = subj_arr[:, 0:37]
+        subj_arr = 10 * np.log10(subj_arr.astype(float))
+        # TODO: remove 
+        if subj_arr.size == 0:
+            raise ValueError("Error: Empty data array.")
+        else: 
+            try:
+                subj_arr = np.reshape(subj_arr, (64, freqs.size))
+            except ValueError:
+                print("Error: Data array has incorrect dimensions.")
         #TODO: check these channels
         if metadata["roi"] == 'Frontal': 
             subj_arr = subj_arr[0:22, :]
@@ -86,7 +96,6 @@ def global_averaging(df, metadata, freqs):
      
 def create_df_for_plotting(df, metadata, freqs, global_averages):  
 
-    #shoo=np.array(global_averages)
     plot_df = pd.DataFrame(np.array(global_averages), columns=freqs)
     plot_df = plot_df.set_index(df.index)
     plot_df.insert(0, "Subject", df['Subject'])
@@ -150,6 +159,9 @@ def plot_control_figures(plot_df, metadata):
     p_minus = group_means.iloc[1, :] - group_sd.iloc[1, :]
     ax2.fill_between(freqs, p_plus, p_minus, color='r', alpha=.2, linewidth=.5)
 
+
+
+#    plt.close()  # close the figure to free memory
 def save_fig(metadata):
     # Save fig to disk
     if metadata["normalization"]:

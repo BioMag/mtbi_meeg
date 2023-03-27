@@ -29,6 +29,7 @@ Returns
 
 #TODO: Define use of thinbands
 #TODO: Export pkl should be a separate class?
+#TODO: Check NaN in DF
 """
 
 import os

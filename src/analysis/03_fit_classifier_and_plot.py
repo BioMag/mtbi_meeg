@@ -32,8 +32,8 @@ Returns
     - metadata?
     - report?
 
-# TODO: Should printing the figure be optional?
-# TODO: Shold saving the figure be optionsl? 
+# TODO: Should printing the figure be optional? WIP!
+# TODO: Shold saving the figure be optional?
 # TODO: Return validation results as outputs: true_positives, false_positives, accuracy
 # TODO: Add logging?
 # TODO: Folds, Seed, Classifiers and scaling methods in config_eeg? If we want to move the clfs we also need to move the seed
@@ -106,6 +106,8 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
     Plots the results in subplots
     return metadata
     """
+    plt.ioff()  # turn off interactive mode
+
     # Initialize figure for plottting
     fig, axs = plt.subplots(nrows=2, ncols=2, 
                             sharex = True, sharey = True, 
@@ -206,7 +208,9 @@ def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
     else:
         figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, \nUsing one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}'
     fig.suptitle(figure_title)
-    
+    display_fig = True
+    if display_fig:
+        plt.show()
 
     return metadata
 
