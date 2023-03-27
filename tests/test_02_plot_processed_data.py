@@ -39,6 +39,7 @@ def test_define_freq_bands():
 
 
 def test_global_averaging_with_sample_data():
+    # TODO: Test for wide freqs!
     freqs = np.array([x for x in range(1, 39)])   
 
     array_subjects = np.random.rand(3, len(freqs) * channels)
@@ -51,7 +52,7 @@ def test_global_averaging_with_sample_data():
         subj_arr = np.array(df.loc[idx])[2:]
         subj_arr = 10*np.log10(subj_arr.astype(float))
         subj_arr = np.reshape(subj_arr, (channels, freqs.size))
-        #TODO: check these channels
+        
         if metadata["roi"] == 'Frontal': 
             subj_arr = subj_arr[0:22, :]
         GA = np.mean(subj_arr, axis=0)
@@ -59,7 +60,7 @@ def test_global_averaging_with_sample_data():
 
     actual_output = plot_processed_data.global_averaging(df, metadata, freqs)
     assert len(expected_output) == len(actual_output)
-    assert all([a == b for a, b in zip(actual_output, expected_output)])
+    assert all(tuple(a) == tuple(b) for a, b in zip(actual_output, expected_output)), "The actual output does not match the expected output."
     
 def test_global_averaging_with_empty_dataframe():
     # The pickle data handler should already be considering these issues

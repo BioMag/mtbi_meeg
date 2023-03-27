@@ -14,15 +14,13 @@ reports/
 *slurm*
 .doit*
 *.html
-
+*.pickle
 # Specific files
 maxfilter_puuttuu.txt
 psds_corrupted_or_missing.txt
 ecg_puuttuu.txt
 subjects.txt
-output_data.txt
-output.pickle
-output.pkl
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
