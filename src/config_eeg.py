@@ -11,10 +11,21 @@ from config_common import (raw_data_dir, processed_data_dir, figures_dir,
 # TODO: Is this used?
 tasks = ['ec', 'eo', 'PASAT']
 
-channels = 64
 
 ###############################################################################
 # Parameters that should be mentioned in the paper
+
+# Seed to be used in the initialization of the classifiers and the CV
+seed =  8
+
+# Channels from the eeg measurment
+channels = 64
+
+# Folds for cv
+folds = 10
+
+# Scaling methods
+scaling_methods = [StandardScaler(), MinMaxScaler(), RobustScaler()]
 
 # Highpass filter above 1Hz. This is needed for the ICA to perform well
 # later on. Lowpass filter below 100Hz to get rid of the signal produced by
