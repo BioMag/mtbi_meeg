@@ -7,7 +7,6 @@ Created on Sun Mar 26 18:09:59 2023
 """
 
 import pickle
-import pandas as pd
 
 class PickleDataHandler:
     

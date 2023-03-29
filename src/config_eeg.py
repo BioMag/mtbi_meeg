@@ -24,14 +24,11 @@ channels = 64
 # Folds for cv
 folds = 10
 
-# Scaling methods
-scaling_methods = [StandardScaler(), MinMaxScaler(), RobustScaler()]
-
 # Highpass filter above 1Hz. This is needed for the ICA to perform well
 # later on. Lowpass filter below 100Hz to get rid of the signal produced by
 # the cHPI coils. Notch filters at 50Hz and 100Hz to get rid of powerline.
-fmin = 1
-fmax = 90
+freq_min = 1
+freq_max = 40
 fnotch = [50, 100]
 
 # Computation of the PSDs
@@ -41,7 +38,7 @@ n_fft = 2048  # Higher number means more resolution at the lower frequencies
 # These are currently not in use
 band_type = 'thin' #or 'thin'
 
-thin_bands = [(x, x+1) for x in range(1,fmax)]
+thin_bands = [(x, x+1) for x in range(1, freq_max)]
 wide_bands =  [(1,3), (3,5.2), (5.2,7.6), (7.6,10.2), (10.2, 13), (13,16),
                (16,19.2), (19.2,22.6), (22.6,26.2), (26.2,30), (30,34), (34,38.2), (38.2,42.6)]
 if band_type == 'wide':
