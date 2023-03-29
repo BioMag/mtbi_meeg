@@ -22,7 +22,7 @@ import sys
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
-from config_eeg import fname, n_fft, get_all_fnames, task_from_fname
+from config_eeg import fname, n_fft, get_all_fnames, task_from_fname, freq_max
 
 # Save time of beginning of the execution to measure running time
 start_time = time.time()
@@ -34,11 +34,6 @@ args = parser.parse_args()
 
 # Compute the PSD for each task
 psds = dict()
-
-# Maximum frequency at which to compute PSD
-fmax = 90
-
-
 
 # Not all subjects have files for all conditions. These functions grab the
 # files that do exist for the subject.
@@ -76,16 +71,16 @@ for psds_fname, clean_fname in all_fnames:
         clean_3 = raw.copy().crop(tmin=210, tmax=260)
         #TODO: why this?
         psds[task+'_3'], freqs = psd_array_welch(clean_3.get_data(picks=['eeg']), sfreq=sfreq, 
-                                                 fmax=fmax, n_fft=n_fft)
+                                                 fmax=freq_max, n_fft=n_fft)
 
     elif 'PASAT' in task:
         clean_1 = raw.copy().crop(tmin=2, tmax=62)
         clean_2 = raw.copy().crop(tmin=62, tmax=122)
     
     psds[task+'_1'], freqs = psd_array_welch(clean_1.get_data(picks=['eeg']), sfreq=sfreq,
-                                             fmax=fmax, n_fft=n_fft)
+                                             fmax=freq_max, n_fft=n_fft)
     psds[task+'_2'], freqs = psd_array_welch(clean_2.get_data(picks=['eeg']), sfreq=sfreq,
-                                             fmax=fmax, n_fft=n_fft)
+                                             fmax=freq_max, n_fft=n_fft)
     
     
     # Add some metadata to the file we are writing
