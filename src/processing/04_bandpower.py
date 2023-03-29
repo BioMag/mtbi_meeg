@@ -48,7 +48,7 @@ corrupted_psds_files = []
 
 try:
     subject_psds = fname.psds(subject=args.subject, ses='01')
-    
+        
     f = h5py.File(subject_psds, 'r')
     psds_keys = list(f.keys())
     psds_data = f[psds_keys[0]]
@@ -59,38 +59,38 @@ try:
     for i in data_keys:
         if 'eo' in i or 'ec' in i or 'PASAT' in i:
             dict_key = i.removeprefix('key_')
-            data[dict_key]=np.array(psds_data[i])
+            data[dict_key] = np.array(psds_data[i])
     freqs = np.array(psds_data['key_freqs'])
     info_keys = list(psds_data['key_info'])
     
     f.close()
     
     
-    #Create a directory to save the .csv files
-    directory = f'{processed_data_dir}sub-{args.subject}/ses-01/eeg/bandpowers/'
+    # Create a directory to save the .csv files
+    directory = f'{processed_data_dir}/sub-{args.subject}/ses-01/eeg/bandpowers/'
     Path(directory).mkdir(parents=True, exist_ok=True)
     
     # Calculate the average bandpower for each PSD
     for data_obj in list(data.keys()):
-        data_bandpower =[] 
+        data_bandpower = [] 
         data_arr = data[data_obj]
         
         if normalize_ch_power:
-            ch_tot_powers = np.sum(data_arr, axis = 1)
-            data_arr = data_arr / ch_tot_powers[:,None]
+            ch_tot_powers = np.sum(data_arr, axis=1)
+            data_arr = data_arr/ch_tot_powers[:, None]
         
-        for fmin, fmax  in f_bands:           
+        for fmin, fmax in f_bands:           
             min_index = np.argmax(freqs > fmin) - 1
             max_index = np.argmax(freqs > fmax) - 1
             
             #NOTE: trapezoidal rule gives weird results. Changed to mean.
             #bandpower = np.trapz(data_arr[:, min_index: max_index], freqs[min_index: max_index], axis = 1)
-            bandpower = np.mean(data_arr[:, min_index: max_index],axis=1)
+            bandpower = np.mean(data_arr[:, min_index:max_index], axis=1)
             
             data_bandpower.append(bandpower)
         
         # Save the calculated bandpowers
-        np.savetxt(directory + '/' + data_obj + '.csv', data_bandpower, delimiter=',' )
+        np.savetxt(directory + '/' + data_obj + '.csv', data_bandpower, delimiter=',')
 except:
     print("Psds file corrupted or missing")
     corrupted_psds_files.append(args.subject)
@@ -100,7 +100,7 @@ except:
 try: 
     with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/psds_corrupted_or_missing.txt', 'a') as file:
         for bad_file in corrupted_psds_files:
-            file.write(bad_file+'\n')
+            file.write(bad_file + '\n')
         file.close()
 except PermissionError:
     print('No permission to access this file')
