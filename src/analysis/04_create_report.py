@@ -12,17 +12,13 @@ import sys
 src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(src_dir)
 from config_common import figures_dir, reports_dir
+from pickle_data_handler import PickleDataHandler 
+ 
 if not os.path.isdir(reports_dir):
     os.makedirs(reports_dir)
 
 # Section 2: plot of all the four ROC AUCs. It would be nice to plot the subplots separately eh? Put metadata specific for this? 
 # Could add accuracies, TPR and something else here
-
-def load_data():  
-    # Read in dataframe and metadata
-    with open("eeg_tmp_data.pickle", "rb") as fin:
-        dataframe, metadata = pickle.load(fin)
-    return dataframe, metadata
 
 def create_report(metadata):
     # Define filename & open HTML file
@@ -79,6 +75,7 @@ def create_report(metadata):
     print(f'INFO: Success! File "{report_filename}" created')
     print('\n***\n')
 if __name__ == "__main__":
-    dataframe, metadata = load_data()
+    handler = PickleDataHandler()
+    dataframe, metadata = handler.load_data()
     create_report(metadata)
     

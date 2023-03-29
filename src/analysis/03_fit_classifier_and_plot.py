@@ -42,7 +42,6 @@ Returns
 import sys
 import os
 import argparse
-import pickle
 import time
 
 import matplotlib.pyplot as plt
@@ -60,18 +59,9 @@ from datetime import datetime
 processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(processing_dir)
 from config_common import figures_dir
+from config_eeg import seed, folds
+from pickle_data_handler import PickleDataHandler 
 
-   
-def load_data():
-    """
-    Load pickle data and initialize variables 
-    return dataframe, metadata
-    """
-    # Read in dataframe and metadata
-    with open("eeg_tmp_data.pickle", "rb") as fin:
-        dataframe, metadata = pickle.load(fin)
-        
-    return dataframe, metadata
 
 def initialize_cv(dataframe, metadata):
     """
@@ -91,11 +81,11 @@ def initialize_cv(dataframe, metadata):
         groups = groups[metadata["which_segment"]:len(groups):metadata["segments"]]
         
         # Initialize Stratified K Fold
-        skf = StratifiedKFold(n_splits=metadata["folds"], shuffle=True, random_state= metadata["seed"])
+        skf = StratifiedKFold(n_splits=metadata["folds"], shuffle=True, random_state= seed)
         data_split = list(skf.split(X, y, groups))
     else:
         # Initialize Stratified Group K Fold
-        sgkf = StratifiedGroupKFold(n_splits=metadata["folds"], shuffle=True, random_state=metadata["seed"])
+        sgkf = StratifiedGroupKFold(n_splits=metadata["folds"], shuffle=True, random_state=seed)
         data_split = list(sgkf.split(X, y, groups))
 
     return X, y, groups, data_split
@@ -241,24 +231,6 @@ def save_figure(metadata):
     plt.savefig(os.path.join(figures_dir, figure_filename))
     print(f'\nINFO: Success! Figure "{figure_filename}" has been saved to folder {figures_dir}')
 
-def export_data(dataframe, metadata):
-    """
-    Creates a pickle object containing the csv and the metadata so that other scripts using the CSV data can have the information on how was the data collected (e.g., input arguments or other variables).
-    
-    Input parameters
-    ----------------
-    - dataframe : pandas dataframe
-            Each row contains the subject_and_task label, the group which it belongs to, and the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
-    - metadata: dictonary
-                Contains the input arguments parsed when running the script     
-    Output
-    ------
-    - eeg_tmp_data. pickle : pickle object
-            pickle object which contains the dataframe and the metadata
-    """
-    with open("eeg_tmp_data.pickle", "wb") as f:
-        pickle.dump((dataframe, metadata), f)
-    print('INFO: Success! CSV data and metadata have been bundled into file "eeg_tmp_data.pickle".')
 
 if __name__ == "__main__":
     
@@ -271,11 +243,19 @@ if __name__ == "__main__":
     
     # Scaling methods
     scaling_methods = [StandardScaler(), MinMaxScaler(), RobustScaler()]
-    
+
+    # Define classifiers
+    classifiers = [
+        ('Support Vector Machine', SVC(kernel = 'rbf', probability=True, random_state=seed)),
+        ('Logistic Regression', LogisticRegression(penalty='l1', solver='liblinear', random_state=seed)),
+        ('Random Forest', RandomForestClassifier(random_state=seed)),
+        ('Linear Discriminant Analysis', LinearDiscriminantAnalysis(solver='svd'))
+    ]
+       
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--verbosity', type=bool, help="Define the verbosity of the output. Default is False", metavar='', default=False)
-    parser.add_argument('-s', '--seed', type=int, help="Seed value used for CV splits, and for classifiers and for CV splits. Default value is 8, and gives 50/50 class balance in Training and Test sets.", metavar='int', default=8) # Note: different sklearn versions could yield different results
+    #parser.add_argument('-v', '--verbosity', type=bool, help="Define the verbosity of the output. Default is False", metavar='', default=False)
+    parser.add_argument('-s', '--seed', type=int, help=f"Seed value used for CV splits, and for classifiers and for CV splits. Default value is {seed}, and gives 50/50 class balance in Training and Test sets.", metavar='int', default=seed) # Note: different sklearn versions could yield different results
     parser.add_argument('--scaling', type=bool, help='Scaling of data before fitting. Can only be used if data is not normalized. Default is True', metavar='', default=False)
     
     parser.add_argument('--scaling_method', choices=scaling_methods, help='Method for scaling data, choose from the options. Default is RobustScaler.', default=scaling_methods[2])
@@ -286,11 +266,13 @@ if __name__ == "__main__":
     
     # Execute the submethods:
     # 1 - Read data
-    dataframe, metadata = load_data()
+    handler = PickleDataHandler()
+    dataframe, metadata = handler.load_data()
     
     # 2 - Add the input arguments to the metadata dictionary
+    metadata["folds"] = folds
+    metadata["seed"] = seed
     metadata["verbosity"] = args.verbosity
-    metadata["seed"] = args.seed
     metadata["scaling"] = args.scaling
     metadata["scaling_method"] = args.scaling_method
     metadata["one_segment_per_task"] = args.one_segment_per_task
@@ -299,21 +281,9 @@ if __name__ == "__main__":
         metadata["which_segment"] = (args.which_segment)
     elif args.which_segment > metadata["segments"]:
         raise TypeError(f'The segment you chose is larger than the number of available segments for task {metadata["task"]}. Please choose a value between 1 and {metadata["segments"]}.')
-          
-    # Number of folds to be used during Cross Validation
-    # TODO: move to config?
-    folds = 10
-    metadata["folds"] = folds
-    
-    # Define classifiers
-    classifiers = [
-        ('Support Vector Machine', SVC(kernel = 'rbf', probability=True, random_state=metadata["seed"])),
-        ('Logistic Regression', LogisticRegression(penalty='l1', solver='liblinear', random_state=metadata["seed"])),
-        ('Random Forest', RandomForestClassifier(random_state=metadata["seed"])),
-        ('Linear Discriminant Analysis', LinearDiscriminantAnalysis(solver='svd'))
-    ]
-    
+             
     print(f'INFO: Input parameters: \n\tTask: {metadata["task"]}, \n\tBand type: {metadata["freq_band_type"]}, \n\tChannel data normalization: {metadata["normalization"]}, \n\tUsing one-segment: {metadata["one_segment_per_task"]}, \n\tScaling: {metadata["scaling"]}, \n\tScaler method: {metadata["scaling_method"]} \n\nINFO: Data is being split and fitted, please wait a moment... \n')
+    
     # 3 - Define input data, initialize CV and get data split
     X, y, groups, data_split = initialize_cv(dataframe, metadata)
     
@@ -327,7 +297,7 @@ if __name__ == "__main__":
     save_figure(metadata)
     
     # 7 - Export metadata
-    export_data(dataframe, metadata)
+    handler.export_data(dataframe, metadata)
     
     # Calculate time that the script takes to run
     execution_time = (time.time() - start_time)

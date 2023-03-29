@@ -37,7 +37,6 @@ import time
 import argparse
 import os
 import sys
-import pickle
 
 import numpy as np
 import pandas as pd
@@ -47,19 +46,16 @@ import seaborn as sns
 src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(src_dir)
 from config_common import figures_dir
-
-
-def load_data():  
-    with open("eeg_tmp_data.pickle", "rb") as fin:
-        dataframe, metadata = pickle.load(fin)
-
-    return dataframe, metadata
+from pickle_data_handler import PickleDataHandler
+from config_eeg import channels, thin_bands, wide_bands
 
 def define_freq_bands(metadata):
     if metadata["freq_band_type"] == 'thin':
-        freqs = np.array([x for x in range(1, 39)])
+        freqs = np.array([x for x in range(1, 41)])
+        #freqs = np.array([bands[0] for bands in thin_bands])
     elif metadata["freq_band_type"] == 'wide':
         freqs = np.array([1, 3, 5.2, 7.6, 10.2, 13, 16, 19.2, 22.6, 26.2, 30, 34, 38.2]).T
+        #freqs = np.array([bands[0] for bands in wide_bands])
 
     return freqs
 # TODO: Would rename to 'channel' averaging
@@ -79,9 +75,10 @@ def global_averaging(df, metadata, freqs):
             raise ValueError("Error: Empty data array.")
         else: 
             try:
-                subj_arr = np.reshape(subj_arr, (64, freqs.size))
-            except ValueError:
+                subj_arr = np.reshape(subj_arr, (channels, freqs.size))
+            except ValueError as e:
                 print("Error: Data array has incorrect dimensions.")
+                raise e
         #TODO: check these channels
         if metadata["roi"] == 'Frontal': 
             subj_arr = subj_arr[0:22, :]
@@ -99,7 +96,7 @@ def create_df_for_plotting(df, metadata, freqs, global_averages):
     plot_df.insert(1, "Group", df['Group'])
     
     # Slice the array based on the index of the segment to plot
-    segment_index = metadata["control_plot_segment"]-1
+    segment_index = metadata["control_plot_segment"] - 1
     plot_df = plot_df[segment_index:len(df):metadata["segments"]] 
     
     return plot_df 
@@ -108,15 +105,14 @@ def plot_control_figures(plot_df, metadata):
     '''
     Plot a figure with two subplots: one with individual patients and another with group means and SD
     '''  
+    
     f, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
-    # Define style
     plt.style.use('seaborn-darkgrid')  
-    # Define title based on the arguments and metadata
     figure_title = f'Average PSD over all channels vs frequency. \nTask: {metadata["task"]}, Freq band: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]} \nUsing segment {metadata["control_plot_segment"]} out of {metadata["segments"]}, Region of interest: {metadata["roi"]}.'
-    # Add figure title
     f.suptitle(figure_title)
     
     # Subplot 1
+    ax1.set_ylabel('PSD (dB)')
     for index,  row in plot_df.iterrows():
         if row['Group'] == 1:
             col = 'red'
@@ -126,9 +122,7 @@ def plot_control_figures(plot_df, metadata):
         data = np.array(data)
         ax1.plot(freqs, data.T, color=col, alpha=0.2)
         ax1.text(x=freqs[-1], y=data.T[-1], s=row['Subject'], horizontalalignment='left', size='small', color=col)
-    
-    ax1.set_ylabel('PSD (dB)')
-    
+        
     # Subplot 2
     #Calculate means of each group & plot
     group_means = plot_df.groupby('Group').mean(numeric_only=True)
@@ -149,8 +143,6 @@ def plot_control_figures(plot_df, metadata):
     p_minus = group_means.iloc[1, :] - group_sd.iloc[1, :]
     ax2.fill_between(freqs, p_plus, p_minus, color='r', alpha=.2, linewidth=.5)
 
-
-
 #    plt.close()  # close the figure to free memory
 def save_fig(metadata):
     # Save fig to disk
@@ -163,25 +155,7 @@ def save_fig(metadata):
     print(f'\nINFO: Success! Figure "{fig_filename}" has been saved to folder {figures_dir}')
     return metadata
 
-def export_data(dataframe, metadata):
-    """
-    Creates a pickle object containing the csv and the metadata so that other scripts using the CSV data can have the information on how was the data collected (e.g., input arguments or other variables).
-    
-    Input parameters
-    ----------------
-    - dataframe: pandas dataframe
-            Each row contains the subject_and_task label, the group which it belongs to, and the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
-    - metadata: dictonary
-                Contains the input arguments parsed when running the script     
-    Output
-    ------
-    - eeg_tmp_data.pickle : pickle object
-            pickle object which contains the dataframe and the metadata
-    """
-    with open("eeg_tmp_data.pickle", "wb") as f:
-        pickle.dump((dataframe, metadata), f)
-    print('INFO: Success! CSV data and metadata have been bundled into file "eeg_tmp_data.pickle".')
-    
+
 if __name__ == '__main__':
     
     # Save time of beginning of the execution to measure running time
@@ -199,9 +173,10 @@ if __name__ == '__main__':
     
     # Execute the submethods:
     # 1 - Read data
-    dataframe, metadata = load_data()
+    handler = PickleDataHandler()
+    dataframe, metadata = handler.load_data()
     
-    # 2 - Store arguments in dictionary object 'metadata'
+    # 2 - Add arguments to dictionary object 'metadata'
     metadata["control_plot_segment"] = args.control_plot_segment
     if metadata["control_plot_segment"] > metadata["segments"]:
         raise IndexError(f'List index out of range. The segment you chose is not allowed for task {metadata["task"]}. Please choose a value between 1 and {metadata["segments"]}.')
@@ -223,7 +198,7 @@ if __name__ == '__main__':
     metadata = save_fig(metadata)
     
     # 8 - Export pickle object
-    export_data(dataframe, metadata)
+    handler.export_data(dataframe, metadata)
     
     # Calculate time that the script takes to run
     execution_time = (time.time() - start_time)

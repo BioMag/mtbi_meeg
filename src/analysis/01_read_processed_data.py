@@ -28,14 +28,12 @@ Returns
         Object of pickle format containing the dataframe with the data as well as the metadata with the information about the arguments used to run this script.
 
 #TODO: Define use of thinbands
-#TODO: Export pkl should be a separate class?
 #TODO: Check NaN in DF
 """
 
 import os
 import sys
 import argparse
-import pickle
 import time
 import re
 
@@ -47,10 +45,9 @@ processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(processing_dir)
 from config_common import processed_data_dir
 from config_eeg import thin_bands, wide_bands, select_tasks, channels
-
+from pickle_data_handler import PickleDataHandler
 
 def read_subjects():
-   
     """
     Reads in the list of subjects from file subjects.txt. Asserts format to contain two digits and then a letter P or C for Patients or Controls. 
         
@@ -141,13 +138,15 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
             for frequency_band in reader:  
                 try:
                     subject_and_task_bands_list.append([float(f) for f in frequency_band])
-                except ValueError:
-                    raise ValueError("Invalid data: could not convert to float")              
-        
+                except ValueError as e:
+                    print("Error: Invalid data, could not convert to float")              
+                    raise e
+                    
         # Convert list to array
-        subject_and_task_bands_array = np.array(subject_and_task_bands_list[0:38])
-        #TODO: Keep line above if using 'sliced' thin bands is ok. 
-        #subject_and_task_bands_array = np.array(subject_and_task_bands_list)
+        if freq_band_type == 'thin':
+            subject_and_task_bands_array = np.array(subject_and_task_bands_list[0:40])
+        else:
+            subject_and_task_bands_array = np.array(subject_and_task_bands_list)
         
         # Normalize each band
         if normalization: 
@@ -158,7 +157,7 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
         
 #      Validate subject_and_task_bands_vector length:
         if freq_band_type == 'thin':
-            assert len(subject_and_task_bands_vector) == (channels * 38), f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
+            assert len(subject_and_task_bands_vector) == (channels * 40), f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
             #assert len(subject_and_task_bands_vector) == (channels * len(thin_bands)), f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
         elif freq_band_type == 'wide':
             assert len(subject_and_task_bands_vector) == (channels * len(wide_bands)), f'Processed data for subject {subject} does not have the expected length when using wide frequency bands.'
@@ -211,27 +210,7 @@ def create_data_frame(subjects_and_tasks, all_bands_vectors):
     dataframe.insert(0, 'Group', groups)
     dataframe.insert(1, 'Subject', subs)
     
-    return dataframe
-
-def export_data(dataframe, metadata):
-    """
-    Creates a pickle object containing the csv and the metadata so that other scripts using the CSV data can have the information on how was the data collected (e.g., input arguments or other variables).
-    
-    Input parameters
-    ----------------
-    - dataframe: pandas dataframe
-            Each row contains the subject_and_task label, the group which it belongs to, and the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
-    - metadata: dictonary
-                Contains the input arguments parsed when running the script     
-    Output
-    ------
-    - "eeg_tmp_data.pickle": pickle object
-            pickle object which contains the dataframe and the metadata
-    """
-    with open("eeg_tmp_data.pickle", "wb") as f:
-        pickle.dump((dataframe, metadata), f)
-    print('INFO: Success! Processed data has been read in and parsed into dataframe.csv. CSV data and metadata have been bundled into file "eeg_tmp_data.pickle".')
-    
+    return dataframe 
     
 if __name__ == '__main__':
     # Save time of beginning of the execution to measure running time
@@ -240,12 +219,12 @@ if __name__ == '__main__':
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="PASAT_1")
-    parser.add_argument('--freq_band_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
+    parser.add_argument('--freq_band_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 40hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
     parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=True)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
     
-    #Create dictonary with metadata information
+    # Create dictonary with metadata information - It is important that it is CREATED here and not that stuff gets appended
     metadata = {"task": args.task, "freq_band_type": args.freq_band_type, "normalization": args.normalization}
     # Define the number of segments per task
     if (metadata["task"] in ('eo', 'ec')):
@@ -278,7 +257,8 @@ if __name__ == '__main__':
     dataframe = create_data_frame(subjects_and_tasks, all_bands_vectors)
 
     # 6 - Outputs the pickle object composed by the dataframe file and metadata to be used by 02_plot_processed_data.py and 03_fit_classifier_and_plot.py   
-    export_data(dataframe = dataframe, metadata = metadata)
+    handler = PickleDataHandler()
+    handler.export_data(dataframe = dataframe, metadata = metadata)
     
     # Calculate time that the script takes to run
     execution_time = (time.time() - start_time)
