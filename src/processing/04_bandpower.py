@@ -67,7 +67,6 @@ try:
     
     
     #Create a directory to save the .csv files
-    #directory = "/net/theta/fishpool/projects/tbi_meg/k22_processed/sub-" + args.subject + "/ses-01/eeg/bandpowers/"
     directory = f'{processed_data_dir}sub-{args.subject}/ses-01/eeg/bandpowers/'
     Path(directory).mkdir(parents=True, exist_ok=True)
     
@@ -112,5 +111,3 @@ execution_time = (time.time() - start_time)
 print('\n###################################################\n')
 print(f'Execution time of 04_bandpower.py is: {round(execution_time,2)} seconds\n')
 print('###################################################\n')
-
-#

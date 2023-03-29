@@ -44,7 +44,7 @@ import pandas as pd
 processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(processing_dir)
 from config_common import processed_data_dir
-from config_eeg import thin_bands, wide_bands, select_tasks, channels
+from config_eeg import thin_bands, wide_bands, select_task_segments, channels
 from pickle_data_handler import PickleDataHandler
 
 def read_subjects():
@@ -242,7 +242,7 @@ if __name__ == '__main__':
     
     # Execute the submethods:
     # 1 - Define subtasks according to input arguments
-    chosen_tasks = select_tasks(args.task)
+    chosen_tasks = select_task_segments(args.task)
     
     # 2 - Read in the list of subjects from file subjects.txt
     subjects = read_subjects()

@@ -21,16 +21,26 @@ It could also be done in bash using something like
 
 import subprocess
 import time
-
+import re
 # Save time of beginning of the execution to measure running time
 here_start_time = time.time()
 
 # Define a list of tuples containing the different argument combinations to use
-subjects = ['10C', '30P']
+#subjects = ['10C', '30P']
 arg_set = [('--freq_band_type', 'thin'),
             ('--freq_band_type', 'wide'),]
 
+subject_pattern = r'^\d{2}[PC]'   
+try:
+    with open('subjects.txt', 'r') as subjects_file:
+        subjects = [line.rstrip() for line in subjects_file.readlines()]
+        # Assert that each line has the expected format
+        for line in subjects:
+            assert re.match(subject_pattern, line), f"Subject '{line}' does not have the expected format."
 
+except FileNotFoundError as e:
+    print("The file 'subjects.txt' does not exist in the current directory. The program will exit.")
+    raise e
 
 for subject in subjects:
     print(f'### \nRunning using subject {subject}...\n')
@@ -50,7 +60,7 @@ for subject in subjects:
 
 # Calculate time that the script takes to run
 here_execution_time = (time.time() - here_start_time)
-print('\n###################################################\n')
-print(f'Execution time of 04_bandpower.py is: {round(here_execution_time,0) / 60} minutes\n')
-print(f'Average time is {here_execution_time/len(subjects)} per subject')
+print('\n###################################################')
+print(f'Execution time of everything is: {round(here_execution_time/60,0)} minutes')
+print(f'Average time is {round(here_execution_time/len(subjects),0)} seconds per subject')
 print('###################################################\n')
