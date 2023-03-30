@@ -43,8 +43,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(src_dir)
+SRC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(SRC_DIR)
 from config_common import figures_dir
 from pickle_data_handler import PickleDataHandler
 from config_eeg import channels, thin_bands, wide_bands
@@ -113,7 +113,7 @@ def plot_control_figures(plot_df, metadata):
     
     # Subplot 1
     ax1.set_ylabel('PSD (dB)')
-    for index,  row in plot_df.iterrows():
+    for _, row in plot_df.iterrows():
         if row['Group'] == 1:
             col = 'red'
         else:
@@ -121,7 +121,7 @@ def plot_control_figures(plot_df, metadata):
         data = row[2:]
         data = np.array(data)
         ax1.plot(freqs, data.T, color=col, alpha=0.2)
-        ax1.text(x=freqs[-1], y=data.T[-1], s=row['Subject'], horizontalalignment='left', size='small', color=col)
+        ax1.text(x=freqs[-1], y=data[-1], s=row['Subject'], horizontalalignment='left', size='small', color=col)
         
     # Subplot 2
     #Calculate means of each group & plot
@@ -145,7 +145,9 @@ def plot_control_figures(plot_df, metadata):
 
 #    plt.close()  # close the figure to free memory
 def save_fig(metadata):
-    # Save fig to disk
+    """ 
+    Saves fig to disk
+    """ 
     if metadata["normalization"]:
         fig_filename = f'psd-control-plot_{metadata["task"]}_{metadata["freq_band_type"]}_normalized.png'
     else:
