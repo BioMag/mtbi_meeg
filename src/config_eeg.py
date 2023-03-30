@@ -11,10 +11,22 @@ from config_common import (raw_data_dir, processed_data_dir, figures_dir,
 # TODO: Is this used?
 tasks = ['ec', 'eo', 'PASAT']
 
-channels = 64
 
 ###############################################################################
 # Parameters that should be mentioned in the paper
+
+# Seed to be used in the initialization of the classifiers and the CV
+seed =  8
+
+# Channels from the eeg measurment
+channels = 64
+
+# Folds for cv
+folds = 10
+<<<<<<< HEAD
+
+# Scaling methods
+scaling_methods = [StandardScaler(), MinMaxScaler(), RobustScaler()]
 
 # Highpass filter above 1Hz. This is needed for the ICA to perform well
 # later on. Lowpass filter below 100Hz to get rid of the signal produced by
@@ -22,21 +34,24 @@ channels = 64
 fmin = 1
 fmax = 90
 fnotch = [50, 100]
+=======
+>>>>>>> 3c840b701f20d65c519cbe3f0420c2e7d1586fa2
 
 # Computation of the PSDs
 n_fft = 2048  # Higher number means more resolution at the lower frequencies
 #1024?4096?
 
-# These are currently not in use
-band_type = 'thin' #or 'thin'
+# Highpass filter above 1Hz. This is needed for the ICA to perform well
+# later on. Lowpass filter below 100Hz to get rid of the signal produced by
+# the cHPI coils. Notch filters at 50Hz and 100Hz to get rid of powerline.
+freq_min = 1
+freq_max = 43
+fnotch = [50, 100]
 
-thin_bands = [(x, x+1) for x in range(1,fmax)]
-wide_bands =  [(1,3), (3,5.2), (5.2,7.6), (7.6,10.2), (10.2, 13), (13,16),
-               (16,19.2), (19.2,22.6), (22.6,26.2), (26.2,30), (30,34), (34,38.2), (38.2,42.6)]
-if band_type == 'wide':
-    f_bands =  wide_bands  
-elif band_type == 'thin':
-    f_bands = thin_bands
+thin_bands = [(x, x+1) for x in range(1, 40)] # thin_bands = (1,2),...., (39,40)
+wide_bands =  [(1,3), (3,5.2), (5.2,7.6), (7.6,10.2), (10.2,13), (13,16), (16,19.2), 
+               (19.2,22.6), (22.6,26.2), (26.2,30), (30,34), (34,38.2), (38.2,42.6)]
+
 
 ###############################################################################
 # Parameters pertaining to the subjects
@@ -475,7 +490,7 @@ def task_from_fname(fname):
     else:
         return task
 
-def select_tasks(task):
+def select_task_segments(task):
     """
     Define the task segments to be used for the analysis
     

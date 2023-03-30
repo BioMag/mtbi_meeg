@@ -15,8 +15,6 @@ import pytest
 import importlib
 import os
 import sys
-import tempfile
-import shutil
 import numpy as np
 import pandas as pd
 
@@ -40,7 +38,7 @@ def test_define_freq_bands():
 
 def test_global_averaging_with_sample_data():
     # TODO: Test for wide freqs!
-    freqs = np.array([x for x in range(1, 39)])   
+    freqs = np.array([x for x in range(1, 41)])   
     eeg_data = np.random.rand(3, len(freqs) * channels)
     df = pd.DataFrame({'Group': [1, 0, 1], 'Subject': ["26P", "01C", "02P"]})
     df = pd.concat([df, pd.DataFrame(eeg_data)], axis=1)
@@ -64,7 +62,7 @@ def test_global_averaging_with_sample_data():
 def test_global_averaging_with_empty_dataframe():
     # The pickle data handler should already be considering these issues
     metadata = {"roi": 'All'}
-    freqs = np.array([x for x in range(1, 39)])   
+    freqs = np.array([x for x in range(1, 41)])   
     eeg_data = []
     df = pd.DataFrame({'Group': [1, 0, 1], 'Subject': ["26P", "01C", "02P"]})
     df = pd.concat([df, pd.DataFrame(eeg_data)], axis=1)
@@ -76,7 +74,7 @@ def test_global_averaging_with_empty_dataframe():
 def test_global_averaging_with_nan_values():
     # The pickle data handler should already be considering this
     metadata = {"roi": 'All'}
-    freqs = np.array([x for x in range(1, 39)])   
+    freqs = np.array([x for x in range(1, 41)])   
     eeg_data = np.full((3, len(freqs) * channels), np.nan)
     df = pd.DataFrame({'Group': [1, 0, 1], 'Subject': ["26P", "01C", "02P"]})
     df = pd.concat([df, pd.DataFrame(eeg_data)], axis=1)
@@ -87,7 +85,7 @@ def test_global_averaging_with_nan_values():
 
 def test_create_df_for_plotting():
     metadata = {"control_plot_segment": 1, "segments": 2}
-    freqs = np.array([x for x in range(1, 39)])   
+    freqs = np.array([x for x in range(1, 41)])   
     eeg_data = np.random.rand(3, len(freqs) * channels)
     df = pd.DataFrame({'Group': [1, 0, 1], 'Subject': ["26P", "01C", "02P"]})
     df = pd.concat([df, pd.DataFrame(eeg_data)], axis=1)
