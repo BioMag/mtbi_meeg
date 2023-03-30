@@ -82,30 +82,23 @@ try:
         for fmin, fmax in f_bands:           
             min_index = np.argmax(freqs > fmin) - 1
             max_index = np.argmax(freqs > fmax) - 1
-            
-            #NOTE: trapezoidal rule gives weird results. Changed to mean.
-            #bandpower = np.trapz(data_arr[:, min_index: max_index], freqs[min_index: max_index], axis = 1)
+
             bandpower = np.mean(data_arr[:, min_index:max_index], axis=1)           
             data_bandpower.append(bandpower)
         
         # Save the calculated bandpowers
         filename = f'{directory}/{args.freq_band_type}_{data_obj}.csv'
         np.savetxt(filename, data_bandpower, delimiter=',')
-        #np.savetxt(directory + '/' + data_obj + '.csv', data_bandpower, delimiter=',')
 except:
     print("Psds file corrupted or missing")
     corrupted_psds_files.append(args.subject)
+ 
+ 
+with open('psds_corrupted_or_missing.txt', 'a') as file:
+    for bad_file in corrupted_psds_files:
+        file.write(bad_file + '\n')
+    file.close()
 
-# TODO: Once the folder structure is defined, re-code the path depending on where is this expected
-# with open('psds_corrupted_or_missing.txt', 'a') as  
-try: 
-    with open('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/psds_corrupted_or_missing.txt', 'a') as file:
-        for bad_file in corrupted_psds_files:
-            file.write(bad_file + '\n')
-        file.close()
-except PermissionError:
-    print('No permission to access this file')
-    
     
 # Calculate time that the script takes to run
 execution_time = (time.time() - start_time)
