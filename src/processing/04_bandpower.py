@@ -67,7 +67,7 @@ try:
     
     
     # Create a directory to save the .csv files
-    directory = f'{processed_data_dir}/sub-{args.subject}/ses-01/eeg/bandpowers/'
+    directory = f'{processed_data_dir}/sub-{args.subject}/ses-01/eeg/bandpowers'
     Path(directory).mkdir(parents=True, exist_ok=True)
     
     # Calculate the average bandpower for each PSD
@@ -85,12 +85,13 @@ try:
             
             #NOTE: trapezoidal rule gives weird results. Changed to mean.
             #bandpower = np.trapz(data_arr[:, min_index: max_index], freqs[min_index: max_index], axis = 1)
-            bandpower = np.mean(data_arr[:, min_index:max_index], axis=1)
-            
+            bandpower = np.mean(data_arr[:, min_index:max_index], axis=1)           
             data_bandpower.append(bandpower)
         
         # Save the calculated bandpowers
-        np.savetxt(directory + '/' + data_obj + '.csv', data_bandpower, delimiter=',')
+        filename = f'{directory}/{args.freq_band_type}_{data_obj}.csv'
+        np.savetxt(filename, data_bandpower, delimiter=',')
+        #np.savetxt(directory + '/' + data_obj + '.csv', data_bandpower, delimiter=',')
 except:
     print("Psds file corrupted or missing")
     corrupted_psds_files.append(args.subject)
