@@ -32,36 +32,133 @@ Returns
     - metadata?
     - report?
 
-# TODO: Should printing the figure be optional? WIP!
 # TODO: Shold saving the figure be optional?
 # TODO: Return validation results as outputs: true_positives, false_positives, accuracy
 # TODO: Add logging?
-# TODO: Folds, Seed, Classifiers and scaling methods in config_eeg? If we want to move the clfs we also need to move the seed
-
+# TODO: Add stuff to metadata as per the comments below?
 """
 import sys
 import os
 import argparse
 import time
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_curve, accuracy_score, RocCurveDisplay, auc
+from sklearn.metrics import roc_curve, accuracy_score, RocCurveDisplay, auc, f1_score, precision_score, recall_score
 from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from statistics import mean, stdev
-from datetime import datetime
 
 processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(processing_dir)
 from config_common import figures_dir
 from config_eeg import seed, folds
-from pickle_data_handler import PickleDataHandler 
+from pickle_data_handler import PickleDataHandler
+# Create directory if it doesn't exist
+if not os.path.isdir(figures_dir):
+    os.makedirs(figures_dir)
 
+
+def initialize_subplots(metadata):
+    """Creates figure with 2x2 subplots, sets axes and fig title"""
+    fig, axs = plt.subplots(nrows=2, ncols=2, 
+                            sharex=True, sharey=True, 
+                            figsize=(10, 10))
+    # Add figure title and save it to metadata
+    if metadata["scaling"]:
+        figure_title = f'Task: {metadata["task"]}, Freq band: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, \nUsing one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}, RobustScaler'
+    else:
+        figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, \nUsing one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}'
+    fig.suptitle(figure_title)
+    # Add x and y labels
+    axs[0, 0].set(ylabel='False Positive Rate')
+    axs[1, 0].set(ylabel='False Positive Rate')
+    axs[1, 0].set(xlabel='True Positive Rate') 
+    axs[1, 1].set(xlabel='True Positive Rate')     
+    # Disable interactive mode in case plotting is not needed
+    plt.ioff()    
+    # Display figure if needed    
+    if metadata["display_fig"]:
+        plt.show()
+    
+    return axs, metadata
+
+def perform_data_split(X, y, split, train_index, test_index):
+    """Splits X and y data into training and testing according to the data split indexes"""
+    skip_split = False
+    # Generate train and test sets for this split
+    X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+    y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+    # Scale if needed:
+    if metadata["scaling"] and not metadata["normalization"]:
+        scaler = metadata["scaling_method"]
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+    elif metadata["scaling"] and metadata["normalization"]:
+        raise TypeError("You are trying to scale data that has been already normalized.")
+    # Control if there's only one class in a fold
+    #_, counts = np.unique(y[test_index], return_counts=True)
+    if np.unique(y[test_index]).size == 1:
+        print(f"WARN: Split {split+1} has only 1 class in the test set, skipping it. ####")
+        skip_split = True
+    # Print out class balance if needed 
+    if metadata["verbosity"]: 
+        print(f"\nSplit {split+1}:")            
+        _, counts_test = np.unique(y[test_index], return_counts=True)
+        _, counts_train = np.unique(y[train_index], return_counts=True)
+    
+        print(f'INFO: Class balance in test set (C-P): {round(counts_test[0]/(y[test_index].size)*100)}-{round(counts_test[1]/(y[test_index].size)*100)}')
+        print(f'INFO: Class balance in training set (C-P): {round(counts_train[0]/(y[train_index].size)*100)}-{round(counts_train[1]/(y[train_index].size)*100)}')        
+    
+    return X_train, X_test, y_train, y_test, skip_split
+
+def roc_per_clf(tprs, aucs, ax, name, clf):
+    """ Calculates the mean TruePositiveRate and AUC for classifier 'clf'"""
+    mean_fpr = np.linspace(0, 1, 100)
+    mean_tpr = np.mean(tprs, axis=0)
+    mean_tpr[-1] = 1.0
+    #tpr_per_classifier.append(mean_tpr.T)
+    # Calculate AUC's mean and std_dev based on fpr and tpr and add to plot
+    mean_auc = auc(mean_fpr, mean_tpr)
+    std_auc = np.std(aucs)
+    ax.plot(mean_fpr, mean_tpr, color='b',
+            label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),
+            lw=2, alpha=.8)
+    # Calculate upper and lower std_dev band around mean and add to plot
+    std_tpr = np.std(tprs, axis=0)
+    tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
+    tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
+    ax.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2,
+                    label=r'$\pm$ 1 std. dev.')
+    ax.set(xlim=[-0.05, 1.05], ylim=[-0.05, 1.05], title=name)
+    ax.legend(loc="lower right", fontsize=6) # Leave it at  6 until we agree on how to move forward
+    ax.grid(True)
+    # Plot chance curve
+    ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
+            label='Chance', alpha=.8)
+    print(f'\nINFO: Classifier = {clf}')
+    print('\tAUC = %0.2f \u00B1 %0.2f' % (mean_auc, std_auc))
+    
+    return mean_tpr, mean_auc, std_auc
+
+def metrics_per_clf(precision, recall, f1):
+    mean_precision = mean(precision)
+    std_precision = stdev(precision)
+    mean_recall = mean(recall)
+    std_recall = stdev(recall)
+    mean_f1 = mean(f1)
+    std_f1 = stdev(f1)
+    
+    print('\tPrecision = %0.2f \u00B1 %0.2f' % (mean_precision, std_precision))
+    print('\tRecall = %0.2f \u00B1 %0.2f' % (mean_recall, std_recall))
+    print('\tF1 = %0.2f \u00B1 %0.2f' % (mean_f1, std_f1))
+    
+    return mean_precision, mean_recall, mean_f1
 
 def initialize_cv(dataframe, metadata):
     """
@@ -74,139 +171,100 @@ def initialize_cv(dataframe, metadata):
     groups = dataframe.loc[:, 'Subject']
     
     # Slice data
-    if metadata["one_segment_per_task"] == True:
+    if metadata["one_segment_per_task"]:
         # Removes (segments-1) rows out of the dataframe 
         X = X[metadata["which_segment"]:len(X):metadata["segments"]]
         y = y[metadata["which_segment"]:len(y):metadata["segments"]]
         groups = groups[metadata["which_segment"]:len(groups):metadata["segments"]]
         
         # Initialize Stratified K Fold
-        skf = StratifiedKFold(n_splits=metadata["folds"], shuffle=True, random_state= seed)
+        skf = StratifiedKFold(n_splits=metadata["folds"], shuffle=True, random_state=seed)
         data_split = list(skf.split(X, y, groups))
     else:
         # Initialize Stratified Group K Fold
         sgkf = StratifiedGroupKFold(n_splits=metadata["folds"], shuffle=True, random_state=seed)
         data_split = list(sgkf.split(X, y, groups))
 
-    return X, y, groups, data_split
+    return X, y, data_split
 
-def fit_and_plot(X, y, groups, classifiers, data_split, metadata):
+def fit_and_plot(X, y, classifiers, data_split, metadata):
     """
-    Loops over all classifiers and accordinat to the CV.
+    Loops over all classifiers according to the data split of the CV.
     Plots the results in subplots
-    return metadata
+    Parameters
+    ----------
+        - X : list
+            Sample
+        - y : list
+            Features of the sample
+        - classifiers :  list
+            List with the functions used as ML classifiers
+        - data_split : list
+            Indexes  of the Training and Testing sets for the CV splits
+        - metadata : dict
+            Object containing the parameters used in the analysis
+            
+    returns
+    -------
+         - Figure with 2x2 subplots: matplotlib plot
+         - metadata
+         - tpr_per_classifier : list
     """
-    plt.ioff()  # turn off interactive mode
-
-    # Initialize figure for plottting
-    fig, axs = plt.subplots(nrows=2, ncols=2, 
-                            sharex = True, sharey = True, 
-                            figsize=(10, 10))
     tpr_per_classifier = []
-    ii=0
+    auc_per_classifier = []
+    std_auc_per_classifier  = []
     
-    ## List containing the accuracy of the fit for each split - WIP
-    #accuracies = []
-    #
-    ## Interpoling True Positive Rate
-    #interpole_tpr = []
-    
+    # Initialize the subplots
+    axs, metadata = initialize_subplots(metadata)
+        
+    # Iterate over the classifiers to populate each subplot
     for ax, (name, clf) in zip(axs.flat, classifiers):
         tprs = []
         aucs = []
+        f1 = []
+        precision = []
+        recall = []
         mean_fpr = np.linspace(0, 1, 100)
         
-        # Fit and do CV
+        # Fit the classifiers to get the data that will be used in subplots
         for split, (train_index, test_index) in enumerate(data_split):
-            # Generate train and test sets for this split
-            X_train, X_test = X.iloc[train_index], X.iloc[test_index]
-            y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+            # Slice the X and y data according to the data_split
+            X_train, X_test, y_train, y_test, skip_split = \
+                perform_data_split(X, y, split, train_index, test_index)
             
-            if metadata["scaling"] and not metadata["normalization"]:
-                scaler = metadata["scaling_method"]
-                X_train = scaler.fit_transform(X_train)
-                X_test = scaler.transform(X_test)
-            elif metadata["scaling"] and metadata["normalization"]:
-                raise TypeError("You are trying to scale data that has been already normalized.")
-      
-            # Control if there's only one class in a fold
-            values, counts = np.unique(y[test_index], return_counts=True)
-            if np.unique(y[test_index]).size == 1:
-                print(f"WARN: Split {split+1} has only 1 class in the test set, skipping it. ####")
+            if skip_split:
                 continue
-            elif metadata["verbosity"] == True: 
-                fold_size = y[test_index].size
-                if counts[0]<=counts[1]:
-                    print(f"\nFold {split}:")
-                    print(f'Class balance: {round(counts[0]/fold_size*100)}-{round(100-counts[0]/fold_size*100)}')
-                else:
-                    print(f"\nFold {split}:")
-                    print(f'Class balance: {round(counts[1]/fold_size*100)}-{round(100-counts[1]/fold_size*100)}')
             
             # Fit classifier
             clf.fit(X_train, y_train)
-            probas_ = clf.predict_proba(X_test)
-    
-            # Compute ROC curve and area the curve
-            fpr, tpr, thresholds = roc_curve(y_test, probas_[:, 1])
-            # Append the tpr vs fpr values interpolated over the mean_fpr linspace
+            # Predict outcomes
+            probas_ = clf.predict_proba(X_test) 
+            y_pred = clf.predict(X_test)
+            # Compare predicted and compute ROC curve 
+            fpr, tpr, _ = roc_curve(y_test, probas_[:, 1])
+            # Append the (tpr vs fpr) values interpolated over mean_fpr
             tprs.append(np.interp(mean_fpr, fpr, tpr))
             tprs[-1][0] = 0.0
             roc_auc = auc(fpr, tpr)
             aucs.append(roc_auc)
             ax.plot(fpr, tpr, lw=1, alpha=0.3, 
                     label='ROC fold %d (AUC = %0.2f)' % (split+1, roc_auc))
-    
-        mean_tpr = np.mean(tprs, axis=0)
-        mean_tpr[-1] = 1.0
-        tpr_per_classifier.append(mean_tpr.T)
-    
-        mean_auc = auc(mean_fpr, mean_tpr)
-        std_auc = np.std(aucs)
-        ax.plot(mean_fpr, mean_tpr, color='b',
-                label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),
-                lw=2, alpha=.8)
-        std_tpr = np.std(tprs, axis=0)
-        tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
-        tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
-        ax.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2,
-                        label=r'$\pm$ 1 std. dev.')
-        ax.set(xlim=[-0.05, 1.05], ylim=[-0.05, 1.05], title=name)
-        ax.legend(loc="lower right", fontsize = 6) # Leave it at  6 until we agree on how to move forward
-        ax.grid(True)
-        # Plot chance curve
-        ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
-                label='Chance', alpha=.8)
+            f1.append(f1_score(y_test, y_pred))
+            precision.append(precision_score(y_test, y_pred))
+            recall.append(recall_score(y_test, y_pred))
+            
+        mean_tpr, mean_auc, std_auc = roc_per_clf(tprs, aucs, ax, name, clf)
+        mean_precision, mean_recall, mean_f1  = metrics_per_clf(precision, recall, f1)
         
-        values_test, counts_test = np.unique(y[test_index], return_counts=True)
-        values_train, counts_train = np.unique(y[test_index], return_counts=True)
-        if ii ==0:
-            print(f'INFO: Class balance in test set (C-P): {round(counts_test[0]/(y[test_index].size)*100)}-{round(counts_test[1]/(y[test_index].size)*100)}')
-            print(f'INFO: Class balance in training set (C-P): {round(counts_train[0]/(y[test_index].size)*100)}-{round(counts_train[1]/(y[test_index].size)*100)}')
-        ii =+1
-        print(f'\nINFO: Classifier = {clf}')
-        print('\tAUC = %0.2f \u00B1 %0.2f' % (mean_auc, std_auc))
-    
-    axs[0, 0].set(ylabel = 'False Positive Rate')
-    axs[1, 0].set(ylabel = 'False Positive Rate')
-    axs[1, 0].set(xlabel = 'True Positive Rate') 
-    axs[1, 1].set(xlabel = 'True Positive Rate') 
-    
-    # Add figure title and save it to metadata
-    if metadata["scaling"]:
-        figure_title = f'Task: {metadata["task"]}, Freq band: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, \nUsing one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}, RobustScaler'
-    else:
-        figure_title = f'Task: {metadata["task"]}, Band type: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]}, \nUsing one-segment: {metadata["one_segment_per_task"]}, Scaling: {metadata["scaling"]}'
-    fig.suptitle(figure_title)
-    display_fig = True
-    if display_fig:
-        plt.show()
-
+        tpr_per_classifier.append(mean_tpr.T)
+        auc_per_classifier.append(mean_auc.T)
+        std_auc_per_classifier.append(std_auc.T)
     return metadata
 
 def add_timestamp(metadata):
     """Adds timestamp to metadata"""
     metadata["timestamp"] = datetime.now()
+    
     return metadata
 
 def save_figure(metadata):
@@ -237,16 +295,12 @@ if __name__ == "__main__":
     # Save time of beginning of the execution to measure running time
     start_time = time.time()
     
-    # Create directory if it doesn't exist
-    if not os.path.isdir(figures_dir):
-        os.makedirs(figures_dir)
-    
     # Scaling methods
     scaling_methods = [StandardScaler(), MinMaxScaler(), RobustScaler()]
 
     # Define classifiers
     classifiers = [
-        ('Support Vector Machine', SVC(kernel = 'rbf', probability=True, random_state=seed)),
+        ('Support Vector Machine', SVC(kernel='rbf', probability=True, random_state=seed)),
         ('Logistic Regression', LogisticRegression(penalty='l1', solver='liblinear', random_state=seed)),
         ('Random Forest', RandomForestClassifier(random_state=seed)),
         ('Linear Discriminant Analysis', LinearDiscriminantAnalysis(solver='svd'))
@@ -254,13 +308,13 @@ if __name__ == "__main__":
        
     # Add arguments to be parsed from command line    
     parser = argparse.ArgumentParser()
-    #parser.add_argument('-v', '--verbosity', type=bool, help="Define the verbosity of the output. Default is False", metavar='', default=False)
+    parser.add_argument('-v', '--verbosity', type=bool, help="Define the verbosity of the output. Default is False", metavar='', default=True)
     parser.add_argument('-s', '--seed', type=int, help=f"Seed value used for CV splits, and for classifiers and for CV splits. Default value is {seed}, and gives 50/50 class balance in Training and Test sets.", metavar='int', default=seed) # Note: different sklearn versions could yield different results
     parser.add_argument('--scaling', type=bool, help='Scaling of data before fitting. Can only be used if data is not normalized. Default is True', metavar='', default=False)
-    
     parser.add_argument('--scaling_method', choices=scaling_methods, help='Method for scaling data, choose from the options. Default is RobustScaler.', default=scaling_methods[2])
     parser.add_argument('--one_segment_per_task', type=bool, help='Utilize only one of the segments from the tasks. Default is False', metavar='', default=False)
-    parser.add_argument('--which_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=1)    
+    parser.add_argument('--which_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=1)
+    parser.add_argument('--display_fig', type=int, help='Define whether figure will be shown. Default is true', metavar='', default=True)    
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
     
@@ -276,6 +330,7 @@ if __name__ == "__main__":
     metadata["scaling"] = args.scaling
     metadata["scaling_method"] = args.scaling_method
     metadata["one_segment_per_task"] = args.one_segment_per_task
+    metadata["display_fig"] = args.display_fig
     # Which segment to be used when using only one segment for fitting 
     if  args.one_segment_per_task:
         metadata["which_segment"] = (args.which_segment)
@@ -285,10 +340,10 @@ if __name__ == "__main__":
     print(f'INFO: Input parameters: \n\tTask: {metadata["task"]}, \n\tBand type: {metadata["freq_band_type"]}, \n\tChannel data normalization: {metadata["normalization"]}, \n\tUsing one-segment: {metadata["one_segment_per_task"]}, \n\tScaling: {metadata["scaling"]}, \n\tScaler method: {metadata["scaling_method"]} \n\nINFO: Data is being split and fitted, please wait a moment... \n')
     
     # 3 - Define input data, initialize CV and get data split
-    X, y, groups, data_split = initialize_cv(dataframe, metadata)
+    X, y, data_split = initialize_cv(dataframe, metadata)
     
     # 4 - Fit classifiers and plot
-    metadata = fit_and_plot(X, y, groups, classifiers, data_split, metadata)
+    metadata = fit_and_plot(X, y, classifiers, data_split, metadata)
     
     # 5 -  Add timestamp
     metadata = add_timestamp(metadata)
@@ -305,25 +360,6 @@ if __name__ == "__main__":
     print(f'Execution time of 03_fit_classifier_and_plot.py: {round(execution_time, 2)} seconds\n')
     print('###################################################\n')
 
-#%% 
-
-# from PIL import Image, PngImagePlugin
-
-# # Load the image without metadata
-# pil_image = Image.open(os.path.join(figures_dir, figure_filename))
-
-# png_info = PngImagePlugin.PngInfo()
-# for key, value in metadata_str.items():
-#     png_info.add_text(key, value)
-
-# # Save the image with the metadata
-# output_filename = "output_papa.png"
-# pil_image.save(output_filename, "PNG", pnginfo=png_info)
-
-# #%% Export data from run
-# def output_data():
-#     # Create / print out the CSV file with the data
-#     pass
 # def test_image_with_metadata():
 
 #     # Load the PNG image with metadata    
@@ -371,7 +407,3 @@ if __name__ == "__main__":
 
 # ## (Optional)
     # Define what strategy to use based on the subjects balance
-
-# Note: There is a 27% chance that there's a fold with only one class. This can impact the classifier (especially LDA)
-# >>> After 999 iterations, we found 267 folds with 1 class
-     
