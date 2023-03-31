@@ -32,10 +32,9 @@ Returns
     - metadata?
     - report?
 
-# TODO: Shold saving the figure be optional?
-# TODO: Return validation results as outputs: true_positives, false_positives, accuracy
+# TODO: Define what to do with metrics: save in metadata / export a CSV file
 # TODO: Add logging?
-# TODO: Add stuff to metadata as per the comments below?
+# TODO: Add stuff to metadata as per the comments below: possibly not in this script?
 """
 import sys
 import os
@@ -48,14 +47,14 @@ import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_curve, accuracy_score, RocCurveDisplay, auc, f1_score, precision_score, recall_score
+from sklearn.metrics import roc_curve, auc, f1_score, precision_score, recall_score
 from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from statistics import mean, stdev
 
-processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(processing_dir)
+SRC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(SRC_DIR)
 from config_common import figures_dir
 from config_eeg import seed, folds
 from pickle_data_handler import PickleDataHandler
@@ -102,7 +101,6 @@ def perform_data_split(X, y, split, train_index, test_index):
     elif metadata["scaling"] and metadata["normalization"]:
         raise TypeError("You are trying to scale data that has been already normalized.")
     # Control if there's only one class in a fold
-    #_, counts = np.unique(y[test_index], return_counts=True)
     if np.unique(y[test_index]).size == 1:
         print(f"WARN: Split {split+1} has only 1 class in the test set, skipping it. ####")
         skip_split = True
@@ -122,7 +120,6 @@ def roc_per_clf(tprs, aucs, ax, name, clf):
     mean_fpr = np.linspace(0, 1, 100)
     mean_tpr = np.mean(tprs, axis=0)
     mean_tpr[-1] = 1.0
-    #tpr_per_classifier.append(mean_tpr.T)
     # Calculate AUC's mean and std_dev based on fpr and tpr and add to plot
     mean_auc = auc(mean_fpr, mean_tpr)
     std_auc = np.std(aucs)
@@ -165,7 +162,7 @@ def initialize_cv(dataframe, metadata):
     Initialize Cross Validation and get data splits as a list
     return X, y, groups, metadata, data_split
     """
-    ## Define features, classes and groups
+    # Define features, classes and groups
     X = dataframe.iloc[:, 2:]
     y = dataframe.loc[:, 'Group']
     groups = dataframe.loc[:, 'Subject']
@@ -194,9 +191,9 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
     Parameters
     ----------
         - X : list
-            Sample
+            Sample subjects
         - y : list
-            Features of the sample
+            Features of the samples
         - classifiers :  list
             List with the functions used as ML classifiers
         - data_split : list
@@ -207,16 +204,18 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
     returns
     -------
          - Figure with 2x2 subplots: matplotlib plot
-         - metadata
+         - metadata : dict
          - tpr_per_classifier : list
+         - precision_per_classifier : list
+         - recall_per_classifier : list
+         - F1_per_classifier : list
     """
     tpr_per_classifier = []
     auc_per_classifier = []
     std_auc_per_classifier  = []
     
     # Initialize the subplots
-    axs, metadata = initialize_subplots(metadata)
-        
+    axs, metadata = initialize_subplots(metadata)       
     # Iterate over the classifiers to populate each subplot
     for ax, (name, clf) in zip(axs.flat, classifiers):
         tprs = []
@@ -247,19 +246,23 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
             tprs[-1][0] = 0.0
             roc_auc = auc(fpr, tpr)
             aucs.append(roc_auc)
+            # Plot the ROC for this split
             ax.plot(fpr, tpr, lw=1, alpha=0.3, 
-                    label='ROC fold %d (AUC = %0.2f)' % (split+1, roc_auc))
-            f1.append(f1_score(y_test, y_pred))
+                    label='ROC split %d (AUC = %0.2f)' % (split+1, roc_auc))
+            # Append the precision, recall and F1 values
             precision.append(precision_score(y_test, y_pred))
             recall.append(recall_score(y_test, y_pred))
-            
+            f1.append(f1_score(y_test, y_pred))
+          
+        # Execute the functions that calculate means & metrics per classifier    
         mean_tpr, mean_auc, std_auc = roc_per_clf(tprs, aucs, ax, name, clf)
         mean_precision, mean_recall, mean_f1  = metrics_per_clf(precision, recall, f1)
-        
+    
         tpr_per_classifier.append(mean_tpr.T)
         auc_per_classifier.append(mean_auc.T)
         std_auc_per_classifier.append(std_auc.T)
-    return metadata
+        # Add precision, recall, F1 per classifier?
+    return metadata # TODO: return something else here?
 
 def add_timestamp(metadata):
     """Adds timestamp to metadata"""
@@ -282,7 +285,6 @@ def save_figure(metadata):
         figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_not-normalized_scaled.png'
     elif not metadata["normalization"] and not metadata["scaling"]:
         figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_not-normalized_not-scaled.png'
-    # metadata_str = {key: str(value) for key, value in metadata.items()}
  
     # Save the figure
     metadata["roc-plots-filename"] = figure_filename
@@ -314,7 +316,8 @@ if __name__ == "__main__":
     parser.add_argument('--scaling_method', choices=scaling_methods, help='Method for scaling data, choose from the options. Default is RobustScaler.', default=scaling_methods[2])
     parser.add_argument('--one_segment_per_task', type=bool, help='Utilize only one of the segments from the tasks. Default is False', metavar='', default=False)
     parser.add_argument('--which_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=1)
-    parser.add_argument('--display_fig', type=int, help='Define whether figure will be shown. Default is true', metavar='', default=True)    
+    parser.add_argument('--display_fig', type=int, help='Define whether figure will be shown. Default is true', metavar='', default=True)
+    parser.add_argument('--save_fig', type=int, help='Define whether figure will be saved. Default is true', metavar='', default=False)    
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
     
@@ -349,7 +352,10 @@ if __name__ == "__main__":
     metadata = add_timestamp(metadata)
     
     # 6 - Save the figure to disk
-    save_figure(metadata)
+    if args.save_fig:
+        save_figure(metadata)
+    else:
+        print('INFO: Figure will not be saved to disk')
     
     # 7 - Export metadata
     handler.export_data(dataframe, metadata)
@@ -360,19 +366,9 @@ if __name__ == "__main__":
     print(f'Execution time of 03_fit_classifier_and_plot.py: {round(execution_time, 2)} seconds\n')
     print('###################################################\n')
 
-# def test_image_with_metadata():
-
-#     # Load the PNG image with metadata    
-#     figure_test = plt.imread("output_papa.png")
-#     pil_image_with_metadata = Image.open("output_papa.png")
-#     # Retrieve the metadata from the image
-#     metadata_test = PngImagePlugin.PngInfo(pil_image_with_metadata.info).items()    
-#     # Print the metadata
-#     print(metadata_test)
 
 # Info to be added to the metadata
 #metadata = {
-#        "Creation Time": datetime.now(),
 #        "Author": "WIP",
 #        "Workstation": "WIP",
 #        "License": "project_license", 
