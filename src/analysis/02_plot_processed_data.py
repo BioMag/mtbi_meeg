@@ -14,14 +14,14 @@ It is used for visual assessment of individual subjects and general group behavi
 Arguments
 ---------
     - eeg_tmp_data.pickle : pickle object 
-        Object of pickle format containing the dataframe with the data as well as the metadata with the arguments used to run the 01_read_processed_data.py script.
-    
+        Object of pickle format containing the dataframe with the data
+        and the metadata with the information about the arguments
+        used to run this script.    
     - control_plot_segment : int
-        Define which of the segments from the task will be used for plotting.
-    
+        Define which of the segments from the task will be used for plotting.  
     - roi : str 
         Defines the Region Of Interest for more localized information (WIP - Not currently functional).
-        
+
 Returns
 -------
 
@@ -31,6 +31,7 @@ Returns
 # TODO: Remove hardcoded values of frequency and use from config_eeg
 # TODO: violin plots?
 # TODO: ROIs. Check this out for rois: https://www.nature.com/articles/s41598-021-02789-9
+# TODO: Seaborn as sns?
 
 """
 import time

@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Mar 15 15:00:27 2023
+#################################
+#    04_create_report.py        #
+#################################
+
+@author: Estanislao Porta
 Creates an HTML report with the images created in the previous step of the pipeline
-@author: portae1
+
+# TODO: I wonder if I should fetch the the data and create a report with the data and not with the png images.....?
+
 """
 
-import pickle
 import os
 import sys
 src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -17,8 +22,6 @@ from pickle_data_handler import PickleDataHandler
 if not os.path.isdir(reports_dir):
     os.makedirs(reports_dir)
 
-# Section 2: plot of all the four ROC AUCs. It would be nice to plot the subplots separately eh? Put metadata specific for this? 
-# Could add accuracies, TPR and something else here
 
 def create_report(metadata):
     # Define filename & open HTML file
@@ -40,23 +43,35 @@ def create_report(metadata):
     # Include the PSD Control Plots  
     if "psd-control-plot-filename" in metadata:
         control_plots = os.path.join(figures_dir, metadata["psd-control-plot-filename"])
+        
+        if not os.path.isfile(control_plots):            
+            raise FileNotFoundError('Control plots were expected but are not found')
+        
         report.write(f'''
         <h2>PSD Averages - Control plot</h1>
+        
         <p>Processed data is plotted in the figure below, to visually assess the data. The PSD for each frequency bin was averaged accross all the channels. The first subplot shows these averages per subject, enabling to identify outliers.</p>
+        
         <p>In the second subplot, the PSD for each frequency bin was averaged accross all the channels and all the subjects within each group. The standard deviation for both groups is also displayed.</p>
         <img src="{control_plots}" class="center">
         ''')
+    else:
+        print('INFO: No control plots')
+    
     # Include the ROC plots
     if "roc-plots-filename" in metadata:
         roc_plots = os.path.join(figures_dir, metadata["roc-plots-filename"])
-        #TODO: check that file exists
-        print(roc_plots)       
+        
+        if not os.path.isfile(roc_plots):            
+            raise FileNotFoundError('ROC plots were expected but are not found')
+        
         report.write(f'''   
         <h2>ROC Plots</h2>
         <p>Processed data was analyzed using four different ML classifiers. Validation was done using Stratified KFold Cross Validation. The subplots below show the ROC curves obtained using each of the classifiers.</p>
         <img src="{roc_plots}" class="center">
         ''')
-        print('I did something with the roc-plots')
+    else:
+        raise TypeError('No ROC plots')
     # Metadata section                     
     report.write('''
                  <h2>Metadata</h2>

@@ -7,26 +7,31 @@
 
 @authors: Verna Heikkinen, Aino Kuusi, Estanislao Porta
 
-Reads in EEG data from CSV files and creates a dataframe whose rows represent each subject's the bandpower per channel and per frequency band. 
-The dataframe and the arguments used to run the script are added to pickle object.
-## NOTE: While we're reading in 'thin' freq bands with 89 freq bins, this script transforms it to the first 38 bins, so that the lower and upper range of the frequencies are identical  for 'thin' and 'wide' type of bands
+Reads in EEG data from CSV files into a dataframe
+Each rows contains bandpower data for each channel and frequency band.
+The dataframe and the arguments used to run the script are added to a pickle object.
 
 Arguments
 ---------
     - task : str
-        Each of the four tasks that have been measured for this experiment: Eyes Closed (ec), Eyes Open (eo), Paced Auditory Serial Addition Test 1 or 2 (PASAT_1 or PASAT_2)
+        Each of the four tasks that have been measured for this experiment:
+        Eyes Closed (ec), Eyes Open (eo),
+        Paced Auditory Serial Addition Test 1 or 2 (PASAT_1 or PASAT_2)
     - freq_band_type : str
-        Frequency bands used in the binning of the subject information. Thin bands 'thin' are 1hz bands from 1 to 90hz. 'wide' are conventional delta, theta, etc.
+        Frequency bands used in the binning of the subject information.
+        Thin bands are 1hz bands from 1 to 90hz. 
+        Wide bands are conventional Delta, Theta, Alpha, Beta, Gamma
     - normalization : bool
         Defines whether channel data is normalized for all the channels
 
 Returns
 -------
     - eeg_tmp_data.pickle : pickle object 
-        Object of pickle format containing the dataframe with the data as well as the metadata with the information about the arguments used to run this script.
+        Object of pickle format containing the dataframe with the data
+        and the metadata with the information about the arguments
+        used to run this script.
 
 #TODO: Define use of thinbands
-#TODO: Check NaN in DF
 """
 
 import os
@@ -41,7 +46,7 @@ import pandas as pd
 
 processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(processing_dir)
-from config_common import processed_data_dir
+from config_common import processed_data_dir, user, host
 from config_eeg import thin_bands, wide_bands, select_task_segments, channels
 from pickle_data_handler import PickleDataHandler
 
@@ -54,7 +59,7 @@ def read_subjects():
     - subjects: a list with all the subjects
  
     """
-     # List of extra controls, dismissed so we'd have equal number of P vs C.
+     # List of extra controls, dismissed so we'd have equal number of P vs C
     to_exclude = ['32C', '33C', '34C', '35C', '36C', '37C', '38C', '39C', '40C', '41C', '12P']
 
     subject_pattern = r'^\d{2}[PC]'   
@@ -80,8 +85,8 @@ def create_subjects_and_tasks(chosen_tasks, subjects):
     Combines the subjects and with the chosen tasks and creates a list of subjects_and_tasks
     
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     - chosen_tasks: list of subtasks pertaining to each task 
     - subjects: list of all the subjects
     
@@ -102,8 +107,8 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
     Read in processed bandpower data for each subject_and_tasks from files
     Creates an array of np with PSD data
     
-    Input parameters
-    ----------------
+    Arguments
+    ---------
     - subjects_and_tasks: list of 2-uples
             Contains the combinations of subjects and segments (e.g., (Subject1, Task1_segment1), (Subject1, Task1_segment2), ...)
     - freq_band_type: str
@@ -112,8 +117,9 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
             If True, normalization of the PSD data for all channels will be performed   
     - processed_data_dir: str
             path to the processed data directory as defined in config_common
-    Output
-   -----
+
+    Returns
+    -----
     - all_bands_vector: list of np arrays
             Each row contains the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
     """
@@ -170,13 +176,14 @@ def create_data_frame(subjects_and_tasks, all_bands_vectors):
     """
     Create a dataframe structure to be used by the model_testing and ROC_AUC.py scripts
         
-    Input parameters
-    ----------------
+    Arguments
+    ---------
     - all_bands_vector: list of np arrays
             Each row contains the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
     - subjects_and_tasks: list of 2-uples
             Contains the combinations of subjects and segments (e.g., (Subject1, Task1_segment1), (Subject1, Task1_segment2), ...) 
-    Output
+    
+    Returns
     ------
     - dataframe: panda dataframe
             Each row contains the subject_and_task label, the group which it belongs to, and the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
@@ -206,12 +213,9 @@ def create_data_frame(subjects_and_tasks, all_bands_vectors):
     dataframe.insert(1, 'Subject', subs)
     
     return dataframe 
-    
-if __name__ == '__main__':
-    # Save time of beginning of the execution to measure running time
-    start_time = time.time()
-    
-    # Add arguments to be parsed from command line    
+
+def initialize_argparser_and_metadata():
+    """ Initialize argparser and add args to metadata."""
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="PASAT_1")
     parser.add_argument('--freq_band_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 40hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
@@ -219,7 +223,8 @@ if __name__ == '__main__':
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
     
-    # Create dictonary with metadata information - It is important that it is CREATED here and not that stuff gets appended
+    # Create dictonary with metadata information 
+    # NOTE: It is important that it is CREATED here and not that stuff gets appended
     metadata = {"task": args.task, "freq_band_type": args.freq_band_type, "normalization": args.normalization}
     # Define the number of segments per task
     if metadata["task"] in ('eo', 'ec'):
@@ -229,29 +234,43 @@ if __name__ == '__main__':
     metadata["segments"] = segments
     
     print('######## \nINFO: Starting to run 01_read_processed_data.py')
+    
     # Print out the chosen configuration
     if args.normalization:
         print(f"\nINFO: Reading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will be normalized. \n")
     else:
-        print(f"\nINFO: Reading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will NOT be normalized. \n") 
-    
-    # Execute the submethods:
-    # 1 - Define subtasks according to input arguments
+        print(f"\nINFO: Reading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will NOT be normalized. \n")
+        return metadata, args
+
+if __name__ == '__main__':
+    # Save time of beginning of the execution to measure running time
+    start_time = time.time()
+
+    # 1 - Initialize command line arguments and save arguments to metadata
+    metadata, args = initialize_argparser_and_metadata()
+
+    # 2 - Define subtasks according to input arguments
     chosen_tasks = select_task_segments(args.task)
-    
-    # 2 - Read in the list of subjects from file subjects.txt
+
+    # 3 - Read in the list of subjects from file subjects.txt
     subjects = read_subjects()
-    
-    # 3 - Read in list of subjects from file and create subjects_and_tasks list
+
+    # 4 - Read in list of subjects from file and create subjects_and_tasks list
     subjects_and_tasks = create_subjects_and_tasks(chosen_tasks, subjects)
-    
-    # 4 - Read in processed data from file and create list where each row contains all the frquency bands and all channels per subject_and_task
+
+    # 5 - Create list: each row contains all frequency bands and all channels per subject_and_task
     all_bands_vectors = read_data(subjects_and_tasks, args.freq_band_type, args.normalization, processed_data_dir)
-    
-    # 5 - Create dataframe
+
+    # 6 - Create dataframe
     dataframe = create_data_frame(subjects_and_tasks, all_bands_vectors)
 
-    # 6 - Outputs the pickle object composed by the dataframe file and metadata to be used by 02_plot_processed_data.py and 03_fit_classifier_and_plot.py
+    # 7 - Add info to metadata
+    if "k22" in processed_data_dir:
+        metadata["dataset"] = "k22"
+    metadata["user"] = f'{user}@{host}'
+    metadata["license"] = "MIT License"
+
+    # 8 - Outputs the pickle object composed by the dataframe file and metadata to be used by 02_plot_processed_data.py and 03_fit_classifier_and_plot.py
     handler = PickleDataHandler()
     handler.export_data(dataframe=dataframe, metadata=metadata)
     
