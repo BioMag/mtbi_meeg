@@ -61,6 +61,7 @@ from datetime import datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -79,6 +80,36 @@ from pickle_data_handler import PickleDataHandler
 if not os.path.isdir(figures_dir):
     os.makedirs(figures_dir)
 
+
+def initialize_argparser(metadata):
+    """ Initialize argparser and add args to metadata."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbosity', type=bool, help="Define the verbosity of the output. Default is False", metavar='', default=True)
+    parser.add_argument('-s', '--seed', type=int, help=f"Seed value used for CV splits, and for classifiers and for CV splits. Default value is {seed}, and gives 50/50 class balance in Training and Test sets.", metavar='int', default=seed) # Note: different sklearn versions could yield different results
+    parser.add_argument('--scaling', type=bool, help='Scaling of data before fitting. Can only be used if data is not normalized. Default is True', metavar='', default=False)
+    parser.add_argument('--scaling_method', choices=scaling_methods, help='Method for scaling data, choose from the options. Default is RobustScaler.', default=scaling_methods[2])
+    parser.add_argument('--one_segment_per_task', type=bool, help='Utilize only one of the segments from the tasks. Default is False', metavar='', default=False)
+    parser.add_argument('--which_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=1)
+    parser.add_argument('--display_fig', type=int, help='Define whether figure will be shown. Default is true', metavar='', default=True)
+    parser.add_argument('--save_fig', type=int, help='Define whether figure will be saved. Default is true', metavar='', default=True)
+    #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
+    args = parser.parse_args()
+
+    # Add the input arguments to the metadata dictionary
+    metadata["folds"] = folds
+    metadata["seed"] = seed
+    metadata["verbosity"] = args.verbosity
+    if args.scaling and metadata["normalization"]:
+        raise TypeError("You are trying to scale data that has been already normalized.")
+    metadata["scaling"] = args.scaling
+    metadata["scaling_method"] = args.scaling_method
+    metadata["one_segment_per_task"] = args.one_segment_per_task
+    metadata["which_segment"] = args.which_segment
+    if  args.one_segment_per_task and (args.which_segment > metadata["segments"]):
+        raise TypeError(f'The segment you chose is larger than the number of available segments for task {metadata["task"]}. Please choose a value between 1 and {metadata["segments"]}.')
+    metadata["display_fig"] = args.display_fig
+
+    return metadata, args
 
 def initialize_subplots(metadata):
     """Creates figure with 2x2 subplots, sets axes and fig title"""
@@ -177,12 +208,12 @@ def roc_per_clf(tprs, aucs, ax, name, clf):
 
 def metrics_per_clf(precision, recall, f1):
     """Calculates metrics for each classifier"""
-    mean_precision = mean(precision)
-    std_precision = stdev(precision)
-    mean_recall = mean(recall)
-    std_recall = stdev(recall)
-    mean_f1 = mean(f1)
-    std_f1 = stdev(f1)
+    mean_precision = round(mean(precision), 3)
+    std_precision = round(stdev(precision), 3)
+    mean_recall = round(mean(recall), 3)
+    std_recall = round(stdev(recall), 3)
+    mean_f1 = round(mean(f1), 3)
+    std_f1 = round(stdev(f1), 3)
 
     print('\tPrecision = %0.2f \u00B1 %0.2f' % (mean_precision, std_precision))
     print('\tRecall = %0.2f \u00B1 %0.2f' % (mean_recall, std_recall))
@@ -238,12 +269,15 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
          - tpr_per_classifier : list
          - precision_per_classifier : list
          - recall_per_classifier : list
-         - F1_per_classifier : list
+         - f1_per_classifier : list
     """
     tpr_per_classifier = []
     auc_per_classifier = []
     std_auc_per_classifier = []
-
+    precision_per_classifier = []
+    recall_per_classifier = []
+    f1_per_classifier = []
+    
     # Initialize the subplots
     axs, metadata = initialize_subplots(metadata)
     # Iterate over the classifiers to populate each subplot
@@ -291,8 +325,18 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
         tpr_per_classifier.append(mean_tpr.T)
         auc_per_classifier.append(mean_auc.T)
         std_auc_per_classifier.append(std_auc.T)
-        # Add precision, recall, F1 per classifier?
-    return metadata # TODO: return something else here?
+        precision_per_classifier.append(mean_precision)
+        recall_per_classifier.append(mean_recall)
+        f1_per_classifier.append(mean_f1)
+
+    metrics = pd.DataFrame({'Classifiers': [pair[0] for pair in classifiers],
+                    'Precision': precision_per_classifier,
+                    'Recall': recall_per_classifier,
+                    'F1': f1_per_classifier,
+                    'TPR': tpr_per_classifier})
+    metadata["metrics"] = metrics
+
+    return metadata
 
 def add_timestamp(metadata):
     """Adds timestamp to metadata"""
@@ -301,7 +345,7 @@ def add_timestamp(metadata):
     return metadata
 
 def save_figure(metadata):
-    """Saves active  figure to disk """
+    """Saves active  figure to disk"""
     # Define filename
     if metadata["normalization"] and not metadata["scaling"]:
         figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_normalized_not-scaled.png'
@@ -314,36 +358,6 @@ def save_figure(metadata):
     metadata["roc-plots-filename"] = figure_filename
     plt.savefig(os.path.join(figures_dir, figure_filename))
     print(f'\nINFO: Success! Figure "{figure_filename}" has been saved to folder {figures_dir}')
-
-def initialize_argparser(metadata):
-    """ Add arguments to be parsed from command line."""
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--verbosity', type=bool, help="Define the verbosity of the output. Default is False", metavar='', default=True)
-    parser.add_argument('-s', '--seed', type=int, help=f"Seed value used for CV splits, and for classifiers and for CV splits. Default value is {seed}, and gives 50/50 class balance in Training and Test sets.", metavar='int', default=seed) # Note: different sklearn versions could yield different results
-    parser.add_argument('--scaling', type=bool, help='Scaling of data before fitting. Can only be used if data is not normalized. Default is True', metavar='', default=False)
-    parser.add_argument('--scaling_method', choices=scaling_methods, help='Method for scaling data, choose from the options. Default is RobustScaler.', default=scaling_methods[2])
-    parser.add_argument('--one_segment_per_task', type=bool, help='Utilize only one of the segments from the tasks. Default is False', metavar='', default=False)
-    parser.add_argument('--which_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=1)
-    parser.add_argument('--display_fig', type=int, help='Define whether figure will be shown. Default is true', metavar='', default=True)
-    parser.add_argument('--save_fig', type=int, help='Define whether figure will be saved. Default is true', metavar='', default=False)
-    #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
-    args = parser.parse_args()
-
-    # Add the input arguments to the metadata dictionary
-    metadata["folds"] = folds
-    metadata["seed"] = seed
-    metadata["verbosity"] = args.verbosity
-    if args.scaling and metadata["normalization"]:
-        raise TypeError("You are trying to scale data that has been already normalized.")
-    metadata["scaling"] = args.scaling
-    metadata["scaling_method"] = args.scaling_method
-    metadata["one_segment_per_task"] = args.one_segment_per_task
-    metadata["which_segment"] = args.which_segment
-    if  args.one_segment_per_task and (args.which_segment > metadata["segments"]):
-        raise TypeError(f'The segment you chose is larger than the number of available segments for task {metadata["task"]}. Please choose a value between 1 and {metadata["segments"]}.')
-    metadata["display_fig"] = args.display_fig
-
-    return metadata, args
 
 
 if __name__ == "__main__":
@@ -365,8 +379,8 @@ if __name__ == "__main__":
         ('Random Forest', RandomForestClassifier(random_state=seed)),
         ('Linear Discriminant Analysis', LinearDiscriminantAnalysis(solver='svd'))
     ]
-
-    # 2 - Initialize argparser and save arguments to metadata
+    metadata["Classifiers"] = classifiers
+    # 2 - Initialize command line arguments and save arguments to metadata
     metadata, args = initialize_argparser(metadata)
 
     # 3 - Define input data, initialize CV and get data split
@@ -392,49 +406,3 @@ if __name__ == "__main__":
     print('\n###################################################\n')
     print(f'Execution time of 03_fit_classifier_and_plot.py: {round(execution_time, 2)} seconds\n')
     print('###################################################\n')
-## I could put all the information in a couple of DFs
-#metadata['metrics']
-#classifier | precision | precision std dev| ...
-#a          |
-#b
-#c
-#d
-#
-#metadata['tprs']
-#classifier | 0 | ... | 100 (linspaceFPRS)
-#a
-#b
-#c
-#d
-
-# Info to be added to the metadata
-#metadata = {
-#        "Class balance": "WIP",
-#        "Number of observations used in classification": len(X),
-#        "Number of features per observation": X.shape[1],
-#        # Per clf:
-#        "Sensitivity": "WIP",
-#        "Specifictiy":"WIP",
-#        }
-
-
-#%%
-
-#  What does roc_curve.from_estimator() object have
-#from pprint import pprint
-#pprint(vars(viz))
-#{'ax_': <matplotlib.axes._subplots.AxesSubplot object at 0x7f15cc85b580>,
-# 'estimator_name': 'ROC fold 10',
-# 'figure_': <Figure size 432x432 with 1 Axes>,
-# 'fpr': array([0.        , 0.11111111, 0.33333333, 0.33333333, 0.44444444,
-#       0.44444444, 1.        , 1.        ]),
-# 'line_': <matplotlib.lines.Line2D object at 0x7f15cc88b280>,
-# 'pos_label': 1,
-# 'roc_auc': 0.4814814814814815,
-# 'tpr': array([0.        , 0.        , 0.        , 0.58333333, 0.58333333,
-#       0.75      , 0.75      , 1.        ])}
-
-# By default, roc_curve it uses as many thresholds as there are unique values in the y_score input array. Here is the relevant excerpt from the scikit-learn documentation:
-
-# ## (Optional)
-    # Define what strategy to use based on the subjects balance

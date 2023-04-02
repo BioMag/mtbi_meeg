@@ -31,7 +31,8 @@ Returns
         and the metadata with the information about the arguments
         used to run this script.
 
-#TODO: Define use of thinbands
+# TODO: Define use of thinbands
+# TODO: Add number of subjects and number of features to metadata
 """
 
 import os
@@ -240,7 +241,8 @@ def initialize_argparser_and_metadata():
         print(f"\nINFO: Reading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will be normalized. \n")
     else:
         print(f"\nINFO: Reading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will NOT be normalized. \n")
-        return metadata, args
+    
+    return metadata, args
 
 if __name__ == '__main__':
     # Save time of beginning of the execution to measure running time

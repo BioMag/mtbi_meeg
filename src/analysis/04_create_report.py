@@ -14,6 +14,7 @@ Creates an HTML report with the images created in the previous step of the pipel
 
 import os
 import sys
+import pandas as pd
 src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(src_dir)
 from config_common import figures_dir, reports_dir
@@ -72,6 +73,12 @@ def create_report(metadata):
         ''')
     else:
         raise TypeError('No ROC plots')
+    # Metrics section
+    report.write('''
+                 <h2>Metrics</h2>
+                 ''')
+    metrics = metadata["metrics"].drop('TPR', axis=1)
+    report.write(metrics.to_html(index=False))
     # Metadata section                     
     report.write('''
                  <h2>Metadata</h2>
@@ -79,6 +86,8 @@ def create_report(metadata):
                  ''')
     # Loop over the dictionary items and write each key-value pair in a separate row
     for key, value in metadata.items():
+        if key == "metrics":
+            continue
         report.write(f'<li><b>{key}:</b> {value}</li>\n')
     # Close the unordered list and close the body section
     report.write('''
@@ -87,7 +96,7 @@ def create_report(metadata):
         </html>
         ''')
     report.close()
-    print(f'INFO: Success! File "{report_filename}" created')
+    print(f'INFO: Success! File "{report_filename}" created in {reports_dir}.')
     print('\n***\n')
 if __name__ == "__main__":
     handler = PickleDataHandler()
