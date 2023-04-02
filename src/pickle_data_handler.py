@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Mar 26 18:09:59 2023
+Class that handles the loading (bundling) and un-loading (exporting) data from the pickle object.
 
-@author: portae1
+@author: Estanislao Porta
 """
-
+import os
+import time
 import pickle
 
 class PickleDataHandler:
@@ -19,7 +20,7 @@ class PickleDataHandler:
             raise ValueError("Metadata must be a dictionary.")
         if not metadata:
             raise ValueError("The metadata file cannot be empty.")
-            
+
         try: 
             with open("eeg_tmp_data.pickle", "wb") as f:
                 pickle.dump((dataframe, metadata), f)
@@ -32,12 +33,19 @@ class PickleDataHandler:
     
     @staticmethod
     def load_data():  
+        # Check if the file exists.
+        file_path = "eeg_tmp_data.pickle"
+        if not os.path.exists(file_path):
+            print("The file 'eeg_tmp_data.pickle' does not exist in the current directory. The program will exit.")
+            return False
+        # Check if the age of the file is older than 1 day.
+        file_age = time.time() - os.path.getmtime(file_path)
+        if file_age > 86400:
+            raise ValueError("The data file is older than 1 day.")
+        
         try:
             with open("eeg_tmp_data.pickle", "rb") as fin:
                 dataframe, metadata = pickle.load(fin)
-        except FileNotFoundError:
-            print("The file 'eeg_tmp_data.pickle' does not exist in the current directory. The program will exit.")
-            return False
         except (IOError, TypeError) as e:
             print(f'An error occurred: {e}')
             return False
