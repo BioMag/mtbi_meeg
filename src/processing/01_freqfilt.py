@@ -30,7 +30,7 @@ from config_eeg import get_all_fnames, fname, ec_bads, eo_bads, pasat1_bads, pas
 
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('subject', help='The subject to process', default='10C')
+parser.add_argument('subject', help='The subject to process')
 args = parser.parse_args()
 
 # Along the way, we collect figures for quality control
@@ -93,7 +93,7 @@ for raw_fname, filt_fname in all_fnames:
         filt = raw.notch_filter(fnotch, picks=['eeg', 'eog', 'ecg'])
         
         # Apply bandpass filter
-        filt = filt.filter(fmin=freq_min, fmax=freq_max, picks=['eeg', 'eog', 'ecg'])
+        filt = filt.filter(l_freq=freq_min, h_freq=freq_max, picks=['eeg', 'eog', 'ecg'])
     
         # Save the filtered data
         filt_fname.parent.mkdir(parents=True, exist_ok=True)
@@ -151,7 +151,7 @@ with open_report(fname.report(subject=args.subject)) as report:
 
 # TODO: Once the folder structure is defined, re-code the path depending on where is this expected
 # with open('maxfilter_corrupted_or_missing.txt', 'a') as  
-with open('/net/tera2/home/portae1/biomag/mtbi-eeg/python/processing/eeg/maxfilter_puuttuu.txt', 'a') as file:
+with open('maxfilter_puuttuu.txt', 'a') as file:
     for bad_file in corrupted_raw_files:
         file.write(bad_file+'\n')
     file.close()
