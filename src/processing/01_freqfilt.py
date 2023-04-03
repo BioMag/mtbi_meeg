@@ -19,18 +19,17 @@ import sys
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
-
-# Save time of beginning of the execution to measure running time
-start_time = time.time()
-
 from config_common import processed_data_dir
 from config_eeg import get_all_fnames, fname, ec_bads, eo_bads, pasat1_bads, pasat2_bads, freq_min, freq_max, fnotch
 
 #TODO: fix 35C channels (WHAT'S THIS???)
 
-# Deal with command line arguments
+# Save time of beginning of the execution to measure running time
+start_time = time.time()
+
+# Initialize command line arguments
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('subject', help='The subject to process', default='10C')
+parser.add_argument('--subject', help='The subject to process', default='10C')
 args = parser.parse_args()
 
 # Along the way, we collect figures for quality control
@@ -43,7 +42,6 @@ all_fnames = zip(
     get_all_fnames(args.subject, kind='raw', exclude=exclude),
     get_all_fnames(args.subject, kind='filt', exclude=exclude),
 )
-
 
 # Date and time
 now = datetime.datetime.now()
@@ -88,27 +86,30 @@ for raw_fname, filt_fname in all_fnames:
         # the HTML report.
         raw_plot = raw.compute_psd(fmin=freq_min, fmax=freq_max).plot(show=False)
         figures['before filt'].append(raw_plot)
-    
+        print('\nn ## Line 89 \n')
+        
         # Remove 50Hz power line noise (and the first harmonic: 100Hz)
         filt = raw.notch_filter(fnotch, picks=['eeg', 'eog', 'ecg'])
-        
+        print('\nn ## Line 93 \n')
+
         # Apply bandpass filter
-        filt = filt.filter(fmin=freq_min, fmax=freq_max, picks=['eeg', 'eog', 'ecg'])
-    
+        filt = filt.filter(fmin=1, fmax=90, picks=['eeg', 'eog', 'ecg'])
+        print('\nn ## Line 97 \n')
+
         # Save the filtered data
         filt_fname.parent.mkdir(parents=True, exist_ok=True)
         filt.save(filt_fname, overwrite=True)
-    
+        print('\nn ## Line 102 \n')
+
         # Add a plot of the power spectrum of the filtered data to the list of
         # figures to be placed in the HTML report.
         filt_plot = filt.plot_psd(fmin=freq_min, fmax=freq_max, show=False)
         figures['after filt'].append(filt_plot)
-        
+        print('\nn ## Line 108 \n')
+
         raw.close()
     except:
         corrupted_raw_files.append(args.subject)
-    
-
 
 # Write HTML report with the quality control figures
 # TODO: These could be nicer!
@@ -122,6 +123,7 @@ with open_report(fname.report(subject=args.subject)) as report:
         section=section,
         tags=('filt')
     )
+    print('\n\n####got to this part\n')
     report.add_figure(
         figures['after filt'],
         title='After frequency filtering',
@@ -149,9 +151,9 @@ with open_report(fname.report(subject=args.subject)) as report:
     report.save(fname.report_html(subject=args.subject),
                 overwrite=True, open_browser=False)
 
-# TODO: Once the folder structure is defined, re-code the path depending on where is this expected
+# TODO: Can this filename be changed? 
 # with open('maxfilter_corrupted_or_missing.txt', 'a') as  
-with open('/net/tera2/home/portae1/biomag/mtbi-eeg/python/processing/eeg/maxfilter_puuttuu.txt', 'a') as file:
+with open('maxfilter_corrupted_or_missing.txt', 'a') as file:
     for bad_file in corrupted_raw_files:
         file.write(bad_file+'\n')
     file.close()
