@@ -33,6 +33,7 @@ n_fft = 2048  # Higher number means more resolution at the lower frequencies
 # the cHPI coils. Notch filters at 50Hz and 100Hz to get rid of powerline.
 freq_min = 1
 freq_max = 43
+filt_freq_max = 90
 fnotch = [50, 100]
 
 thin_bands = [(x, x+1) for x in range(1, 43)] # thin_bands = (1,2),...., (42,43)

@@ -26,7 +26,7 @@ sys.path.append(parent_dir)
 # Save time of beginning of the execution to measure running time
 start_time = time.time()
 
-from config_eeg import get_all_fnames, fname, ec_bads, eo_bads, pasat1_bads, pasat2_bads, freq_min, freq_max, fnotch
+from config_eeg import get_all_fnames, fname, ec_bads, eo_bads, pasat1_bads, pasat2_bads, freq_min, filt_freq_max, fnotch
 
 #TODO: fix 35C channels (WHAT'S THIS???)
 
@@ -91,14 +91,14 @@ for raw_fname, filt_fname in all_fnames:
     
     # Add a plot of the power spectrum to the list of figures to be placed in
     # the HTML report.
-    raw_plot = raw.compute_psd(fmin=freq_min, fmax=freq_max).plot(show=False)
+    raw_plot = raw.compute_psd(fmin=freq_min, fmax=filt_freq_max).plot(show=False)
     figures['before filt'].append(raw_plot)
 
     # Remove 50Hz power line noise (and the first harmonic: 100Hz)
     filt = raw.notch_filter(fnotch, picks=['eeg', 'eog', 'ecg'])
     
     # Apply bandpass filter
-    filt = filt.filter(l_freq=freq_min, h_freq=freq_max, picks=['eeg', 'eog', 'ecg'])
+    filt = filt.filter(l_freq=freq_min, h_freq=filt_freq_max, picks=['eeg', 'eog', 'ecg'])
 
     # Save the filtered data
     filt_fname.parent.mkdir(parents=True, exist_ok=True)
@@ -106,7 +106,7 @@ for raw_fname, filt_fname in all_fnames:
 
     # Add a plot of the power spectrum of the filtered data to the list of
     # figures to be placed in the HTML report.
-    filt_plot = filt.plot_psd(fmin=freq_min, fmax=freq_max, show=False)
+    filt_plot = filt.plot_psd(fmin=freq_min, fmax=filt_freq_max, show=False)
     figures['after filt'].append(filt_plot)
     
     raw.close()
