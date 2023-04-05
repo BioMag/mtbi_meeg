@@ -47,11 +47,9 @@ Returns
     - metadata?
     - report?
 
-# TODO: Define what to do with metrics: save in metadata / export a CSV file
+# TODO: Export metrics to CSV file
 # TODO: Add logging?
-# TODO: Add stuff to metadata as per the comments below: possibly not in this script?
 # TODO: Use User and workstation to define backend so that when running it in the  cluster it automatically recognizes that there should be no interactive display
-
 """
 import sys
 import os
@@ -133,10 +131,10 @@ def initialize_subplots(metadata):
         )
     fig.suptitle(figure_title)
     # Add x and y labels
-    axs[0, 0].set(ylabel='False Positive Rate')
-    axs[1, 0].set(ylabel='False Positive Rate')
-    axs[1, 0].set(xlabel='True Positive Rate')
-    axs[1, 1].set(xlabel='True Positive Rate')
+    axs[0, 0].set(ylabel='True Positive Rate')
+    axs[1, 0].set(ylabel='True Positive Rate')
+    axs[1, 0].set(xlabel='False Positive Rate')
+    axs[1, 1].set(xlabel='False Positive Rate')
     # Disable interactive mode in case plotting is not needed
 
     plt.ioff()
@@ -265,11 +263,11 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
     Returns
     -------
          - Figure with 2x2 subplots: matplotlib plot
-         - metadata : dict
-         - tpr_per_classifier : list
-         - precision_per_classifier : list
-         - recall_per_classifier : list
-         - f1_per_classifier : list
+         - metadata : dict containing df 'metrics', which includes:
+                - tpr_per_classifier : list
+                - precision_per_classifier : list
+                - recall_per_classifier : list
+                - f1_per_classifier : list
     """
     tpr_per_classifier = []
     auc_per_classifier = []
@@ -329,18 +327,14 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
         recall_per_classifier.append(mean_recall)
         f1_per_classifier.append(mean_f1)
 
-    metrics = pd.DataFrame({'Classifiers': [pair[0] for pair in classifiers],
+    metrics = pd.DataFrame({
+                    'Classifiers': [pair[0] for pair in classifiers],
                     'Precision': precision_per_classifier,
                     'Recall': recall_per_classifier,
                     'F1': f1_per_classifier,
-                    'TPR': tpr_per_classifier})
+                    'TPR': tpr_per_classifier
+                    })
     metadata["metrics"] = metrics
-
-    return metadata
-
-def add_timestamp(metadata):
-    """Adds timestamp to metadata"""
-    metadata["timestamp"] = datetime.now()
 
     return metadata
 
@@ -369,10 +363,8 @@ if __name__ == "__main__":
     handler = PickleDataHandler()
     dataframe, metadata = handler.load_data()
 
-    # Scaling methods
+    # Define scaling methods and classifiers
     scaling_methods = [StandardScaler(), MinMaxScaler(), RobustScaler()]
-
-    # Define classifiers
     classifiers = [
         ('Support Vector Machine', SVC(kernel='rbf', probability=True, random_state=seed)),
         ('Logistic Regression', LogisticRegression(penalty='l1', solver='liblinear', random_state=seed)),
@@ -380,6 +372,7 @@ if __name__ == "__main__":
         ('Linear Discriminant Analysis', LinearDiscriminantAnalysis(solver='svd'))
     ]
     metadata["Classifiers"] = classifiers
+
     # 2 - Initialize command line arguments and save arguments to metadata
     metadata, args = initialize_argparser(metadata)
 
@@ -390,7 +383,7 @@ if __name__ == "__main__":
     metadata = fit_and_plot(X, y, classifiers, data_split, metadata)
 
     # 5 -  Add timestamp
-    metadata = add_timestamp(metadata)
+    metadata["timestamp"] = datetime.now()
 
     # 6 - Save the figure to disk
     if args.save_fig:

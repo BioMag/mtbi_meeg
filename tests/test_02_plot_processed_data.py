@@ -8,9 +8,8 @@
 
 Tests the functions from module 02_plot_processed_data.py
 Use `python3 -m pytest test_02_plot_processed_data.py` to run it from terminal
+# TODO: Should this import wide_bands and thin_bands from config_eeg?
 """
-
-
 import pytest
 import importlib
 import os
@@ -40,7 +39,7 @@ def test_define_freq_bands():
 
 def test_global_averaging_with_sample_data():
     # TODO: Test for wide freqs!
-    freqs = np.array([x for x in range(1, 39)])   
+    freqs = np.array([x for x in range(1, 43)])   
     eeg_data = np.random.rand(3, len(freqs) * channels)
     df = pd.DataFrame({'Group': [1, 0, 1], 'Subject': ["26P", "01C", "02P"]})
     df = pd.concat([df, pd.DataFrame(eeg_data)], axis=1)
@@ -51,7 +50,7 @@ def test_global_averaging_with_sample_data():
         subj_arr = np.array(df.loc[idx])[2:]
         subj_arr = 10*np.log10(subj_arr.astype(float))
         subj_arr = np.reshape(subj_arr, (channels, freqs.size))
-        
+   # TODO: Remove the ROI for the testing     
         if metadata["roi"] == 'Frontal': 
             subj_arr = subj_arr[0:22, :]
         GA = np.mean(subj_arr, axis=0)
@@ -64,7 +63,7 @@ def test_global_averaging_with_sample_data():
 def test_global_averaging_with_empty_dataframe():
     # The pickle data handler should already be considering these issues
     metadata = {"roi": 'All'}
-    freqs = np.array([x for x in range(1, 39)])   
+    freqs = np.array([x for x in range(1, 43)])   
     eeg_data = []
     df = pd.DataFrame({'Group': [1, 0, 1], 'Subject': ["26P", "01C", "02P"]})
     df = pd.concat([df, pd.DataFrame(eeg_data)], axis=1)
@@ -76,7 +75,7 @@ def test_global_averaging_with_empty_dataframe():
 def test_global_averaging_with_nan_values():
     # The pickle data handler should already be considering this
     metadata = {"roi": 'All'}
-    freqs = np.array([x for x in range(1, 39)])   
+    freqs = np.array([x for x in range(1, 43)])   
     eeg_data = np.full((3, len(freqs) * channels), np.nan)
     df = pd.DataFrame({'Group': [1, 0, 1], 'Subject': ["26P", "01C", "02P"]})
     df = pd.concat([df, pd.DataFrame(eeg_data)], axis=1)
@@ -87,7 +86,7 @@ def test_global_averaging_with_nan_values():
 
 def test_create_df_for_plotting():
     metadata = {"control_plot_segment": 1, "segments": 2}
-    freqs = np.array([x for x in range(1, 39)])   
+    freqs = np.array([x for x in range(1, 43)])   
     eeg_data = np.random.rand(3, len(freqs) * channels)
     df = pd.DataFrame({'Group': [1, 0, 1], 'Subject': ["26P", "01C", "02P"]})
     df = pd.concat([df, pd.DataFrame(eeg_data)], axis=1)

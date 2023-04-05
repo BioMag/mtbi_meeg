@@ -61,6 +61,6 @@ for subject in subjects:
 # Calculate time that the script takes to run
 here_execution_time = (time.time() - here_start_time)
 print('\n###################################################')
-print(f'Execution time of everything is: {round(here_execution_time/60,0)} minutes')
-print(f'Average time is {round(here_execution_time/len(subjects),0)} seconds per subject')
+print(f'Execution time of everything is: {round(here_execution_time/60,1)} minutes')
+print(f'Average time is {round(here_execution_time/len(subjects),1)} seconds per subject')
 print('###################################################\n')

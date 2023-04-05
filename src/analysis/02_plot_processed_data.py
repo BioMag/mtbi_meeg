@@ -31,8 +31,6 @@ Returns
 # TODO: Remove hardcoded values of frequency and use from config_eeg
 # TODO: violin plots?
 # TODO: ROIs. Check this out for rois: https://www.nature.com/articles/s41598-021-02789-9
-# TODO: Seaborn as sns?
-
 """
 import time
 import argparse
@@ -42,7 +40,6 @@ import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 SRC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(SRC_DIR)
@@ -50,13 +47,31 @@ from config_common import figures_dir
 from pickle_data_handler import PickleDataHandler
 from config_eeg import channels, thin_bands, wide_bands
 
+
+def initialize_argparser(metadata):
+    """ Initialize argparser and add args to metadata."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbosity', type=bool, help="Define the verbosity of the output. Default is False", metavar='', default=False)
+    roi_areas = ['All', 'Frontal', 'Occipital', 'FTC', 'Centro-parietal']
+    parser.add_argument('--roi', type=str, choices=roi_areas, help="ROI areas to be plotted. Default value is 'All'.", metavar='', default='All')
+    parser.add_argument('--control_plot_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=1)    
+    #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
+    args = parser.parse_args()
+
+    # Add the input arguments to the metadata dictionary        
+    metadata["control_plot_segment"] = args.control_plot_segment
+    if metadata["control_plot_segment"] > metadata["segments"]:
+        raise IndexError(f'List index out of range. The segment you chose is not allowed for task {metadata["task"]}. Please choose a value between 1 and {metadata["segments"]}.')
+    metadata["roi"] = args.roi
+    return metadata
+    
 def define_freq_bands(metadata):
     if metadata["freq_band_type"] == 'thin':
-        freqs = np.array([x for x in range(1, 41)])
-        #freqs = np.array([bands[0] for bands in thin_bands])
+        #freqs = np.array([x for x in range(1, 43)])
+        freqs = np.array([bands[0] for bands in thin_bands])
     elif metadata["freq_band_type"] == 'wide':
-        freqs = np.array([1, 3, 5.2, 7.6, 10.2, 13, 16, 19.2, 22.6, 26.2, 30, 34, 38.2]).T
-        #freqs = np.array([bands[0] for bands in wide_bands])
+        #freqs = np.array([1, 3, 5.2, 7.6, 10.2, 13, 16, 19.2, 22.6, 26.2, 30, 34, 38.2]).T
+        freqs = np.array([bands[0] for bands in wide_bands])
 
     return freqs
 # TODO: Would rename to 'channel' averaging
@@ -164,26 +179,13 @@ if __name__ == '__main__':
     # Save time of beginning of the execution to measure running time
     start_time = time.time()
     
-    # Add arguments to be parsed from command line    
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--verbosity', type=bool, help="Define the verbosity of the output. Default is False", metavar='', default=False)
-    
-    roi_areas = ['All', 'Frontal', 'Occipital', 'FTC', 'Centro-parietal']
-    parser.add_argument('--roi', type=str, choices=roi_areas, help="ROI areas to be plotted. Default value is 'All'.", metavar='', default='All')
-    parser.add_argument('--control_plot_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=1)    
-    #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
-    args = parser.parse_args()
-    
     # Execute the submethods:
     # 1 - Read data
     handler = PickleDataHandler()
     dataframe, metadata = handler.load_data()
     
-    # 2 - Add arguments to dictionary object 'metadata'
-    metadata["control_plot_segment"] = args.control_plot_segment
-    if metadata["control_plot_segment"] > metadata["segments"]:
-        raise IndexError(f'List index out of range. The segment you chose is not allowed for task {metadata["task"]}. Please choose a value between 1 and {metadata["segments"]}.')
-    metadata["roi"] = args.roi
+    # 2 - InitializeInitialize command line arguments and save arguments to metadata
+    metadata = initialize_argparser(metadata)
     
     # 3 - Define Frequency bands
     freqs = define_freq_bands(metadata)

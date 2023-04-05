@@ -101,5 +101,5 @@ with open('psds_corrupted_or_missing.txt', 'a') as file:
 # Calculate time that the script takes to run
 execution_time = (time.time() - start_time)
 print('\n###################################################\n')
-print(f'Execution time of 04_bandpower.py is: {round(execution_time,2)} seconds\n')
+print(f'Execution time of 04_bandpower.py for {args.freq_band_type} frequency bands is: {round(execution_time,2)} seconds\n')
 print('###################################################\n')

@@ -51,6 +51,36 @@ from config_common import processed_data_dir, user, host
 from config_eeg import thin_bands, wide_bands, select_task_segments, channels
 from pickle_data_handler import PickleDataHandler
 
+
+def initialize_argparser_and_metadata():
+    """ Initialize argparser and add args to metadata."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="PASAT_2")
+    parser.add_argument('--freq_band_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 43hz. 'wide' are conventional delta, theta, etc. Default is 'wide'.", default="wide")
+    parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=True)
+    #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) 
+    args = parser.parse_args()
+    
+    # Create dictonary with metadata information 
+    # NOTE: It is important that it is CREATED here and not that stuff gets appended
+    metadata = {"task": args.task, "freq_band_type": args.freq_band_type, "normalization": args.normalization}
+    # Define the number of segments per task
+    if metadata["task"] in ('eo', 'ec'):
+        segments = 3
+    elif metadata["task"] in ('PASAT_1', 'PASAT_2'):
+        segments = 2
+    metadata["segments"] = segments
+    
+    print('######## \nINFO: Starting to run 01_read_processed_data.py')
+    
+    # Print out the chosen configuration
+    if args.normalization:
+        print(f"\nINFO: Reading in data from task '{args.task}', using '{args.freq_band_type}' frequency bands. Data **will** be normalized. \n")
+    else:
+        print(f"\nINFO: Reading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data **will NOT** be normalized. \n")
+    
+    return metadata, args
+
 def read_subjects():
     """
     Reads in the list of subjects from file subjects.txt. Asserts format to contain two digits and then a letter P or C for Patients or Controls. 
@@ -147,11 +177,14 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
                     print("Error: Invalid data, could not convert to float")              
                     raise e
                     
-        # Convert list to array
-        if freq_band_type == 'thin':
-            subject_and_task_bands_array = np.array(subject_and_task_bands_list[0:40])
-        else:
-            subject_and_task_bands_array = np.array(subject_and_task_bands_list)
+        # # Convert list to array
+        # if freq_band_type == 'thin':
+        #     # TODO thin freq_bands: there should be no slicing of 'subject_and_task_band_list', since 
+        #     subject_and_task_bands_array = np.array(subject_and_task_bands_list)
+        # else:
+        #     subject_and_task_bands_array = np.array(subject_and_task_bands_list)
+        
+        subject_and_task_bands_array = np.array(subject_and_task_bands_list)
         
         # Normalize each band
         if normalization: 
@@ -160,13 +193,14 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
         
         subject_and_task_bands_vector = np.concatenate(subject_and_task_bands_array.transpose())
         
-#      Validate subject_and_task_bands_vector length:
+        # Validate subject_and_task_bands_vector length:
         if freq_band_type == 'thin':
-            assert len(subject_and_task_bands_vector) == (channels * 40), f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
-            #assert len(subject_and_task_bands_vector) == (channels * len(thin_bands)), f"Processed data for subject {subject} does not have the expected length when using thin frequency bands."
+            freqs = thin_bands
         elif freq_band_type == 'wide':
-            assert len(subject_and_task_bands_vector) == (channels * len(wide_bands)), f'Processed data for subject {subject} does not have the expected length when using wide frequency bands.'
-            
+            freqs = wide_bands
+        
+        assert len(subject_and_task_bands_vector) == (channels * len(freqs)), f"Processed data for subject {subject} does not have the expected length when using {freq_band_type} frequency bands."
+          
         # Add vector to matrix
         all_bands_vectors.append(subject_and_task_bands_vector)    
 
@@ -215,36 +249,9 @@ def create_data_frame(subjects_and_tasks, all_bands_vectors):
     
     return dataframe 
 
-def initialize_argparser_and_metadata():
-    """ Initialize argparser and add args to metadata."""
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="PASAT_1")
-    parser.add_argument('--freq_band_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 40hz. 'wide' are conventional delta, theta, etc. Default is 'thin'.", default="thin")
-    parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=True)
-    #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
-    args = parser.parse_args()
-    
-    # Create dictonary with metadata information 
-    # NOTE: It is important that it is CREATED here and not that stuff gets appended
-    metadata = {"task": args.task, "freq_band_type": args.freq_band_type, "normalization": args.normalization}
-    # Define the number of segments per task
-    if metadata["task"] in ('eo', 'ec'):
-        segments = 3
-    elif metadata["task"] in ('PASAT_1', 'PASAT_2'):
-        segments = 2
-    metadata["segments"] = segments
-    
-    print('######## \nINFO: Starting to run 01_read_processed_data.py')
-    
-    # Print out the chosen configuration
-    if args.normalization:
-        print(f"\nINFO: Reading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will be normalized. \n")
-    else:
-        print(f"\nINFO: Reading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data will NOT be normalized. \n")
-    
-    return metadata, args
 
 if __name__ == '__main__':
+
     # Save time of beginning of the execution to measure running time
     start_time = time.time()
 
