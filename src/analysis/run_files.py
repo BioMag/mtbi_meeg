@@ -3,20 +3,19 @@
 """
 Created on Wed Mar 15 11:23:04 2023
 
-Runs the scripts 01_read_processed_data.py and 03_fit_classifier_and_plot.py
-
-It could also be done in bash using something like 
-    # Define the arguments for the first file
-    arg1_vals=("eo" "ec" "PASAT_1" "PASAT_2")
-    arg2_vals=("thin" "wide")
+It runs the scripts:
+    01_read_processed_data.py, 
+    02_plot_processed_data, 
+    03_fit_classifier_and_plot.py,
+    04_create_report
     
-    # Call the first Python file with each set of arguments
-    for (( i=0; i<${#arg1_vals[@]}; i++ )); do
-        python file1.py --task "${arg1_vals[i]}" --freq_band_type "${arg2_vals[i]}"
-        # Call the second Python file without any arguments
-        python file2.py
-    done
-@author: portae1
+    
+It will:
+- Read processed data for all subjects in subjects.txt
+- Plot control plots and save them to the 'figures_dir'
+- Fit classifiers, plot ROCs, and save the ROC plots and the metrics to a pickle object
+- Create an html report in the 'reports_dir'
+
 """
 
 import subprocess
