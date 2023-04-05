@@ -6,6 +6,9 @@ frequencies.
 Running:
 import subprocess
 subprocess.run('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/runsome.sh', shell=True)
+
+# TODO: Add logic to include a print statement and warning if subjects were corrupted
+# TODO: Add subject argument as --subject?
 """
 
 import argparse
@@ -23,7 +26,6 @@ sys.path.append(parent_dir)
 # Save time of beginning of the execution to measure running time
 start_time = time.time()
 
-from config_common import processed_data_dir
 from config_eeg import get_all_fnames, fname, ec_bads, eo_bads, pasat1_bads, pasat2_bads, freq_min, freq_max, fnotch
 
 #TODO: fix 35C channels (WHAT'S THIS???)
@@ -54,61 +56,60 @@ corrupted_raw_files = []
 for raw_fname, filt_fname in all_fnames:
     try:
         raw = read_raw_fif(raw_fname, preload=True)
-
-        # Reduce logging level (technically, one could define it in the read_raw_fif function, but it seems to be buggy)
-        # More info about the bug can be found here: https://github.com/mne-tools/mne-python/issues/8872
-        set_log_level(verbose='Warning')
-
-        # Mark bad channels that were manually annotated earlier.
-        raw_str = str(raw_fname)
-        if 'task-ec' in raw_str:
-            raw.info['bads'] = ec_bads[args.subject]
-            task = 'ec'
-        elif 'task-eo' in raw_str:
-            raw.info['bads'] = eo_bads[args.subject]
-            task = 'eo'
-        elif 'task-PASAT' in raw_str and 'run-01' in raw_str:
-            raw.info['bads'] = pasat1_bads[args.subject]
-            task = 'pasat1'
-        elif 'task-PASAT' in raw_str and 'run-02' in raw_str:
-            raw.info['bads'] = pasat2_bads[args.subject]
-            task = 'pasat2'
-        
-        # Remove MEG channels. This is the EEG pipeline after all.
-        raw.pick_types(meg=False, eeg=True, eog=True, stim=True, ecg=True, exclude=[])
-        
-        # Plot segment of raw data
-        figures['raw segment'].append(raw.plot(n_channels=30, title = date_time, show=False))
-        
-        # Interpolate bad channels
-        raw.interpolate_bads()
-        figures['interpolated segment'].append(raw.plot(n_channels=30, title = date_time + task, show=False))
-        
-        # Add a plot of the power spectrum to the list of figures to be placed in
-        # the HTML report.
-        raw_plot = raw.compute_psd(fmin=freq_min, fmax=freq_max).plot(show=False)
-        figures['before filt'].append(raw_plot)
-    
-        # Remove 50Hz power line noise (and the first harmonic: 100Hz)
-        filt = raw.notch_filter(fnotch, picks=['eeg', 'eog', 'ecg'])
-        
-        # Apply bandpass filter
-        filt = filt.filter(l_freq=freq_min, h_freq=freq_max, picks=['eeg', 'eog', 'ecg'])
-    
-        # Save the filtered data
-        filt_fname.parent.mkdir(parents=True, exist_ok=True)
-        filt.save(filt_fname, overwrite=True)
-    
-        # Add a plot of the power spectrum of the filtered data to the list of
-        # figures to be placed in the HTML report.
-        filt_plot = filt.plot_psd(fmin=freq_min, fmax=freq_max, show=False)
-        figures['after filt'].append(filt_plot)
-        
-        raw.close()
+    # TODO: what type of exception will this yield? File not found, etc?
     except:
         corrupted_raw_files.append(args.subject)
-    
+        continue
+    # Reduce logging level (technically, one could define it in the read_raw_fif function, but it seems to be buggy)
+    # More info about the bug can be found here: https://github.com/mne-tools/mne-python/issues/8872
+    set_log_level(verbose='Warning')
 
+    # Mark bad channels that were manually annotated earlier.
+    raw_str = str(raw_fname)
+    if 'task-ec' in raw_str:
+        raw.info['bads'] = ec_bads[args.subject]
+        task = 'ec'
+    elif 'task-eo' in raw_str:
+        raw.info['bads'] = eo_bads[args.subject]
+        task = 'eo'
+    elif 'task-PASAT' in raw_str and 'run-01' in raw_str:
+        raw.info['bads'] = pasat1_bads[args.subject]
+        task = 'pasat1'
+    elif 'task-PASAT' in raw_str and 'run-02' in raw_str:
+        raw.info['bads'] = pasat2_bads[args.subject]
+        task = 'pasat2'
+    
+    # Remove MEG channels. This is the EEG pipeline after all.
+    raw.pick_types(meg=False, eeg=True, eog=True, stim=True, ecg=True, exclude=[])
+    
+    # Plot segment of raw data
+    figures['raw segment'].append(raw.plot(n_channels=30, title = date_time, show=False))
+    
+    # Interpolate bad channels
+    raw.interpolate_bads()
+    figures['interpolated segment'].append(raw.plot(n_channels=30, title = date_time + task, show=False))
+    
+    # Add a plot of the power spectrum to the list of figures to be placed in
+    # the HTML report.
+    raw_plot = raw.compute_psd(fmin=freq_min, fmax=freq_max).plot(show=False)
+    figures['before filt'].append(raw_plot)
+
+    # Remove 50Hz power line noise (and the first harmonic: 100Hz)
+    filt = raw.notch_filter(fnotch, picks=['eeg', 'eog', 'ecg'])
+    
+    # Apply bandpass filter
+    filt = filt.filter(l_freq=freq_min, h_freq=freq_max, picks=['eeg', 'eog', 'ecg'])
+
+    # Save the filtered data
+    filt_fname.parent.mkdir(parents=True, exist_ok=True)
+    filt.save(filt_fname, overwrite=True)
+
+    # Add a plot of the power spectrum of the filtered data to the list of
+    # figures to be placed in the HTML report.
+    filt_plot = filt.plot_psd(fmin=freq_min, fmax=freq_max, show=False)
+    figures['after filt'].append(filt_plot)
+    
+    raw.close()
 
 # Write HTML report with the quality control figures
 # TODO: These could be nicer!
@@ -155,7 +156,6 @@ with open('maxfilter_puuttuu.txt', 'a') as file:
     for bad_file in corrupted_raw_files:
         file.write(bad_file+'\n')
     file.close()
-
 # Calculate time that the script takes to run
 execution_time = (time.time() - start_time)
 print('\n###################################################\n')
