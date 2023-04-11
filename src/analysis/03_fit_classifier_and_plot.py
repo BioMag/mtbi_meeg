@@ -47,9 +47,7 @@ Returns
     - metadata?
     - report?
 
-# TODO: Export metrics to CSV file
-# TODO: Add logging?
-# TODO: Use User and workstation to define backend so that when running it in the  cluster it automatically recognizes that there should be no interactive display
+# TODO: Define metric and export them to CSV file
 """
 import sys
 import os
