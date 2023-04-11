@@ -6,6 +6,7 @@ ready to run the analysis pipeline.
 import os
 import pkg_resources
 import mne
+from config_common import raw_data_dir, processed_data_dir, figures_dir, reports_dir
 
 # Check to see if the python dependencies are fullfilled.
 dependencies = []
@@ -30,34 +31,25 @@ except pkg_resources.VersionConflict as e:
     # Raise a new exception with the custom error message
     raise ValueError(error_message) from e
 
-# Check that the data is present on the system
-from config_common import raw_data_dir
+# Check that the raw data directory is present on the system and raise error if doesnt exist
 if not os.path.exists(raw_data_dir):
     raise ValueError(f'The `raw_data_dir` points to a directory that does not exist: {raw_data_dir}')
 
-# Make sure the processed data directories exist
-from config_common import processed_data_dir
-os.makedirs(processed_data_dir, exist_ok=True)
-
-# TODO: still use meg files? maybe for better pipeline?
-#from meg.config_meg import fname 
-#os.makedirs(fname.figures_dir, exist_ok=True)
-#os.makedirs(fname.reports_dir, exist_ok=True)
-
-from config_eeg import fname
-os.makedirs(fname.figures_dir, exist_ok=True)
-os.makedirs(fname.reports_dir, exist_ok=True)
+# Make sure the processed data, figures and reports directories exist
+if not os.path.exists(processed_data_dir):
+    print(f'Creating directory {processed_data_dir}')
+    os.makedirs(processed_data_dir, exist_ok=True)
+if not os.path.exists(figures_dir):
+    print(f'Creating directory {figures_dir}')
+    os.makedirs(figures_dir, exist_ok=True)
+if not os.path.exists(reports_dir):
+    print(f'Creating directory {reports_dir}')
+    os.makedirs(reports_dir, exist_ok=True)
 
 # Prints some information about the system
 print('\nNME dependencies installed in the system\n------')
 mne.sys_info()
 print('-------------')
 
-# I don't know what is the goal of this
-#with open('system_check.txt', 'w') as f:
-#    f.write('System check OK.')
-
 print('INFO: Success! System requirements are met.')
-print('You can run the pipelines by doing TBD')
-
-
+print('You can run the pipelines by doing.... TBD')
