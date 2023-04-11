@@ -55,7 +55,7 @@ mtbi_meeg/
     └── test_05_convert_reports_to_pdf.py (WIP)
 ```
 
-## Installing the package (skip this section for now)
+## Installing the package locally in the computer
 The package can be installed by cloning the repository and using pip install:
 
 ```bash
@@ -66,6 +66,23 @@ $ python3 -m pip install .
 ```
 This will install all the necessary dependencies for the package to work. 
 
+In the case that freely installing dependencies in the local computer is not possible or not desirable,
+an option is to create a conda environment and then install the package within the environemnt (see next section).
+
+## Installing the package within a conda enviornment
+1. After cloning the repository, navigate to the root directory.
+2. Create the conda environment by running,
+    ```
+    $ conda env create --file environment.yml
+    ```
+3. Activate the created environment,
+    ```
+    $ conda activate mtbi_meeg_conda
+    ```
+4. Install the package and its dependencies,
+    ```
+    $ python3 -m pip install .
+    ```
 
 ## Getting started: config_common and system_check
 
