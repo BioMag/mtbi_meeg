@@ -126,10 +126,10 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
         report.save(fname.report_html(subject=args.subject),
                     overwrite=True, open_browser=False)
     
-    #TODO: is this necessary anymore?
-    with open("ecg_puuttuu.txt", "a") as filu:
+    with open("ecg_missing.txt", "a") as filu:
         filu_name = task_from_fname(filt_fname)
         if not ecg_exists:
+            print(f'{args.subject}: no ECG found') 
             filu.write(str(args.subject)+filu_name+'\n')
         filu.close()
 
