@@ -126,12 +126,12 @@ for filt_fname, ica_fname, clean_fname in all_fnames:
         report.save(fname.report_html(subject=args.subject),
                     overwrite=True, open_browser=False)
     
-    with open("ecg_missing.txt", "a") as filu:
-        filu_name = task_from_fname(filt_fname)
+    with open("ecg_missing.txt", "a") as file:
+        file_name = task_from_fname(filt_fname)
         if not ecg_exists:
             print(f'{args.subject}: no ECG found') 
-            filu.write(str(args.subject)+filu_name+'\n')
-        filu.close()
+            file.write(str(args.subject)+file_name+'\n')
+        file.close()
 
 # Calculate time that the script takes to run
 execution_time = (time.time() - start_time)
