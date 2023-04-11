@@ -1,13 +1,22 @@
 # mTBI-EEG
 
-Pipeline for the processing and analysis of EEG data from mild Traumatic Brain Injury patients.
-The preprocessing and analysis sections are run separately from different folders.
+Pipeline for the processing and analysis of EEG data from mild Traumatic Brain Injuries (mTBI) patients.
+
+The processing pipeline reads raw EEG data and processes it to obtain bandpower data.
+The analysis pipeline utilizes ML models for classifying the subjects.
+
+The preprocessing and analysis sections are run separately.
+
+## Diagram
+The diagram of the pipeline can be seen in the following diagram:
+
+![Pipeline diagram](/src/pipeline_diagram.png)
 
 ## Folder structure
 The folder structure for the project is shown below. The root folder is `mtbi_eeg`. The code is under `src`. Common scripts and config files are under `src/`.
 The modules for data processing and data analysis are under `src/processing/` and `src/analyisis/`.
 
-```
+```bash
 mtbi_meeg/
 ├── .gitignore
 ├── LICENSE
@@ -49,10 +58,10 @@ mtbi_meeg/
 Before the first time you execute the scripts in this repository, you must edit the file `src/config_common.py` and include a new block with information about your user, workstation, data directories, and matplotlib backend:
 
 1. Go to folder `src` and open the file `config_common.py` for editing. From terminal,
-    ```
+    ```bash
     $ cd src
     $ nano config_common.py
-    # You can also use other editors. For VS Code, type `code config_common.py`
+    # Note: you can also use other editors. For using VS Code, type `code config_common.py`
     ```
 2. Edit the file: add your `user` and `host` to the list. There's a commented block you can use as example [here](https://version.aalto.fi/gitlab/heikkiv7/mtbi-eeg/-/blob/main/python/processing/config_common.py#L78). Copy the block and edit it.
 3. Add the path where `raw_data_dir` is expected ('/net/theta/fishpool/projects/tbi_meg/BIDS' in BioMag)
@@ -62,14 +71,14 @@ Before the first time you execute the scripts in this repository, you must edit 
 7. Check that your system has the required dependencies by running the script `check_system.py`. From terminal, 
 
     (_Note: this step will not be needed when installing the package is working ok, but I will leave the instructions until that is clear_)
-    ```
+    ```bash
     $ python3 check_system.py
     ```
 If there's no problems, you should see a message saying that 'System requirements are ok' and you should be ok to run the pipeline now.
 
 #### Version Conflict errors
 If there is an issue with packages or versions, you will see a message indicating the library with a Version Conflict. Please update the package
-```
+```bash
 # For updating using pip,
 $ python3 -m pip upgrade <package-name>
 # For updating using conda,
@@ -85,27 +94,26 @@ Once you have added the required information in config_common and checked that a
 The preprocessing pipeline can be found in `src/processing/`. The aim of this pipeline is to clean up the data and extract useful features, so data can be used by the classifiers in the analysis section.
 
 The list of files is described below:
-- `00_maxfilter.py`: applies max filtering (not applicable to this data)
 - `01_freqfilt.py`: applies frequency filtering
 - `02_ica.py`: removes ocular & heartbeat artefacts with independent component analysis
 - `03_psds.py`: computes the PSDs over all channels and saves them as h5 files
 - `04_bandpower.py`: calculates band power for each subject and creates a spatial frequency matrix that is then vectorized for later analysis.
 
 **Inputs:**
-- a
-- b
+- Raw data (in folder `raw_data_dir`)
+- Parameters defined in config_eeg.py 
+- List of subjects
 
 **Outputs:**
-- c 
-- d 
+- Processed files: CSV files with bandpower data (in folder `processed_data_dir`)
+- Reports
 
 To run the pipeline, go to `src/processing/` and do,
-```
+```bash
 $ cd src/processing/
 # Note: Make sure that subjects.txt exists here
 $ python3 run_files.py
 ```
-
 
 ## Analysis pipeline
 
@@ -120,15 +128,22 @@ The list of files is described below:
 - `run_files.py`:
 
 **Inputs:**
-- subjects.txt
-- processed data (in folder `processed_data_dir`)
+- Processed files: CSV files with bandpower data (in folder `processed_data_dir`)
+- List of subjects
+- parameters defined in `config_eeg.py`
 
 **Outputs:**
 - CSV file with results from ML classification accuracy metrics
-- PNG figure
-- HTML report 
+- PNG figures
+- HTML report(s)
 - PDF with all the HTML reports
 
+To run the pipeline, go to `src/analysis/` and do,
+```bash
+$ cd src/analysis/
+# Note: Make sure that subjects.txt exists here
+$ python3 run_files.py
+```
 ## Things that are yet to be implemented:
 
 - [x] config file for analysis? 
