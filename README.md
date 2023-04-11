@@ -173,14 +173,16 @@ An example of the file can be seen below:
 # etc
 ```
 
-## Installing using Conda
+# Instructions for running it in Aalto's HPC
+asdf
 
+## Installing using Conda
+asdf
 
 ## Installing using Docker
-
+asdf
 
 ## Things that are yet to be implemented:
-
 - [x] config file for analysis? 
 - [x] model fitting
 - [ ] hyperparameter optimization, triton-compatible
