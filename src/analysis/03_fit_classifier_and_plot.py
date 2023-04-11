@@ -310,12 +310,18 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
             aucs.append(roc_auc)
             # Plot the ROC for this split
             ax.plot(fpr, tpr, lw=1, alpha=0.3,
-                    label='ROC split %d (AUC = %0.2f)' % (split+1, roc_auc))
+                    label=f'ROC {split+1} (AUC = {roc_auc:.2f})')
             # Append the precision, recall and F1 values
             precision.append(precision_score(y_test, y_pred))
             recall.append(recall_score(y_test, y_pred))
-            f1.append(f1_score(y_test, y_pred))
-
+            f1_test = f1_score(y_test, y_pred)
+            f1.append(f1_test)
+            print(f"INFO: F1 score in test set: {f1_test:.2f}")
+            # Test overfitting - Compute F1 score on training set
+            y_train_pred = clf.predict(X_train)
+            f1_train = f1_score(y_train, y_train_pred)
+            print(f"INFO: F1 score in training set: {f1_train:.2f}")
+            
         # Execute the functions that calculate means & metrics per classifier
         mean_tpr, mean_auc, std_auc = roc_per_clf(tprs, aucs, ax, name, clf)
         mean_precision, mean_recall, mean_f1 = metrics_per_clf(precision, recall, f1)
