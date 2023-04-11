@@ -44,12 +44,6 @@ wide_bands =  [(1,3), (3,5.2), (5.2,7.6), (7.6,10.2), (10.2,13), (13,16), (16,19
 ###############################################################################
 # Parameters pertaining to the subjects
 
-# Subjects removed from the MEG analysis because of some problem
-# TODO: check these 
-# bad_subjects = [
-#     24, 29,  # No EEG data present
-# ]
-
 ## All subjects for which there is some form of data available
 all_subjects = os.listdir(raw_data_dir)
 # Filter in directories-only
