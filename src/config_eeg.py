@@ -8,7 +8,7 @@ from fnames import FileNames
 from config_common import (raw_data_dir, processed_data_dir, figures_dir,
                            reports_dir)
 
-# TODO: Is this used?
+
 tasks = ['ec', 'eo', 'PASAT']
 
 
