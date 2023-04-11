@@ -17,7 +17,18 @@ with open('../requirements.txt') as f:
         dependencies.append(line)
 
 # This raises errors of dependencies are not met
-pkg_resources.working_set.require(dependencies)
+try:
+    pkg_resources.working_set.require(dependencies)
+except pkg_resources.VersionConflict as e:
+    # Get the conflicting distribution and requirement
+    dist = e.dist
+    req = e.req
+
+    # Create a custom error message
+    error_message = f"Version conflict: {dist} ({dist.location}) does not meet the requirements of {req}"
+
+    # Raise a new exception with the custom error message
+    raise ValueError(error_message) from e
 
 # Check that the data is present on the system
 from config_common import raw_data_dir
