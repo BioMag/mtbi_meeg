@@ -94,6 +94,5 @@ print(f'Hi {user}@{host}!')
 os.environ['OMP_NUM_THREADS'] = str(n_jobs)
 
 # Configure the graphics backend
-#TODO: Is this necessary here? Will config_common even run if I dont import it?
 import matplotlib
 matplotlib.use(matplotlib_backend)
