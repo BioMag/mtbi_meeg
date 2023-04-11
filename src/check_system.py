@@ -25,7 +25,7 @@ except pkg_resources.VersionConflict as e:
     req = e.req
 
     # Create a custom error message
-    error_message = f"Version conflict: {dist} ({dist.location}) does not meet the requirements of {req}"
+    error_message = f"\nVersion conflict:Library {dist} ({dist.location}) does not meet the requirements: {req}"
 
     # Raise a new exception with the custom error message
     raise ValueError(error_message) from e
@@ -57,13 +57,7 @@ print('-------------')
 #with open('system_check.txt', 'w') as f:
 #    f.write('System check OK.')
 
-print("""
-All seems to be in order.
-You can now run the pipelines with:
-    cd eeg
-    python -m doit
-and
-    cd meg
-    python -m doit
-""")
+print('INFO: Success! System requirements are met.')
+print('You can run the pipelines by doing TBD')
+
 
