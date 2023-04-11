@@ -19,7 +19,7 @@ Arguments
         Paced Auditory Serial Addition Test 1 or 2 (PASAT_1 or PASAT_2)
     - freq_band_type : str
         Frequency bands used in the binning of the subject information.
-        Thin bands are 1hz bands from 1 to 90hz. 
+        Thin bands are 1hz bands from 1 to 43hz. 
         Wide bands are conventional Delta, Theta, Alpha, Beta, Gamma
     - normalization : bool
         Defines whether channel data is normalized for all the channels
@@ -31,7 +31,6 @@ Returns
         and the metadata with the information about the arguments
         used to run this script.
 
-# TODO: Define use of thinbands
 # TODO: Add number of subjects and number of features to metadata
 """
 
