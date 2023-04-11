@@ -44,7 +44,7 @@ mtbi_meeg/
     └── test_05_convert_reports_to_pdf.py (WIP)
 ```
 
-## Getting started
+## Getting started: config_common and system_check
 
 Before the first time you execute the scripts in this repository, you must edit the file `src/config_common.py` and include a new block with information about your user, workstation, data directories, and matplotlib backend:
 
@@ -79,8 +79,9 @@ $ conda update <package-name>
  If folders are missing, please create them. These scripts will not create folders automatically.
 
 # Running the pipelines
-## Preprocessing
+Once you have added the required information in config_common and checked that all the dependencies are met, you can run the `preprocessing` or `analysis` sections. If you haven't, please follow the instructions described above.
 
+## Preprocessing
 The preprocessing pipeline can be found in `src/processing/`. The aim of this pipeline is to clean up the data and extract useful features, so data can be used by the classifiers in the analysis section.
 
 The list of files is described below:
