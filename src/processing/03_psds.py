@@ -69,7 +69,6 @@ for psds_fname, clean_fname in all_fnames:
         clean_1 = raw.copy().crop(tmin=30, tmax=90)
         clean_2 = raw.copy().crop(tmin=120, tmax=180)
         clean_3 = raw.copy().crop(tmin=210, tmax=260)
-        #TODO: why this?
         psds[task+'_3'], freqs = psd_array_welch(clean_3.get_data(picks=['eeg']), sfreq=sfreq, 
                                                  fmax=freq_max, n_fft=n_fft)
 
@@ -87,7 +86,6 @@ for psds_fname, clean_fname in all_fnames:
     psds['info'] = raw.info
     psds['freqs'] = freqs
     write_hdf5(fname.psds(subject=args.subject, ses='01'), psds, overwrite=True)
-    # TODO: save freqs
 
 # Add a PSD plot to the report.
 raw.pick_types(meg=False, eeg=True, eog=False, stim=False, ecg=False, exclude=[])
@@ -117,7 +115,6 @@ axes = iter_topography(info, layout, on_pick=on_pick, fig=fig,
                        axis_facecolor='white', fig_facecolor='white',
                        axis_spinecolor='white')
 for ax, ch_idx in axes:
-    #print(ax)
     handles = [
         ax.plot(psds['freqs'], psds['ec_1'][ch_idx], color='C0'),
         ax.plot(psds['freqs'], psds['eo_1'][ch_idx], color='C1'),
