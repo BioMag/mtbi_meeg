@@ -74,7 +74,7 @@ def define_freq_bands(metadata):
         freqs = np.array([bands[0] for bands in wide_bands])
 
     return freqs
-# TODO: Would rename to 'channel' averaging
+
 def global_averaging(df, metadata, freqs):
     
     if df.isnull().values.any():
@@ -86,7 +86,6 @@ def global_averaging(df, metadata, freqs):
     for idx in df.index:
         subj_arr = np.array(df.loc[idx])[2:]
         subj_arr = 10 * np.log10(subj_arr.astype(float))
-        # TODO: remove 
         if subj_arr.size == 0:
             raise ValueError("Error: Empty data array.")
         else: 
@@ -95,12 +94,10 @@ def global_averaging(df, metadata, freqs):
             except ValueError as e:
                 print("Error: Data array has incorrect dimensions.")
                 raise e
-        #TODO: check these channels
         if metadata["roi"] == 'Frontal': 
             subj_arr = subj_arr[0:22, :]
         GA = np.mean(subj_arr, axis=0)
         global_averages.append(GA)
-        #TODO: same for ROIs?
         
     return global_averages
      
@@ -159,7 +156,6 @@ def plot_control_figures(plot_df, metadata):
     p_minus = group_means.iloc[1, :] - group_sd.iloc[1, :]
     ax2.fill_between(freqs, p_plus, p_minus, color='r', alpha=.2, linewidth=.5)
 
-#    plt.close()  # close the figure to free memory
 def save_fig(metadata):
     """ 
     Saves fig to disk
