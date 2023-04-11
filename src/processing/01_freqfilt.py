@@ -7,8 +7,6 @@ Running:
 import subprocess
 subprocess.run('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/python/processing/eeg/runsome.sh', shell=True)
 
-# TODO: Add logic to include a print statement and warning if subjects were corrupted
-# TODO: Add subject argument as --subject?
 """
 
 import argparse
@@ -44,7 +42,6 @@ all_fnames = zip(
     get_all_fnames(args.subject, kind='filt', exclude=exclude),
 )
 
-
 # Date and time
 now = datetime.datetime.now()
 date_time = now.strftime('%A, %d. %B %Y %I:%M%p')
@@ -54,10 +51,13 @@ corrupted_raw_files = []
 for raw_fname, filt_fname in all_fnames:
     try:
         raw = read_raw_fif(raw_fname, preload=True)
-    # TODO: what type of exception will this yield? File not found, etc?
-    except:
+    except NameError:
+        raise NameError, f'Subject {args.subject} does not exist'
+    except IOError, ValueError as error_message:
         corrupted_raw_files.append(args.subject)
+        print('Error: {error_message}')
         continue
+    
     # Reduce logging level (technically, one could define it in the read_raw_fif function, but it seems to be buggy)
     # More info about the bug can be found here: https://github.com/mne-tools/mne-python/issues/8872
     set_log_level(verbose='Warning')
@@ -110,7 +110,6 @@ for raw_fname, filt_fname in all_fnames:
     raw.close()
 
 # Write HTML report with the quality control figures
-# TODO: These could be nicer!
 section='Filtering'
 with open_report(fname.report(subject=args.subject)) as report:
     report.add_figure(
@@ -148,12 +147,11 @@ with open_report(fname.report(subject=args.subject)) as report:
     report.save(fname.report_html(subject=args.subject),
                 overwrite=True, open_browser=False)
 
-# TODO: Once the folder structure is defined, re-code the path depending on where is this expected
-# with open('maxfilter_corrupted_or_missing.txt', 'a') as  
-with open('maxfilter_puuttuu.txt', 'a') as file:
+with open('corrupted_subjects.txt', 'a') as file:
     for bad_file in corrupted_raw_files:
         file.write(bad_file+'\n')
     file.close()
+
 # Calculate time that the script takes to run
 execution_time = (time.time() - start_time)
 print('\n###################################################\n')
