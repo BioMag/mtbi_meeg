@@ -18,10 +18,26 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dependencies = []
 
+[options]
+packages = find:
+package_dir = = "src"
+include_package_data = true
+install_requires = [
+    "doit",
+    "scipy",
+    "mne>=1.3",
+    "h5py>=3.8.0",
+    "numpy>=1.20.3",
+    "pandas>=1.5.2",
+    "scikit-learn>=1.1.2",
+    "matplotlib>=3.1.2",
+    "weasyprint>=58.1"
+]
+
+[options.packages.find]
+where = "src"
 [project.urls]
-"Homepage" = "https://github.com/pypa/sampleproject"
-"Bug Tracker" = "https://github.com/pypa/sampleproject/issues"
+"Homepage" = ""
 
 
