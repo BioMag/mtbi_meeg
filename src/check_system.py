@@ -9,7 +9,7 @@ import mne
 
 # Check to see if the python dependencies are fullfilled.
 dependencies = []
-with open('./requirements.txt') as f:
+with open('../requirements.txt') as f:
     for line in f:
         line = line.strip()
         if len(line) == 0 or line.startswith('#'):
@@ -24,7 +24,7 @@ from config_common import raw_data_dir
 if not os.path.exists(raw_data_dir):
     raise ValueError(f'The `raw_data_dir` points to a directory that does not exist: {raw_data_dir}')
 
-# Make sure the output directories exist
+# Make sure the processed data directories exist
 from config_common import processed_data_dir
 os.makedirs(processed_data_dir, exist_ok=True)
 
@@ -33,18 +33,18 @@ os.makedirs(processed_data_dir, exist_ok=True)
 #os.makedirs(fname.figures_dir, exist_ok=True)
 #os.makedirs(fname.reports_dir, exist_ok=True)
 
-from eeg.config_eeg import fname
+from config_eeg import fname
 os.makedirs(fname.figures_dir, exist_ok=True)
 os.makedirs(fname.reports_dir, exist_ok=True)
 
 # Prints some information about the system
-print('\nPrint NME packages installed in the system\n------')
+print('\nNME dependencies installed in the system\n------')
 mne.sys_info()
 print('-------------')
 
 # I don't know what is the goal of this
-with open('system_check.txt', 'w') as f:
-    f.write('System check OK.')
+#with open('system_check.txt', 'w') as f:
+#    f.write('System check OK.')
 
 print("""
 All seems to be in order.
