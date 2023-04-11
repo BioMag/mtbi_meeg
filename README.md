@@ -7,6 +7,8 @@ The analysis pipeline utilizes ML models for classifying the subjects.
 
 The preprocessing and analysis sections are run separately.
 
+Authors: Verna Heikkinen, Mia Liljeström, Aino Kuusi, Estanislao Porta
+
 ## Diagram
 The diagram of the pipeline can be seen in the following diagram:
 
@@ -53,6 +55,18 @@ mtbi_meeg/
     └── test_05_convert_reports_to_pdf.py (WIP)
 ```
 
+## Installing the package (skip this section for now)
+The package can be installed by cloning the repository and using pip install:
+
+```bash
+$ git clone https://etc.etc
+# cd into the root directory
+$ cd mtbi_meeg
+$ python3 -m pip install .
+```
+This will install all the necessary dependencies for the package to work. 
+
+
 ## Getting started: config_common and system_check
 
 Before the first time you execute the scripts in this repository, you must edit the file `src/config_common.py` and include a new block with information about your user, workstation, data directories, and matplotlib backend:
@@ -87,6 +101,7 @@ $ conda update <package-name>
 #### Missing folder errors
  If folders are missing, please create them. These scripts will not create folders automatically.
 
+
 # Running the pipelines
 Once you have added the required information in config_common and checked that all the dependencies are met, you can run the `preprocessing` or `analysis` sections. If you haven't, please follow the instructions described above.
 
@@ -102,7 +117,7 @@ The list of files is described below:
 **Inputs:**
 - Raw data (in folder `raw_data_dir`)
 - Parameters defined in config_eeg.py 
-- List of subjects
+- Subject(s)
 
 **Outputs:**
 - Processed files: CSV files with bandpower data (in folder `processed_data_dir`)
@@ -144,6 +159,26 @@ $ cd src/analysis/
 # Note: Make sure that subjects.txt exists here
 $ python3 run_files.py
 ```
+
+## Subjects as arguments
+The current way of defining the subjects to be processed is either via command line arguments and running each step of the pipeline separately or by using `run_files.py`, along with a file where all the subjects to be processed exist, named `subjects.txt`.
+
+An example of the file can be seen below:
+```python
+# subjects.txt
+01C
+01P
+02C
+02C
+# etc
+```
+
+## Installing using Conda
+
+
+## Installing using Docker
+
+
 ## Things that are yet to be implemented:
 
 - [x] config file for analysis? 
@@ -168,7 +203,7 @@ git push
 ```
 It is **strongly recommended** to work on separate branches which are later merged to main by the owner of the repo.  
 Merge requests are handled together! Check the branch you are currently on by typing ```git status```. 
-You can change the branch you are one with the command ```git checkout <your branch name>```.
+You can change the branch you are one with the command ```git checkout -b <your branch name>```.
 After pushing, create a merge request and assign someone to go through your code.
 
 >NOTE: Before creating a new branch, ALWAYS pull the main branch from the remote repository!
