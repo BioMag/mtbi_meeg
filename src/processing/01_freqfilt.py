@@ -28,8 +28,6 @@ start_time = time.time()
 
 from config_eeg import get_all_fnames, fname, ec_bads, eo_bads, pasat1_bads, pasat2_bads, freq_min, filt_freq_max, fnotch
 
-#TODO: fix 35C channels (WHAT'S THIS???)
-
 # Deal with command line arguments
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('subject', help='The subject to process')
