@@ -51,12 +51,13 @@ corrupted_raw_files = []
 for raw_fname, filt_fname in all_fnames:
     try:
         raw = read_raw_fif(raw_fname, preload=True)
-    except NameError:
-        raise NameError, f'Subject {args.subject} does not exist'
-    except IOError, ValueError as error_message:
+    except NameError as e:
+        raise NameError(f'Subject {args.subject} does not exist') from e
+    except (IOError, ValueError) as error:
         corrupted_raw_files.append(args.subject)
-        print('Error: {error_message}')
+        print(f'Error: {error}')
         continue
+
     
     # Reduce logging level (technically, one could define it in the read_raw_fif function, but it seems to be buggy)
     # More info about the bug can be found here: https://github.com/mne-tools/mne-python/issues/8872

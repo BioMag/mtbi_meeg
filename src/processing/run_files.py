@@ -36,39 +36,43 @@ arg_set = [('--freq_band_type', 'thin'),
             ('--freq_band_type', 'wide'),]
 
 subject_pattern = r'^\d{2}[PC]'   
-try:
-    with open('subjects.txt', 'r') as subjects_file:
-        subjects = [line.rstrip() for line in subjects_file.readlines()]
-        # Assert that each line has the expected format
-        for line in subjects:
-            assert re.match(subject_pattern, line), f"Subject '{line}' does not have the expected format."
 
-except FileNotFoundError as e:
-    print("The file 'subjects.txt' does not exist in the current directory. The program will exit.")
-    raise e
 
 if TEST_RUN:
     subjects = ['10C', '11P']
+else:
+    try:
+        with open('subjects.txt', 'r') as subjects_file:
+            subjects = [line.rstrip() for line in subjects_file.readlines()]
+            # Assert that each line has the expected format
+            for line in subjects:
+                assert re.match(subject_pattern, line), f"Subject '{line}' does not have the expected format."
+
+    except FileNotFoundError as e:
+        print("The file 'subjects.txt' does not exist in the current directory. The program will exit.")
+        raise e
 
 for subject in subjects:
     print(f'### \nRunning using subject {subject}...\n')
     # Call the first Python 
     subprocess.run(['python3', '01_freqfilt.py', subject])
-    print('Finished 01\n')
+    print(f'Finished executing 01_freqfilt for subject {subject}\n')
     # Call the second Python file
     subprocess.run(['python3', '02_ica.py', subject])
-    print('Finished 02\n')
+    print(f'Finished executing 02_ica for subject {subject}\n')
     # Call the third script
     subprocess.run(['python3', '03_psds.py', subject])
-    print('Finished 03\n')
+    print(f'Finished executing 03_psds for subject {subject}\n')
     # Create bandpowers
     for arg in arg_set:
         subprocess.run(['python3', '04_bandpower.py', subject] + list(arg))
-
+    print(f'Finished executing 04_bandpower for subject {subject}\n')
+    
 
 # Calculate time that the script takes to run
 here_execution_time = (time.time() - here_start_time)
 print('\n###################################################')
-print(f'Execution time of everything is: {round(here_execution_time/60,1)} minutes')
+print('Processing pipeline has finalized executing')
+print(f'Total execution time is: {round(here_execution_time/60,1)} minutes')
 print(f'Average time is {round(here_execution_time/len(subjects),1)} seconds per subject')
 print('###################################################\n')

@@ -16,10 +16,12 @@ reports/
 *.html
 *.pickle
 # Specific files
+ecg_missing.txt
 maxfilter_puuttuu.txt
 psds_corrupted_or_missing.txt
 ecg_puuttuu.txt
 subjects.txt
+corrupted_subjects.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
