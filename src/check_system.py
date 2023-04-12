@@ -51,5 +51,4 @@ print('\nNME dependencies installed in the system\n------')
 mne.sys_info()
 print('-------------')
 
-print('INFO: Success! System requirements are met.')
-print('You can run the pipelines by doing.... TBD')
+print('INFO: Success! System requirements are met.\n')
