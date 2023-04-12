@@ -74,6 +74,7 @@ In the case that freely installing dependencies in the local computer is not pos
 2. Create the conda environment by running,
     ```
     $ conda env create --file environment.yml
+    # Note: this step might take 5-10 minutes
     ```
 3. Activate the created environment,
     ```
@@ -83,7 +84,7 @@ In the case that freely installing dependencies in the local computer is not pos
     ```
     $ python3 -m pip install .
     ```
-## Installing in a Docker
+## Installing using Docker
 This Dockerfile specifies a base image (`continuumio/miniconda3:latest`), updates conda, installs the necessary dependencies, and copies the `mtbi_meeg` package code into the container. It also sets the working directory and specifies the default command to run when the container starts.
 
 1. Build the Docker image: Run the command `docker build -t mtbi_meeg . ` to build the Docker image. This will create a new image named `mtbi_meeg` based on the Dockerfile.
@@ -106,8 +107,6 @@ Before the first time you execute the scripts in this repository, you must edit 
 5. Add the paths where figures and reports will be created into (you can use the directories in this repository or other)
 6. Add the matplotlib backend (TBC)
 7. Check that your system has the required dependencies by running the script `check_system.py`. From terminal, 
-
-    (_Note: this step will not be needed when installing the package is working ok, but I will leave the instructions until that is clear_)
     ```bash
     $ python3 check_system.py
     ```
@@ -121,8 +120,8 @@ $ python3 -m pip upgrade <package-name>
 # For updating using conda,
 $ conda update <package-name>
 ```
-#### Missing folder errors
- If folders are missing, please create them. These scripts will not create folders automatically.
+#### Missing raw data dir errors
+ If raw data is missing, the repository cannot be used.
 
 
 # Running the pipelines
