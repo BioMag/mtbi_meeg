@@ -24,7 +24,7 @@ import time
 import re
 
 # Flag used for test run
-TEST_RUN = True
+TEST_RUN = False
 
 
 # Save time of beginning of the execution to measure running time
