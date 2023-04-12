@@ -106,8 +106,6 @@ Before the first time you execute the scripts in this repository, you must edit 
 5. Add the paths where figures and reports will be created into (you can use the directories in this repository or other)
 6. Add the matplotlib backend (TBC)
 7. Check that your system has the required dependencies by running the script `check_system.py`. From terminal, 
-
-    (_Note: this step will not be needed when installing the package is working ok, but I will leave the instructions until that is clear_)
     ```bash
     $ python3 check_system.py
     ```
@@ -121,8 +119,8 @@ $ python3 -m pip upgrade <package-name>
 # For updating using conda,
 $ conda update <package-name>
 ```
-#### Missing folder errors
- If folders are missing, please create them. These scripts will not create folders automatically.
+#### Missing raw data dir errors
+ If raw data is missing, the repository cannot be used.
 
 
 # Running the pipelines
