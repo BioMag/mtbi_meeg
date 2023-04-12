@@ -74,7 +74,7 @@ In the case that freely installing dependencies in the local computer is not pos
 2. Create the conda environment by running,
     ```
     $ conda env create --file environment.yml
-    # Note: this step might take 5-10 minutes
+    # Note: this step might take 20+ minutes
     ```
 3. Activate the created environment,
     ```
