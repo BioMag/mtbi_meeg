@@ -19,6 +19,6 @@ WORKDIR /app
 CMD ["python", "my_package.py"]
 
 # to run it:
-#    Build the Docker image: Run the command docker build -t my_package . to build the Docker image. This will create a new image named my_package based on the Dockerfile.
+#    Build the Docker image: Run the command docker build -t mtbi_meeg . to build the Docker image. This will create a new image named my_package based on the Dockerfile.
 
-#    Run the Docker container: Run the command docker run -it my_package to start the container and run your package. This will start a new container based on the my_package image and run the default command specified in the Dockerfile.
+#    Run the Docker container: Run the command docker run -it mtbi_meeg to start the container and run your package. This will start a new container based on the my_package image and run the default command specified in the Dockerfile.
