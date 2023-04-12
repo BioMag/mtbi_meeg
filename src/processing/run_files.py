@@ -22,6 +22,11 @@ It could also be done in bash using something like
 import subprocess
 import time
 import re
+
+# Flag used for test run
+TEST_RUN = True
+
+
 # Save time of beginning of the execution to measure running time
 here_start_time = time.time()
 
@@ -41,6 +46,9 @@ try:
 except FileNotFoundError as e:
     print("The file 'subjects.txt' does not exist in the current directory. The program will exit.")
     raise e
+
+if TEST_RUN:
+    subjects = ['10C', '11P']
 
 for subject in subjects:
     print(f'### \nRunning using subject {subject}...\n')
