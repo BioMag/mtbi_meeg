@@ -149,7 +149,9 @@ To run the pipeline, go to `src/processing/` and do,
 ```bash
 $ cd src/processing/
 # Note: Make sure that subjects.txt exists here.
-# Note 2: Due to the extensive time that running the processing pipeline for each subject take, one can modify the boolean `TEST_RUN = True`, in order to run the whole pipeline for only 2 subjects (which takes around 3min or 1.5min per subject)
+# Note 2: Due to the extensive time that running the processing pipeline for each subject takes,
+one can modify the boolean `TEST_RUN` to True in the file `run_files.py` (using, e.g., `nano run_files.py`).
+This will run the whole processing pipeline for only 2 subjects, which takes around 3min or 1.5min per subject.
 $ python3 run_files.py
 
 ```
