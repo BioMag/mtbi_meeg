@@ -87,9 +87,6 @@ elif 'vdiubuntu' in host and user == 'portae1' :
 else:
     raise ValueError(f'User or host not recognized. \nPlease enter the details of your system ({user}@{host}) in config_common.py')
 
-# Print welcome
-print(f'Hi {user}@{host}!')
-
 # For BLAS to use the right amount of cores
 os.environ['OMP_NUM_THREADS'] = str(n_jobs)
 
