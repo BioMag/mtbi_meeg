@@ -103,7 +103,7 @@ Before the first time you execute the scripts in this repository, you must edit 
     ```
 2. Edit the file: add your `user` and `host` to the list. There's a commented block you can use as example [here](https://version.aalto.fi/gitlab/heikkiv7/mtbi-eeg/-/blob/main/python/processing/config_common.py#L78). Copy the block and edit it.
 3. Add the path where `raw_data_dir` is expected ('/net/theta/fishpool/projects/tbi_meg/BIDS' in BioMag)
-4. Add the path where `processed_data_dir` is expected ('/net/theta/fishpool/projects/tbi_meg/k22_processed' in BioMag)
+4. Add the path where `processed_data_dir` is expected (Be mindful which folder you choose, as you may overwrite other people's data)
 5. Add the paths where figures and reports will be created into (you can use the directories in this repository or other)
 6. Add the matplotlib backend (TBC)
 7. Check that your system has the required dependencies by running the script `check_system.py`. From terminal, 
@@ -157,7 +157,7 @@ $ python3 run_files.py
 ```
 
 ## Analysis pipeline
-The data analysis is done using the scripts in the folder `src/analysis`. The aim is to use different classifiers (LR, LDA, SVM and RF) to differentiate between patients and controls. 
+The data analysis is done using the scripts in the folder `src/analysis`. The aim is to use different classifiers (LR, LDA, SVM and RF) to differentiate between patients and controls. A file `subjects.txt` is expected in this folder
 
 The list of files is described below:
 - `01_read_processed_data.py`: Reads in EEG bandpower data from CSV files into a dataframe. The dataframe and the arguments used to run the script are added to a pickle object.
@@ -169,7 +169,7 @@ The list of files is described below:
 
 **Inputs:**
 - Processed files: CSV files with bandpower data (in folder `processed_data_dir`)
-- List of subjects
+- List of subjects in 
 - parameters defined in `config_eeg.py`
 
 **Outputs:**
