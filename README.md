@@ -60,7 +60,7 @@ mtbi_meeg/
 The package can be installed by cloning the repository and using pip install:
 
 ```bash
-$ git clone https://etc.etc
+$ git clone https://github.com/BioMag/mtbi_meeg
 # cd into the root directory
 $ cd mtbi_meeg
 $ python3 -m pip install .
