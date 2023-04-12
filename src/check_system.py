@@ -47,8 +47,8 @@ if not os.path.exists(reports_dir):
     os.makedirs(reports_dir, exist_ok=True)
 
 # Prints some information about the system
-print('\nNME dependencies installed in the system\n------')
-mne.sys_info()
-print('-------------')
+#print('\nNME dependencies installed in the system\n------')
+#mne.sys_info()
+#print('-------------')
 
 print('INFO: Success! System requirements are met.\n')
