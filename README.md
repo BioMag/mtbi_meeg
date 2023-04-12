@@ -74,6 +74,7 @@ In the case that freely installing dependencies in the local computer is not pos
 2. Create the conda environment by running,
     ```
     $ conda env create --file environment.yml
+    # Note: this step might take 5-10 minutes
     ```
 3. Activate the created environment,
     ```
@@ -83,7 +84,7 @@ In the case that freely installing dependencies in the local computer is not pos
     ```
     $ python3 -m pip install .
     ```
-## Installing in a Docker
+## Installing using Docker
 This Dockerfile specifies a base image (`continuumio/miniconda3:latest`), updates conda, installs the necessary dependencies, and copies the `mtbi_meeg` package code into the container. It also sets the working directory and specifies the default command to run when the container starts.
 
 1. Build the Docker image: Run the command `docker build -t mtbi_meeg . ` to build the Docker image. This will create a new image named `mtbi_meeg` based on the Dockerfile.
