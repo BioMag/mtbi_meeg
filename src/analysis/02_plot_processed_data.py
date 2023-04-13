@@ -16,7 +16,7 @@ Arguments
     - eeg_tmp_data.pickle : pickle object
         Object of pickle format containing the dataframe with the data
         and the metadata with the information about the arguments
-        used to run this script.    
+        used to run this script.
     - control_plot_segment : int
         Define which of the segments from the task will be used for plotting.  
     - roi : str 
