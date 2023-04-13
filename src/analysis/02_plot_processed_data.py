@@ -13,7 +13,7 @@ It is used for visual assessment of individual subjects and general group behavi
 
 Arguments
 ---------
-    - eeg_tmp_data.pickle : pickle object 
+    - eeg_tmp_data.pickle : pickle object
         Object of pickle format containing the dataframe with the data
         and the metadata with the information about the arguments
         used to run this script.    
