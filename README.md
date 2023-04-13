@@ -130,7 +130,7 @@ Once you have added the required information in config_common and checked that a
 ## Preprocessing
 The preprocessing pipeline can be found in `src/processing/`. The aim of this pipeline is to clean up the data and extract useful features, so data can be used by the classifiers in the analysis section.
 
-The list of files is described below:
+**Files:**
 - `01_freqfilt.py`: applies frequency filtering
 - `02_ica.py`: removes ocular & heartbeat artefacts with independent component analysis
 - `03_psds.py`: computes the PSDs over all channels and saves them as h5 files
@@ -145,21 +145,25 @@ The list of files is described below:
 - Processed files: CSV files with bandpower data (in folder `processed_data_dir`)
 - Reports
 
-To run the pipeline, go to `src/processing/` and do,
+#### How to run:
+Go to the folder `src/processing`. Make sure that file `subjects.txt` exists in the folder.
+
+You can run one file at a time using `python3 <filename> <arguments>`.
+Alternatively, you can run the pipeline using the `run_files.py` file. It loops over all steps of the pipeline, using one subject at a time. This means that it will re-run the pipeline as many times as subjects there are.
+Since running all the steps for one subject might take a couple of minutes, there's an option to run a test run with only two subjects by modifying the boolean `TEST_RUN` to True in the `run_files.py` file.
+
 ```bash
 $ cd src/processing/
-# Note: Make sure that subjects.txt exists here.
-# Note 2: Due to the extensive time that running the processing pipeline for each subject takes,
-one can modify the boolean `TEST_RUN` to True in the file `run_files.py` (using, e.g., `nano run_files.py`).
-This will run the whole processing pipeline for only 2 subjects, which takes around 3min or 1.5min per subject.
+# Note: Due to the extensive time that running the processing pipeline for each subject takes,
+# one can modify the boolean `TEST_RUN` to True in the file `run_files.py` (using, e.g., `nano run_files.py`).
+# This will run the whole processing pipeline for only 2 subjects, which takes around 3min or 1.5min per subject.
 $ python3 run_files.py
-
 ```
 
 ## Analysis pipeline
 The data analysis is done using the scripts in the folder `src/analysis`. The aim is to use different classifiers (LR, LDA, SVM and RF) to differentiate between patients and controls. A file `subjects.txt` is expected in this folder
 
-The list of files is described below:
+**Files:**
 - `01_read_processed_data.py`: Reads in EEG bandpower data from CSV files into a dataframe. The dataframe and the arguments used to run the script are added to a pickle object.
 - `02_plot_processed_data.py`: (optional step) Plots the processed EEG data of the PSD intensity for visual assessment.
 - `03_fit_model_and_plot.py`: Fits ML classifiers using the processed data, performs cross validation and evaluates the performance of the classification using ROC curves. Outputs a CSV file with the classification results, plots and saves plots to disk and adds the information to a metadata file.
@@ -178,7 +182,12 @@ The list of files is described below:
 - HTML reports
 - PDF with all the HTML reports
 
-To run the pipeline, go to `src/analysis/` and do,
+#### How to run it:
+Go to the folder `src/analysis`. Make sure that file `subjects.txt` exists in the folder.
+
+You can run one file at a time using `python3 <filename> <arguments>`.
+Alternatively, you can run the whole pipeline using the `run_files.py` file. It loops over all steps of the pipeline, using all the list of subjects for each steps, but iterating over the four different tasks: eyes open (EO), eyes closed (EC), Paced Auditory Serial Addition Test 1 or 2 (PASAT_1 or PASAT_2). This means that you will run the whole pipeline four times. 
+
 ```bash
 $ cd src/analysis/
 # Note: Make sure that subjects.txt exists here
