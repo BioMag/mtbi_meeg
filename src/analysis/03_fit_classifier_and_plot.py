@@ -31,8 +31,8 @@ Arguments
         Define whether one or all segments of the task will be used for the classification.
     - which_segment : int
         Defines which of the segments will be used.
-    - save_fig: bool
-        Define whether to save the figure to disk in PNG format.
+    - dont_save_fig: bool
+        Define whether to refrain from saving the figure to disk.
     - display_figure: bool
         Define whether to display the figure in graphical interface
         (e.g., when running script in HPC).
@@ -80,16 +80,22 @@ if not os.path.isdir(figures_dir):
 def initialize_argparser(metadata):
     """ Initialize argparser and add args to metadata."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--verbosity', choices=['True', 'False'], help='Define the verbosity of the output. Default: False', default=False)
+    parser.add_argument('-v', '--verbosity', action='store_true', help='Define the verbosity of the output. Default: False', default=False)
     parser.add_argument('-s', '--seed', type=int, help=f'Seed value used for CV splits, and for classifiers and for CV splits. Default: {seed}', metavar='int', default=seed) # Note: different sklearn versions could yield different results 
-    parser.add_argument('--scaling', choices=['True', 'False'], help='Scaling of data before fitting. Can only be used if data is not normalized. Default: False', default=False)
+    parser.add_argument('--scaling', action='store_true', help='Scaling of data before fitting. Can only be used if data is not normalized. Default: False', default=False)
     parser.add_argument('--scaling_method', choices=scaling_methods, help='Method for scaling data, choose from the options. Default: RobustScaler', default=scaling_methods[2]) 
-    parser.add_argument('--one_segment_per_task',  choices=['True','False'],  help='Utilizes only one of the segments from the tasks. Default: False', default=False)
+    parser.add_argument('--one_segment_per_task', action='store_true',  help='Utilizes only one of the segments from the tasks. Default: False', default=False)
     parser.add_argument('--which_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=1)
-    parser.add_argument('--display_fig', choices=['True','False'], help='Displays the figure. Default: False (does not display fig)', default=False)
-    parser.add_argument('--save_fig', choices=['True','False'], help='Saves figure to disk. Default: True', default=True)
+    parser.add_argument('--display_fig', action='store_true', help='Displays the figure. Default: False', default=False)
+    parser.add_argument('--dont_save_fig', action='store_true', help='Saves figure to disk. Default: True', default=False)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
+    print('ARGUMENT TYPE CHECK')
+    print(f'Argument verbosity = {args.verbosity}, and type = {type(args.verbosity)}')
+    print(f'Argument scaling = {args.scaling}, and type = {type(args.scaling)}')
+    print(f'Argument one_segment_per_task = {args.one_segment_per_task}, and type = {type(args.one_segment_per_task)}')
+    print(f'Argument display_fig = {args.display_fig}, and type = {type(args.display_fig)}')
+    print(f'Argument dont_save_fig = {args.dont_save_fig}, and type = {type(args.dont_save_fig)}')
 
     # Add the input arguments to the metadata dictionary
     metadata["folds"] = folds
@@ -391,10 +397,10 @@ if __name__ == "__main__":
     metadata["timestamp"] = datetime.now()
 
     # 6 - Save the figure to disk
-    if args.save_fig:
-        save_figure(metadata)
-    else:
+    if args.dont_save_fig:
         print('INFO: Figure will not be saved to disk.')
+    else:
+        save_figure(metadata)
 
     # 7 - Export metadata
     handler.export_data(dataframe, metadata)
