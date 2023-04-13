@@ -5,6 +5,7 @@ Bundle up all HTMLs from the `reports_dir` into one PDF naamed 'mtbi_meeg_report
 Be careful because it will overwrite files with the same name
 
 @author: Estanislao Porta
+# TODO: Check if filename exists, and avoid overwriting
 """
 from weasyprint import HTML, CSS
 import os
@@ -42,5 +43,6 @@ img {
     """
 # Write the html into a PDF
 filename='mtbi_meeg_report.pdf'
+
 pdf_document.write_pdf(os.path.join(reports_dir, filename), presentational_hints=True, stylesheets=[CSS(string=css)])
 print(f"INFO: Success! All the HTML reports from {reports_dir} have been combined into one PDF named '{filename}'" )
