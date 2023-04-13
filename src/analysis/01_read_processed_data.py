@@ -54,9 +54,9 @@ from pickle_data_handler import PickleDataHandler
 def initialize_argparser_and_metadata():
     """ Initialize argparser and add args to metadata."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('--task', type=str, help="ec, eo, PASAT_1 or PASAT_2", default="PASAT_2")
-    parser.add_argument('--freq_band_type', type=str, help="Define the frequency bands. 'thin' are 1hz bands from 1 to 43hz. 'wide' are conventional delta, theta, etc. Default is 'wide'.", default="wide")
-    parser.add_argument('--normalization', type=bool, help='Normalizing of the data from the channels', default=True)
+    parser.add_argument('--task', choices=['eo','ec','PASAT_1', 'PASAT_2'], help='ec, eo, PASAT_1 or PASAT_2', default='PASAT_2')
+    parser.add_argument('--freq_band_type', choices=['thin', 'wide'], help="Define the frequency bands. 'thin' are 1hz bands from 1 to 43hz. 'wide' are conventional delta, theta, etc. Default: wide.", default='wide')
+    parser.add_argument('--normalization', choices=['True', 'False'], help='Normalizing of the data from the channels. Default: True', default=True)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) 
     args = parser.parse_args()
     

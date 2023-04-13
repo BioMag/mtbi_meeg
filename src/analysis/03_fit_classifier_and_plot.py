@@ -80,14 +80,14 @@ if not os.path.isdir(figures_dir):
 def initialize_argparser(metadata):
     """ Initialize argparser and add args to metadata."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--verbosity', type=bool, help="Define the verbosity of the output. Default is False", metavar='', default=True)
-    parser.add_argument('-s', '--seed', type=int, help=f"Seed value used for CV splits, and for classifiers and for CV splits. Default value is {seed}, and gives 50/50 class balance in Training and Test sets.", metavar='int', default=seed) # Note: different sklearn versions could yield different results
-    parser.add_argument('--scaling', type=bool, help='Scaling of data before fitting. Can only be used if data is not normalized. Default is True', metavar='', default=False)
-    parser.add_argument('--scaling_method', choices=scaling_methods, help='Method for scaling data, choose from the options. Default is RobustScaler.', default=scaling_methods[2])
-    parser.add_argument('--one_segment_per_task', type=bool, help='Utilize only one of the segments from the tasks. Default is False', metavar='', default=False)
+    parser.add_argument('-v', '--verbosity', choices=['True', 'False'], help='Define the verbosity of the output. Default: False', default=False)
+    parser.add_argument('-s', '--seed', type=int, help=f'Seed value used for CV splits, and for classifiers and for CV splits. Default: {seed}', metavar='int', default=seed) # Note: different sklearn versions could yield different results 
+    parser.add_argument('--scaling', choices=['True', 'False'], help='Scaling of data before fitting. Can only be used if data is not normalized. Default: False', default=False)
+    parser.add_argument('--scaling_method', choices=scaling_methods, help='Method for scaling data, choose from the options. Default: RobustScaler', default=scaling_methods[2]) 
+    parser.add_argument('--one_segment_per_task',  choices=['True','False'],  help='Utilizes only one of the segments from the tasks. Default: False', default=False)
     parser.add_argument('--which_segment', type=int, help='Define which number of segment to use: 1, 2, etc. Default is 1', metavar='', default=1)
-    parser.add_argument('--display_fig', type=int, help='Define whether figure will be shown. Default is true', metavar='', default=True)
-    parser.add_argument('--save_fig', type=int, help='Define whether figure will be saved. Default is true', metavar='', default=True)
+    parser.add_argument('--display_fig', choices=['True','False'], help='Displays the figure. Default: False (does not display fig)', default=False)
+    parser.add_argument('--save_fig', choices=['True','False'], help='Saves figure to disk. Default: True', default=True)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
 
@@ -109,9 +109,12 @@ def initialize_argparser(metadata):
 
 def initialize_subplots(metadata):
     """Creates figure with 2x2 subplots, sets axes and fig title"""
+    # Disable interactive mode in case plotting is not needed
+    plt.ioff()
     fig, axs = plt.subplots(nrows=2, ncols=2,
                             sharex=True, sharey=True,
                             figsize=(10, 10))
+
     # Add figure title and save it to metadata
     if metadata["scaling"]:
         figure_title = (
@@ -133,14 +136,12 @@ def initialize_subplots(metadata):
     axs[1, 0].set(ylabel='True Positive Rate')
     axs[1, 0].set(xlabel='False Positive Rate')
     axs[1, 1].set(xlabel='False Positive Rate')
-    # Disable interactive mode in case plotting is not needed
 
-    plt.ioff()
     # Display figure if needed
     if metadata["display_fig"]:
-        plt.show()
+        plt.show(block=False)
     else:
-        print('INFO: Figure will not be displayed')
+        print('INFO: Figure will not be displayed.')
     return axs, metadata
 
 def perform_data_split(X, y, split, train_index, test_index):
@@ -273,7 +274,6 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
     precision_per_classifier = []
     recall_per_classifier = []
     f1_per_classifier = []
-    
     # Initialize the subplots
     axs, metadata = initialize_subplots(metadata)
     # Iterate over the classifiers to populate each subplot
@@ -314,11 +314,12 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
             recall.append(recall_score(y_test, y_pred))
             f1_test = f1_score(y_test, y_pred)
             f1.append(f1_test)
-            print(f"INFO: F1 score in test set: {f1_test:.2f}")
-            # Test overfitting - Compute F1 score on training set
-            y_train_pred = clf.predict(X_train)
-            f1_train = f1_score(y_train, y_train_pred)
-            print(f"INFO: F1 score in training set: {f1_train:.2f}")
+            # Print out set's F1 score on Test and Training set:
+            if metadata["verbosity"]:
+                print(f"INFO: F1 score in test set: {f1_test:.2f}")
+                y_train_pred = clf.predict(X_train)
+                f1_train = f1_score(y_train, y_train_pred)
+                print(f"INFO: F1 score in training set: {f1_train:.2f}")
             
         # Execute the functions that calculate means & metrics per classifier
         mean_tpr, mean_auc, std_auc = roc_per_clf(tprs, aucs, ax, name, clf)
@@ -393,7 +394,7 @@ if __name__ == "__main__":
     if args.save_fig:
         save_figure(metadata)
     else:
-        print('INFO: Figure will not be saved to disk')
+        print('INFO: Figure will not be saved to disk.')
 
     # 7 - Export metadata
     handler.export_data(dataframe, metadata)
