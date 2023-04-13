@@ -70,8 +70,8 @@ elif 'vdiubuntu' in host and user == 'portae1' :
     # Estanislao's workstation in VirtualMachine Aalto
     raw_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed' #This is not in use actually
     processed_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed'
-    reports_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi-eeg/src/reports'
-    figures_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi-eeg/src/figures'
+    reports_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi_meeg/output/reports'
+    figures_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi_meeg/output/figures'
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg' 
 ## Add new users below
