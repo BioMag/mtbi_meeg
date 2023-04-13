@@ -19,14 +19,14 @@ Arguments
         Paced Auditory Serial Addition Test 1 or 2 (PASAT_1 or PASAT_2)
     - freq_band_type : str
         Frequency bands used in the binning of the subject information.
-        Thin bands are 1hz bands from 1 to 43hz. 
+        Thin bands are 1hz bands from 1 to 43hz.
         Wide bands are conventional Delta, Theta, Alpha, Beta, Gamma
     - normalization : bool
         Defines whether channel data is normalized for all the channels
 
 Returns
 -------
-    - eeg_tmp_data.pickle : pickle object 
+    - eeg_tmp_data.pickle : pickle object
         Object of pickle format containing the dataframe with the data
         and the metadata with the information about the arguments
         used to run this script.
@@ -59,8 +59,8 @@ def initialize_argparser_and_metadata():
     parser.add_argument('--normalization', choices=['True', 'False'], help='Normalizing of the data from the channels. Default: True', default=True)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) 
     args = parser.parse_args()
-    
-    # Create dictonary with metadata information 
+
+    # Create dictonary with metadata information
     # NOTE: It is important that it is CREATED here and not that stuff gets appended
     metadata = {"task": args.task, "freq_band_type": args.freq_band_type, "normalization": args.normalization}
     # Define the number of segments per task
@@ -69,30 +69,30 @@ def initialize_argparser_and_metadata():
     elif metadata["task"] in ('PASAT_1', 'PASAT_2'):
         segments = 2
     metadata["segments"] = segments
-    
+
     print('######## \nINFO: Starting to run 01_read_processed_data.py')
-    
+
     # Print out the chosen configuration
     if args.normalization:
         print(f"\nINFO: Reading in data from task '{args.task}', using '{args.freq_band_type}' frequency bands. Data **will** be normalized. \n")
     else:
         print(f"\nINFO: Reading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data **will NOT** be normalized. \n")
-    
+
     return metadata, args
 
 def read_subjects():
     """
     Reads in the list of subjects from file subjects.txt. Asserts format to contain two digits and then a letter P or C for Patients or Controls. 
-        
+
     Returns
     -------
     - subjects: a list with all the subjects
- 
+
     """
      # List of extra controls, dismissed so we'd have equal number of P vs C
     to_exclude = ['32C', '33C', '34C', '35C', '36C', '37C', '38C', '39C', '40C', '41C', '12P']
 
-    subject_pattern = r'^\d{2}[PC]'   
+    subject_pattern = r'^\d{2}[PC]'
     try:
         with open('subjects.txt', 'r') as subjects_file:
             subjects = [line.rstrip() for line in subjects_file.readlines()]
@@ -102,41 +102,38 @@ def read_subjects():
     except FileNotFoundError as error_warning:
         print("The file 'subjects.txt' does not exist in the current directory. The program will exit.")
         raise error_warning
-    
+
     # Excluse subjects with errors
     for i in to_exclude:
         subjects.remove(i)
-    
+
     return subjects
 
 def create_subjects_and_tasks(chosen_tasks, subjects):
 
     """
     Combines the subjects and with the chosen tasks and creates a list of subjects_and_tasks
-    
 
     Arguments
     ---------
-    - chosen_tasks: list of subtasks pertaining to each task 
+    - chosen_tasks: list of subtasks pertaining to each task
     - subjects: list of all the subjects
-    
+
     Returns
     -------
     - subjects_and_tasks: a list with 2-uples formed by all the combinations of (subjects, tasks)
 
     """
-   
     subjects_and_tasks = [(x, y) for x in subjects for y in chosen_tasks]
     print(f'INFO: There are {len(subjects_and_tasks)} subject_and_task combinations.')
-    
+
     return subjects_and_tasks
 
 def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_dir):
-
     """
     Read in processed bandpower data for each subject_and_tasks from files
     Creates an array of np with PSD data
-    
+
     Arguments
     ---------
     - subjects_and_tasks: list of 2-uples
@@ -144,7 +141,7 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
     - freq_band_type: str
             Frequency bins, 'thin' or 'wide'
     - normalization: boolean
-            If True, normalization of the PSD data for all channels will be performed   
+            If True, normalization of the PSD data for all channels will be performed
     - processed_data_dir: str
             path to the processed data directory as defined in config_common
 
@@ -153,58 +150,49 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
     - all_bands_vector: list of np arrays
             Each row contains the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
     """
-    
-    # Initialize a list to store processed data for each unique subject+segment combination 
-    all_bands_vectors = [] 
-    
+    # Initialize a list to store processed data for each unique subject+segment combination
+    all_bands_vectors = []
     if freq_band_type == 'thin':
         freqs = thin_bands
     if freq_band_type == 'wide':
         freqs = wide_bands
 
     # Iterate over all combinations of (subject, subtask) and populate 'all_bands_vectors' with numpy array 'sub_bands_array' containing processed data for each subject_and_tasks
-    for pair in subjects_and_tasks:  
-        # Construct the path pointing to where processed data for (subject,task) is stored         
-        subject, task = pair[0].rstrip(), pair[1] 
+    for pair in subjects_and_tasks:
+        # Construct the path pointing to where processed data for (subject,task) is stored
+        subject, task = pair[0].rstrip(), pair[1]
         path_to_processed_data = os.path.join(f'{processed_data_dir}', f'sub-{subject}', 'ses-01', 'eeg', 'bandpowers', f'{freq_band_type}_{task}.csv')
-        
-        # Create a 2D list to which the read data will be added
+
+        # List where the read data will be added
         subject_and_task_bands_list = []
-        
+
         # Read csv file and saves each the data to f_bands_list
         with open(path_to_processed_data, 'r') as file:
             reader = csv.reader(file)
-            for frequency_band in reader:  
+            for frequency_band in reader:
                 try:
                     subject_and_task_bands_list.append([float(f) for f in frequency_band])
                 except ValueError as e:
-                    print("Error: Invalid data, could not convert to float")              
+                    print("Error: Invalid data, could not convert to float")
                     raise e
-                    
+
         # Convert list to array
         if freq_band_type == 'thin':
-            # TODO thin freq_bands: there should be no slicing of 'subject_and_task_band_list', since 
+            # Thin bands should not need slicing but better safe than sorry
             subject_and_task_bands_array = np.array(subject_and_task_bands_list[:len(freqs)])
         else:
             subject_and_task_bands_array = np.array(subject_and_task_bands_list)
-        
+
         # Normalize each band
-        if normalization: 
+        if normalization:
             ch_tot_powers = np.sum(subject_and_task_bands_array, axis=0)
             subject_and_task_bands_array = subject_and_task_bands_array / ch_tot_powers[None, :]
-        
+
         subject_and_task_bands_vector = np.concatenate(subject_and_task_bands_array.transpose())
-        
-        # Validate subject_and_task_bands_vector length:
-        if freq_band_type == 'thin':
-            freqs = thin_bands
-        elif freq_band_type == 'wide':
-            freqs = wide_bands
-        
+
+        # Validate subject_and_task_bands_vector length and add to matrix
         assert len(subject_and_task_bands_vector) == (channels * len(freqs)), f"Processed data for subject {subject} does not have the expected length when using {freq_band_type} frequency bands."
-          
-        # Add vector to matrix
-        all_bands_vectors.append(subject_and_task_bands_vector)    
+        all_bands_vectors.append(subject_and_task_bands_vector)
 
     print(f'INFO: Success! Shape of \'all_bands_vectors\' is {len(all_bands_vectors)} x {len(all_bands_vectors[0])}, as expected.')
     return all_bands_vectors
@@ -212,14 +200,14 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
 def create_data_frame(subjects_and_tasks, all_bands_vectors):
     """
     Create a dataframe structure to be used by the model_testing and ROC_AUC.py scripts
-        
+
     Arguments
     ---------
     - all_bands_vector: list of np arrays
             Each row contains the PSD data (for the chosen frquency bands and for all channels) per subject_and_tasks
     - subjects_and_tasks: list of 2-uples
             Contains the combinations of subjects and segments (e.g., (Subject1, Task1_segment1), (Subject1, Task1_segment2), ...) 
-    
+
     Returns
     ------
     - dataframe: panda dataframe
@@ -228,14 +216,14 @@ def create_data_frame(subjects_and_tasks, all_bands_vectors):
     if not subjects_and_tasks:
         raise ValueError("The list of subject-task combinations cannot be empty.")
     if len(all_bands_vectors) == 0:
-        raise ValueError("The list of PSD data cannot be empty.")        
-    
+        raise ValueError("The list of PSD data cannot be empty.")
+
     # Create a list of indices of format 'subject_segment'
     indices = [i[0].rstrip() + '_' + i[1] for i in subjects_and_tasks]
-  
-    # Convert list to numpy array to dataframe 
-    dataframe = pd.DataFrame(np.array(all_bands_vectors, dtype=object), index=indices) 
-    
+
+    # Convert list to numpy array to dataframe
+    dataframe = pd.DataFrame(np.array(all_bands_vectors, dtype=object), index=indices)
+
     groups = []
     subs = []
     for subject, _ in subjects_and_tasks:
@@ -248,8 +236,8 @@ def create_data_frame(subjects_and_tasks, all_bands_vectors):
             groups.append(2) # In case there is a problem
     dataframe.insert(0, 'Group', groups)
     dataframe.insert(1, 'Subject', subs)
-    
-    return dataframe 
+
+    return dataframe
 
 
 if __name__ == '__main__':
@@ -284,7 +272,7 @@ if __name__ == '__main__':
     # 8 - Outputs the pickle object composed by the dataframe file and metadata to be used by 02_plot_processed_data.py and 03_fit_classifier_and_plot.py
     handler = PickleDataHandler()
     handler.export_data(dataframe=dataframe, metadata=metadata)
-    
+
     # Calculate time that the script takes to run
     execution_time = (time.time() - start_time)
     print('\n###################################################\n')
