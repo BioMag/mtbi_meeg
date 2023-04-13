@@ -156,6 +156,11 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
     
     # Initialize a list to store processed data for each unique subject+segment combination 
     all_bands_vectors = [] 
+    
+    if freq_band_type == 'thin':
+        freqs = thin_bands
+    if freq_band_type == 'wide':
+        freqs = wide_bands
 
     # Iterate over all combinations of (subject, subtask) and populate 'all_bands_vectors' with numpy array 'sub_bands_array' containing processed data for each subject_and_tasks
     for pair in subjects_and_tasks:  
@@ -176,14 +181,12 @@ def read_data(subjects_and_tasks, freq_band_type, normalization, processed_data_
                     print("Error: Invalid data, could not convert to float")              
                     raise e
                     
-        # # Convert list to array
-        # if freq_band_type == 'thin':
-        #     # TODO thin freq_bands: there should be no slicing of 'subject_and_task_band_list', since 
-        #     subject_and_task_bands_array = np.array(subject_and_task_bands_list)
-        # else:
-        #     subject_and_task_bands_array = np.array(subject_and_task_bands_list)
-        
-        subject_and_task_bands_array = np.array(subject_and_task_bands_list)
+        # Convert list to array
+        if freq_band_type == 'thin':
+            # TODO thin freq_bands: there should be no slicing of 'subject_and_task_band_list', since 
+            subject_and_task_bands_array = np.array(subject_and_task_bands_list[:len(freqs)])
+        else:
+            subject_and_task_bands_array = np.array(subject_and_task_bands_list)
         
         # Normalize each band
         if normalization: 
