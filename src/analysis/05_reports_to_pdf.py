@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Mar 22 13:47:09 2023
-Bundle up all htmls into one with a certain cover
- 
-Then print it as a PDF
-@author: portae1
+Bundle up all HTMLs from the `reports_dir` into one PDF naamed 'mtbi_meeg_report.pdf'
+Be careful because it will overwrite files with the same name
+
+@author: Estanislao Porta
 """
 from weasyprint import HTML, CSS
 import os
 import sys
-src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(src_dir)
-from config_common import reports_dir
+SRC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(SRC_DIR)
+from config_common import reports_dir, figures_dir
 
 # Get list of HTML files in directory
 html_files = [os.path.join(reports_dir, f) for f in os.listdir(reports_dir) if f.endswith('.html')]
@@ -21,10 +20,15 @@ html_files = [os.path.join(reports_dir, f) for f in os.listdir(reports_dir) if f
 html_string = ''
 for html_file in html_files:
     with open(html_file, 'r') as f:
-        html_string += f.read()
+        html = f.read()
+        if html_string:
+            # Add a page break before all HTML files except the first one
+            html_string += f'<div style="page-break-before: always;"></div>{html}'
+        else:
+            html_string += html
 
-# Combine all the HTML content into a single string
-base_url = 'file:///m/home/home2/20/portae1/unix/biomag/mtbi-eeg/src/figures/'
+# Used to resolve relative paths from the HTMLs
+base_url =f'file://{figures_dir}'
 # Initialize a WeasyPrint document
 pdf_document = HTML(string=html_string, base_url=base_url)
 
@@ -36,5 +40,7 @@ img {
     object-fit: contain;
     }
     """
-# Set the page size and margins using CSS
-pdf_document.write_pdf('mTBI-eeg_normalized_not-scaled.pdf', presentational_hints=True, stylesheets=[CSS(string=css)])
+# Write the html into a PDF
+filename='mtbi_meeg_report.pdf'
+pdf_document.write_pdf(os.path.join(reports_dir, filename), presentational_hints=True, stylesheets=[CSS(string=css)])
+print(f"INFO: Success! All the HTML reports from {reports_dir} have been combined into one PDF named '{filename}'" )

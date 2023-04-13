@@ -44,8 +44,8 @@ import csv
 import numpy as np
 import pandas as pd
 
-processing_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(processing_dir)
+SRC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(SRC_DIR)
 from config_common import processed_data_dir, user, host
 from config_eeg import thin_bands, wide_bands, select_task_segments, channels
 from pickle_data_handler import PickleDataHandler
@@ -59,7 +59,7 @@ def initialize_argparser_and_metadata():
     parser.add_argument('--no_normalization', action='store_true', help='No normalization of the data from the channels. Default: True', default=False)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) 
     args = parser.parse_args()
-    
+
     # Create dictonary with metadata information
     # NOTE: It is important that it is CREATED here and not that stuff gets appended
     metadata = {"task": args.task, "freq_band_type": args.freq_band_type, "normalization": not args.no_normalization}

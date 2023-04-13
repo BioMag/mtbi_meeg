@@ -10,13 +10,13 @@ Creates an HTML report with the images created in the previous step of the pipel
 
 # TODO: I wonder if I should fetch the the data and create a report with the data and not with the png images.....?
 
+# TODO: If control plots are not found, text should be included, not an error?
 """
 
 import os
 import sys
-import pandas as pd
-src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(src_dir)
+SRC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(SRC_DIR)
 from config_common import figures_dir, reports_dir
 from pickle_data_handler import PickleDataHandler 
  
@@ -50,7 +50,7 @@ def create_report(metadata):
     # Include the PSD Control Plots  
     if "psd-control-plot-filename" in metadata:
         control_plots = os.path.join(figures_dir, metadata["psd-control-plot-filename"])
-q        if not os.path.isfile(control_plots):            
+        if not os.path.isfile(control_plots):            
             raise FileNotFoundError('Control plots were expected but are not found')
         
         report.write(f'''

@@ -96,7 +96,7 @@ def initialize_argparser(metadata):
     print(f'Argument one_segment_per_task = {args.one_segment_per_task}, and type = {type(args.one_segment_per_task)}')
     print(f'Argument display_fig = {args.display_fig}, and type = {type(args.display_fig)}')
     print(f'Argument dont_save_fig = {args.dont_save_fig}, and type = {type(args.dont_save_fig)}')
-
+    args.scaling = True
     # Add the input arguments to the metadata dictionary
     metadata["folds"] = folds
     metadata["seed"] = seed
