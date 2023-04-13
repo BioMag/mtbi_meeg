@@ -39,13 +39,18 @@ def create_report(metadata):
     </head>
     <body>
     	<h1>mTBI-EEG report: {metadata["task"]} - {metadata["freq_band_type"]}</h1>
-        <h2>Normalized - Not scaled</h2>
     ''')  
+    if metadata["normalization"] and not metadata["scaling"]:
+        report.write('<h2>Normalized - Notq scaled</h2>')
+    if not metadata["normalization"] and metadata["scaling"]:
+        report.write('<h2>Not normalized - Scaled</h2>')
+    if not metadata["normalization"] and not metadata["scaling"]:
+        report.write('<h2>Not normalized - Not scaled</h2>') 
+    
     # Include the PSD Control Plots  
     if "psd-control-plot-filename" in metadata:
         control_plots = os.path.join(figures_dir, metadata["psd-control-plot-filename"])
-        
-        if not os.path.isfile(control_plots):            
+q        if not os.path.isfile(control_plots):            
             raise FileNotFoundError('Control plots were expected but are not found')
         
         report.write(f'''
