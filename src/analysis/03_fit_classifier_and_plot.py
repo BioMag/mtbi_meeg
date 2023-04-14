@@ -61,7 +61,7 @@ import pandas as pd
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_curve, auc, f1_score, precision_score, recall_score
+from sklearn.metrics import roc_curve, auc, confusion_matrix, f1_score
 from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
@@ -90,13 +90,7 @@ def initialize_argparser(metadata):
     parser.add_argument('--dont_save_fig', action='store_true', help='Saves figure to disk. Default: True', default=False)
     #parser.add_argument('--threads', type=int, help="Number of threads, using multiprocessing", default=1) #skipped for now
     args = parser.parse_args()
-    print('ARGUMENT TYPE CHECK')
-    print(f'Argument verbosity = {args.verbosity}, and type = {type(args.verbosity)}')
-    print(f'Argument scaling = {args.scaling}, and type = {type(args.scaling)}')
-    print(f'Argument one_segment_per_task = {args.one_segment_per_task}, and type = {type(args.one_segment_per_task)}')
-    print(f'Argument display_fig = {args.display_fig}, and type = {type(args.display_fig)}')
-    print(f'Argument dont_save_fig = {args.dont_save_fig}, and type = {type(args.dont_save_fig)}')
-    args.scaling = True
+    
     # Add the input arguments to the metadata dictionary
     metadata["folds"] = folds
     metadata["seed"] = seed
@@ -209,20 +203,20 @@ def roc_per_clf(tprs, aucs, ax, name, clf):
 
     return mean_tpr, mean_auc, std_auc
 
-def metrics_per_clf(precision, recall, f1):
+def metrics_per_clf(sensitivity, specificity, f1):
     """Calculates metrics for each classifier"""
-    mean_precision = round(mean(precision), 3)
-    std_precision = round(stdev(precision), 3)
-    mean_recall = round(mean(recall), 3)
-    std_recall = round(stdev(recall), 3)
+    mean_sensitivity = round(mean(sensitivity), 3)
+    std_sensitivity = round(stdev(sensitivity), 3)
+    mean_specificity = round(mean(specificity), 3)
+    std_specificity = round(stdev(specificity), 3)
     mean_f1 = round(mean(f1), 3)
-    std_f1 = round(stdev(f1), 3)
+    #std_f1 = round(stdev(f1), 3)
 
-    print('\tPrecision = %0.2f \u00B1 %0.2f' % (mean_precision, std_precision))
-    print('\tRecall = %0.2f \u00B1 %0.2f' % (mean_recall, std_recall))
-    print('\tF1 = %0.2f \u00B1 %0.2f' % (mean_f1, std_f1))
+    print('\tSensitivity = %0.2f \u00B1 %0.2f' % (mean_sensitivity, std_sensitivity))
+    print('\tSpecificity = %0.2f \u00B1 %0.2f' % (mean_specificity, std_specificity))
+    #print('\tF1 = %0.2f \u00B1 %0.2f' % (mean_f1, std_f1))
 
-    return mean_precision, mean_recall, mean_f1
+    return mean_sensitivity, mean_specificity, mean_f1
 
 def initialize_cv(dataframe, metadata):
     """Initialize Cross Validation and gets data splits as a list """
@@ -270,15 +264,15 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
          - Figure with 2x2 subplots: matplotlib plot
          - metadata : dict containing df 'metrics', which includes:
                 - tpr_per_classifier : list
-                - precision_per_classifier : list
-                - recall_per_classifier : list
+                - sensitivity_per_classifier : list
+                - specificity_per_classifier : list
                 - f1_per_classifier : list
     """
     tpr_per_classifier = []
     auc_per_classifier = []
     std_auc_per_classifier = []
-    precision_per_classifier = []
-    recall_per_classifier = []
+    sensitivity_per_classifier = []
+    specificity_per_classifier = []
     f1_per_classifier = []
     # Initialize the subplots
     axs, metadata = initialize_subplots(metadata)
@@ -287,11 +281,11 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
         tprs = []
         aucs = []
         f1 = []
-        precision = []
-        recall = []
+        sensitivity = []
+        specificity = []
         mean_fpr = np.linspace(0, 1, 100)
 
-        # Fit the classifiers to get the data that will be used in subplots
+        # Fit the classifiers to the split
         for split, (train_index, test_index) in enumerate(data_split):
             # Slice the X and y data according to the data_split
             X_train, X_test, y_train, y_test, skip_split = \
@@ -315,12 +309,19 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
             # Plot the ROC for this split
             ax.plot(fpr, tpr, lw=1, alpha=0.3,
                     label=f'ROC {split+1} (AUC = {roc_auc:.2f})')
-            # Append the precision, recall and F1 values
-            precision.append(precision_score(y_test, y_pred))
-            recall.append(recall_score(y_test, y_pred))
+            
+            #threshold = 0.5
+            # Convert predicted probabilities to binary class labels using the threshold
+            #y_pred = (probas_ >= threshold).astype(int)
+            # Sensitivity and specificity
+            tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel() 
+
+            # Append the sensitivity, specificity and F1 values
+            sensitivity.append(tp / (tp + fn))
+            specificity.append(tn / (tn + fp))
             f1_test = f1_score(y_test, y_pred)
             f1.append(f1_test)
-            # Print out set's F1 score on Test and Training set:
+            # Print out set's F1 score on Test and Training set to evaluate overfitting:
             if metadata["verbosity"]:
                 print(f"INFO: F1 score in test set: {f1_test:.2f}")
                 y_train_pred = clf.predict(X_train)
@@ -329,19 +330,19 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
             
         # Execute the functions that calculate means & metrics per classifier
         mean_tpr, mean_auc, std_auc = roc_per_clf(tprs, aucs, ax, name, clf)
-        mean_precision, mean_recall, mean_f1 = metrics_per_clf(precision, recall, f1)
+        mean_sensitivity, mean_specificity, mean_f1 = metrics_per_clf(sensitivity, specificity, f1)
 
         tpr_per_classifier.append(mean_tpr.T)
         auc_per_classifier.append(mean_auc.T)
         std_auc_per_classifier.append(std_auc.T)
-        precision_per_classifier.append(mean_precision)
-        recall_per_classifier.append(mean_recall)
+        sensitivity_per_classifier.append(mean_sensitivity)
+        specificity_per_classifier.append(mean_specificity)
         f1_per_classifier.append(mean_f1)
 
     metrics = pd.DataFrame({
                     'Classifiers': [pair[0] for pair in classifiers],
-                    'Precision': precision_per_classifier,
-                    'Recall': recall_per_classifier,
+                    'Sensitivity': sensitivity_per_classifier,
+                    'Specificity': specificity_per_classifier,
                     'F1': f1_per_classifier,
                     'TPR': tpr_per_classifier
                     })
