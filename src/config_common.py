@@ -3,7 +3,8 @@
 Config file
 ===========
 
-Configuration parameters for the study.
+Configuration parameters related to the users
+
 """
 
 import os
@@ -39,15 +40,15 @@ elif host == 'sirius' and user == 'heikkiv' :
     # Verna's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS'
     processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed'
-    reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/src/reports',user)
-    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/src/figures',user)
+    reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi_meeg/output/reports',user)
+    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi_meeg/output/figures',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
 elif host == 'ypsilon.biomag.hus.fi' and user == 'heikkiv':
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS'
     processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed'
-    reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/src/reports',user)
-    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi-eeg/src/reports',user)
+    reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi_meeg/output/reports',user)
+    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi_meeg/output/reports',user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg'
 elif host == 'psi' and user == 'aino' :
@@ -62,8 +63,8 @@ elif host == 'rho' and user == 'portae1' :
     # Estanislao's workstation in BioMag
     raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS'
     processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed'
-    reports_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/src/reports', user)
-    figures_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi-eeg/src/figures', user)
+    reports_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi_meeg/output/reports', user)
+    figures_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi_meeg/output/figures', user)
     n_jobs = 4
     matplotlib_backend = 'Qt5Agg' 
 elif 'vdiubuntu' in host and user == 'portae1' :
