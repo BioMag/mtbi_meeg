@@ -5,21 +5,23 @@ figures/
 reports/
 .idea/
 
+# Ignore sensitive raw data
+*.fif
+*.h5
+
 # Figs & data
 *.pdf
 *.png
-*.h5
 *.csv
 *.xlsx
 *slurm*
 .doit*
 *.html
 *.pickle
+
 # Specific files
 ecg_missing.txt
-maxfilter_puuttuu.txt
 psds_corrupted_or_missing.txt
-ecg_puuttuu.txt
 subjects.txt
 corrupted_subjects.txt
 
