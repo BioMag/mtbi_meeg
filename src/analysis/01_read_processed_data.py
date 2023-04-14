@@ -74,9 +74,9 @@ def initialize_argparser_and_metadata():
 
     # Print out the chosen configuration
     if args.not_normalized:
-        print(f"\nINFO: Reading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data **will NOT** be normalized. \n")
+        print(f"INFO: Reading in data from task {args.task}, using {args.freq_band_type} frequency bands. Data **will NOT** be normalized.")
     else:
-        print(f"\nINFO: Reading in data from task '{args.task}', using '{args.freq_band_type}' frequency bands. Data **will** be normalized. \n")
+        print(f"INFO: Reading in data from task '{args.task}', using '{args.freq_band_type}' frequency bands. Data **will** be normalized.")
     return metadata, args
 
 def read_subjects():
@@ -193,7 +193,7 @@ def read_data(subjects_and_tasks, freq_band_type, not_normalized, processed_data
         assert len(subject_and_task_bands_vector) == (channels * len(freqs)), f"Processed data for subject {subject} does not have the expected length when using {freq_band_type} frequency bands."
         all_bands_vectors.append(subject_and_task_bands_vector)
 
-    print(f'INFO: Success! Shape of \'all_bands_vectors\' is {len(all_bands_vectors)} x {len(all_bands_vectors[0])}, as expected.')
+    print(f'INFO: Shape of \'all_bands_vectors\' is {len(all_bands_vectors)} x {len(all_bands_vectors[0])}, as expected.')
     return all_bands_vectors
 
 def create_data_frame(subjects_and_tasks, all_bands_vectors):

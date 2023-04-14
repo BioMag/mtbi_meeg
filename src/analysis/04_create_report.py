@@ -101,8 +101,9 @@ def create_report(metadata):
         </html>
         ''')
     report.close()
-    print(f'INFO: Success! File "{report_filename}" created in {reports_dir}.')
-    print('\n***\n')
+    print(f'INFO: File "{report_filename}" has been created in {reports_dir}.')
+
+
 if __name__ == "__main__":
     handler = PickleDataHandler()
     dataframe, metadata = handler.load_data()

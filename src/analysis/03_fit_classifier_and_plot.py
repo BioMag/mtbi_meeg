@@ -53,6 +53,7 @@ import sys
 import os
 import argparse
 import time
+import csv
 from datetime import datetime
 
 import matplotlib.pyplot as plt
@@ -69,7 +70,7 @@ from statistics import mean, stdev
 
 SRC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(SRC_DIR)
-from config_common import figures_dir
+from config_common import figures_dir, reports_dir
 from config_eeg import seed, folds
 from pickle_data_handler import PickleDataHandler
 # Create directory if it doesn't exist
@@ -176,13 +177,16 @@ def perform_data_split(X, y, split, train_index, test_index):
     return X_train, X_test, y_train, y_test, skip_split
 
 def roc_per_clf(tprs, aucs, ax, name, clf):
-    """ Calculates the mean TruePositiveRate and AUC for classifier 'clf'"""
+    """ Calculates the mean TruePositiveRate and AUC for classifier 'clf'.
+    Adds std of the auc to the figure
+    Adds the chance plot to the figure
+    """
     mean_fpr = np.linspace(0, 1, 100)
     mean_tpr = np.mean(tprs, axis=0)
     mean_tpr[-1] = 1.0
     # Calculate AUC's mean and std_dev based on fpr and tpr and add to plot
-    mean_auc = auc(mean_fpr, mean_tpr)
-    std_auc = np.std(aucs)
+    mean_auc = round(auc(mean_fpr, mean_tpr), 3)
+    std_auc = round(np.std(aucs), 3)
     ax.plot(mean_fpr, mean_tpr, color='b',
             label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),
             lw=2, alpha=.8)
@@ -209,14 +213,14 @@ def metrics_per_clf(sensitivity, specificity, f1):
     std_sensitivity = round(stdev(sensitivity), 3)
     mean_specificity = round(mean(specificity), 3)
     std_specificity = round(stdev(specificity), 3)
-    mean_f1 = round(mean(f1), 3)
+#    mean_f1 = round(mean(f1), 3)
     #std_f1 = round(stdev(f1), 3)
 
     print('\tSensitivity = %0.2f \u00B1 %0.2f' % (mean_sensitivity, std_sensitivity))
     print('\tSpecificity = %0.2f \u00B1 %0.2f' % (mean_specificity, std_specificity))
     #print('\tF1 = %0.2f \u00B1 %0.2f' % (mean_f1, std_f1))
 
-    return mean_sensitivity, mean_specificity, mean_f1
+    return mean_sensitivity, std_sensitivity, mean_specificity, std_specificity
 
 def initialize_cv(dataframe, metadata):
     """Initialize Cross Validation and gets data splits as a list """
@@ -270,10 +274,12 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
     """
     tpr_per_classifier = []
     auc_per_classifier = []
-    std_auc_per_classifier = []
+    std_auc_clf = []
     sensitivity_per_classifier = []
+    std_sens_clf = []
     specificity_per_classifier = []
-    f1_per_classifier = []
+    std_spec_clf = []
+#    f1_per_classifier = []
     # Initialize the subplots
     axs, metadata = initialize_subplots(metadata)
     # Iterate over the classifiers to populate each subplot
@@ -309,19 +315,13 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
             # Plot the ROC for this split
             ax.plot(fpr, tpr, lw=1, alpha=0.3,
                     label=f'ROC {split+1} (AUC = {roc_auc:.2f})')
-            
-            #threshold = 0.5
-            # Convert predicted probabilities to binary class labels using the threshold
-            #y_pred = (probas_ >= threshold).astype(int)
-            # Sensitivity and specificity
-            tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel() 
-
             # Append the sensitivity, specificity and F1 values
+            tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel() 
             sensitivity.append(tp / (tp + fn))
             specificity.append(tn / (tn + fp))
             f1_test = f1_score(y_test, y_pred)
             f1.append(f1_test)
-            # Print out set's F1 score on Test and Training set to evaluate overfitting:
+            # Print out set's F1 score to evaluate overfitting:
             if metadata["verbosity"]:
                 print(f"INFO: F1 score in test set: {f1_test:.2f}")
                 y_train_pred = clf.predict(X_train)
@@ -330,24 +330,29 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
             
         # Execute the functions that calculate means & metrics per classifier
         mean_tpr, mean_auc, std_auc = roc_per_clf(tprs, aucs, ax, name, clf)
-        mean_sensitivity, mean_specificity, mean_f1 = metrics_per_clf(sensitivity, specificity, f1)
+        mean_sensitivity, std_sens, mean_specificity, std_spec = metrics_per_clf(sensitivity, specificity, f1)
 
         tpr_per_classifier.append(mean_tpr.T)
-        auc_per_classifier.append(mean_auc.T)
-        std_auc_per_classifier.append(std_auc.T)
+        auc_per_classifier.append(mean_auc)
+        std_auc_clf.append(std_auc)
         sensitivity_per_classifier.append(mean_sensitivity)
+        std_sens_clf.append(std_sens)
         specificity_per_classifier.append(mean_specificity)
-        f1_per_classifier.append(mean_f1)
+        std_spec_clf.append(std_spec)
+#        f1_per_classifier.append(mean_f1)
 
     metrics = pd.DataFrame({
                     'Classifiers': [pair[0] for pair in classifiers],
+                    'AUC':auc_per_classifier,
+                    'AUC_STD':std_auc_clf,
                     'Sensitivity': sensitivity_per_classifier,
+                    'Sens_STD':std_sens_clf,
                     'Specificity': specificity_per_classifier,
-                    'F1': f1_per_classifier,
+                    'Spec_STD':std_spec_clf,
+#                    'F1': f1_per_classifier,
                     'TPR': tpr_per_classifier
                     })
     metadata["metrics"] = metrics
-
     return metadata
 
 def save_figure(metadata):
@@ -363,8 +368,17 @@ def save_figure(metadata):
     # Save the figure
     metadata["roc-plots-filename"] = figure_filename
     plt.savefig(os.path.join(figures_dir, figure_filename))
-    print(f'\nINFO: Success! Figure "{figure_filename}" has been saved to folder {figures_dir}')
+    print(f'INFO: Figure "{figure_filename}" has been saved to folder {figures_dir}')
 
+def save_csv(metadata):
+    """Saves the classification metrics as a csv"""
+    csv_filename = f'{metadata["roc-plots-filename"][:-4]}.csv'
+    csv_path = os.path.join(reports_dir, csv_filename)
+    df = metadata["metrics"]
+    with open(csv_path, 'w') as file:
+        file.write(f'#{metadata["timestamp"]}\n')
+        df.to_csv(file, index=False)
+    print(f'INFO: CSV data with metrics "{csv_filename}" has been saved to folder {figures_dir}')
 
 if __name__ == "__main__":
 
@@ -402,8 +416,11 @@ if __name__ == "__main__":
         print('INFO: Figure will not be saved to disk.')
     else:
         save_figure(metadata)
-
-    # 7 - Export metadata
+    
+    # 7 - Save CSV data to reports dir
+    save_csv(metadata)
+    
+    # 8 - Export metadata
     handler.export_data(dataframe, metadata)
 
     # Calculate time that the script takes to run

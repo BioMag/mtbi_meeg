@@ -166,7 +166,7 @@ def save_fig(metadata):
         fig_filename = f'psd-control-plot_{metadata["task"]}_{metadata["freq_band_type"]}_not-normalized.png'
     plt.savefig(os.path.join(figures_dir, fig_filename))
     metadata["psd-control-plot-filename"] = fig_filename
-    print(f'INFO: Success! Figure "{fig_filename}" has been saved to folder {figures_dir}')
+    print(f'INFO: Figure "{fig_filename}" has been saved to folder {figures_dir}')
     return metadata
 
 

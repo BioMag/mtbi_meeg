@@ -28,7 +28,7 @@ class PickleDataHandler:
             print(f'An error occurred: {e}')
             return False
         
-        print('INFO: Success! CSV data and metadata have been bundled into file "eeg_tmp_data.pickle".')
+        print('INFO: CSV data and metadata have been bundled into file "eeg_tmp_data.pickle".')
         return True
     
     @staticmethod
@@ -57,5 +57,5 @@ class PickleDataHandler:
         if not metadata:
             raise ValueError("The metadata file cannot be empty.")
             
-        print('INFO: Success! CSV data and metadata have been read in from file "eeg_tmp_data.pickle".')
+        print('INFO: CSV data and metadata have been read in from file "eeg_tmp_data.pickle".')
         return dataframe, metadata
