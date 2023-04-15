@@ -8,7 +8,7 @@
 @author: Estanislao Porta
 Creates an HTML report with the images created in the previous step of the pipeline
 
-# TODO: I wonder if I should fetch the the data and create a report with the data and not with the png images.....?
+# TODO: Add classification metrics
 
 # TODO: If control plots are not found, text should be included, not an error?
 """

@@ -53,10 +53,9 @@ import sys
 import os
 import argparse
 import time
-import csv
 from math import sqrt
 from datetime import datetime
-
+#import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -77,7 +76,7 @@ from pickle_data_handler import PickleDataHandler
 # Create directory if it doesn't exist
 if not os.path.isdir(figures_dir):
     os.makedirs(figures_dir)
-
+sns.set_style('white')
 
 def initialize_argparser(metadata):
     """ Initialize argparser and add args to metadata."""
@@ -187,22 +186,25 @@ def roc_per_clf(tprs, aucs, ax, name, clf):
     mean_tpr[-1] = 1.0
     # Calculate AUC's mean and confidence interval based on fpr and tpr and add to plot
     mean_auc = round(auc(mean_fpr, mean_tpr), 3)
-    ci_auc = round(np.std(aucs)*1.96/sqrt(folds), 3)
+    std_auc = round(np.std(aucs), 3)
     ax.plot(mean_fpr, mean_tpr, color='tab:blue',
-            label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, ci_auc),
+            label=r'AUC = %0.2f $\pm$ %0.2f' % (mean_auc, std_auc),
             lw=2, alpha=.8)
     # Calculate upper and lower std_dev band around mean and add to plot
     std_tpr = np.std(tprs, axis=0)
     tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
     tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
-    ax.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2,
+    #ax.fill_between(mean_fpr, tprs_lower, tprs_upper, color='tab:blue', alpha=.2)
+    ax.fill_between(mean_fpr, tprs_lower, tprs_upper, color='tab:grey', alpha=.2,
                     label=r'$\pm$ 1 std. dev.')
-    ax.set(xlim=[-0.05, 1.05], ylim=[-0.05, 1.05], title=name)
-    ax.legend(loc="lower right", fontsize=6) # Leave it at  6 until we agree on how to move forward
-    ax.grid(True)
+    ax.set(xlim=[0, 1], ylim=[0, 1], title=name)
+    ax.legend(loc="lower right", fontsize=12) 
+    #ax.grid(True)
     # Plot chance curve
     ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='tab:red',
-            label='Chance', alpha=.8)
+            label='Chance', alpha=.3)
+    # Estimate confidence interval
+    ci_auc = round(std_auc*1.96/sqrt(folds), 3)
     print(f'\nINFO: Classifier = {clf}')
     print('\tAUC = %0.2f \u00B1 %0.2f' % (mean_auc, ci_auc))
 
@@ -314,8 +316,11 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
             roc_auc = auc(fpr, tpr)
             aucs.append(roc_auc)
             # Plot the ROC for this split
-            ax.plot(fpr, tpr, lw=1, alpha=0.3,
-                    label=f'ROC {split+1} (AUC = {roc_auc:.2f})')
+            #ax.plot(fpr, tpr, lw=1, alpha=0.3,
+            #        label=f'Split {split+1} (AUC = {roc_auc:.2f})')
+            # To not add the split AUC to legend, uncomment this: 
+            ax.plot(fpr, tpr, lw=1, alpha=0.3)
+            
             # Append the sensitivity, specificity and F1 values
             tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel() 
             sensitivity.append(tp / (tp + fn))
@@ -397,7 +402,10 @@ def plot_boxplot(metadata):
     # Adjust spacing between subplots
     fig.subplots_adjust(wspace=0.3)
     fig.suptitle("Classification metrics")
-    plt.show()
+    if metadata["display_fig"]:
+        plt.show(block=False)
+    else:
+        print('INFO: Figure will not be displayed.')
     return fig
 
 

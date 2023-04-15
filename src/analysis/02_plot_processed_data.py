@@ -40,13 +40,14 @@ import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import seaborn as sns
 SRC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(SRC_DIR)
 from config_common import figures_dir
 from pickle_data_handler import PickleDataHandler
 from config_eeg import channels, thin_bands, wide_bands
 
+#sns.set_style()
 
 def initialize_argparser(metadata):
     """ Initialize argparser and add args to metadata."""
@@ -120,17 +121,17 @@ def plot_control_figures(plot_df, metadata):
     '''
 
     f, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
-    plt.style.use('seaborn-darkgrid')
+    #plt.style.use('seaborn-darkgrid')
     figure_title = f'Average PSD over all channels vs frequency. \nTask: {metadata["task"]}, Freq band: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]} \nUsing segment {metadata["control_plot_segment"]} out of {metadata["segments"]}, Region of interest: {metadata["roi"]}.'
     f.suptitle(figure_title)
-
+    ax1.set_xlim(0, freqs[-1]+2)
     # Subplot 1
     ax1.set_ylabel('PSD (dB)')
     for _, row in plot_df.iterrows():
         if row['Group'] == 1:
-            col = 'red'
+            col = 'tab:red'
         else:
-            col = 'green'
+            col = 'tab:green'
         data = row[2:]
         data = np.array(data)
         ax1.plot(freqs, data.T, color=col, alpha=0.2)
@@ -139,8 +140,8 @@ def plot_control_figures(plot_df, metadata):
     # Subplot 2
     #Calculate means of each group & plot
     group_means = plot_df.groupby('Group').mean(numeric_only=True)
-    ax2.plot(freqs, group_means.iloc[0, :], 'g--', linewidth=1, label='Controls')
-    ax2.plot(freqs, group_means.iloc[1, :], 'r-.', linewidth=1, label='Patients')
+    ax2.plot(freqs, group_means.iloc[0, :], 'tab:green', linestyle='--', linewidth=1, label='Controls')
+    ax2.plot(freqs, group_means.iloc[1, :], color='tab:red', linestyle='-.', linewidth=1, label='Patients')
 
     ax2.set_xlabel('Frequency (Hz)')
     ax2.set_ylabel('PSD (dB)') #only if no channel scaling
@@ -150,11 +151,11 @@ def plot_control_figures(plot_df, metadata):
     group_sd = plot_df.groupby('Group').std(numeric_only=True)
     c_plus = group_means.iloc[0, :] + group_sd.iloc[0, :]
     c_minus = group_means.iloc[0, :] - group_sd.iloc[0, :]
-    ax2.fill_between(freqs, c_plus, c_minus, color='g', alpha=.2, linewidth=.5)
+    ax2.fill_between(freqs, c_plus, c_minus, color='tab:green', alpha=.2, linewidth=.5)
 
     p_plus = group_means.iloc[1, :] + group_sd.iloc[1, :]
     p_minus = group_means.iloc[1, :] - group_sd.iloc[1, :]
-    ax2.fill_between(freqs, p_plus, p_minus, color='r', alpha=.2, linewidth=.5)
+    ax2.fill_between(freqs, p_plus, p_minus, color='tab:red', alpha=.2, linewidth=.5)
 
 def save_fig(metadata):
     """
