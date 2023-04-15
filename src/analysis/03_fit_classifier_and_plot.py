@@ -54,6 +54,7 @@ import os
 import argparse
 import time
 import csv
+from math import sqrt
 from datetime import datetime
 
 import matplotlib.pyplot as plt
@@ -112,7 +113,7 @@ def initialize_subplots(metadata):
     """Creates figure with 2x2 subplots, sets axes and fig title"""
     # Disable interactive mode in case plotting is not needed
     plt.ioff()
-    fig, axs = plt.subplots(nrows=2, ncols=2,
+    fig_roc, axs = plt.subplots(nrows=2, ncols=2,
                             sharex=True, sharey=True,
                             figsize=(10, 10))
 
@@ -131,7 +132,7 @@ def initialize_subplots(metadata):
             f'Using one-segment: {metadata["one_segment_per_task"]}, Scaling: '
             f'{metadata["scaling"]}'
         )
-    fig.suptitle(figure_title)
+    fig_roc.suptitle(figure_title)
     # Add x and y labels
     axs[0, 0].set(ylabel='True Positive Rate')
     axs[1, 0].set(ylabel='True Positive Rate')
@@ -143,7 +144,7 @@ def initialize_subplots(metadata):
         plt.show(block=False)
     else:
         print('INFO: Figure will not be displayed.')
-    return axs, metadata
+    return fig_roc, axs, metadata
 
 def perform_data_split(X, y, split, train_index, test_index):
     """Splits X and y data into training and testing according to the data split indexes"""
@@ -178,17 +179,17 @@ def perform_data_split(X, y, split, train_index, test_index):
 
 def roc_per_clf(tprs, aucs, ax, name, clf):
     """ Calculates the mean TruePositiveRate and AUC for classifier 'clf'.
-    Adds std of the auc to the figure
+    Adds confidence interval of the AUC to the figure
     Adds the chance plot to the figure
     """
     mean_fpr = np.linspace(0, 1, 100)
     mean_tpr = np.mean(tprs, axis=0)
     mean_tpr[-1] = 1.0
-    # Calculate AUC's mean and std_dev based on fpr and tpr and add to plot
+    # Calculate AUC's mean and confidence interval based on fpr and tpr and add to plot
     mean_auc = round(auc(mean_fpr, mean_tpr), 3)
-    std_auc = round(np.std(aucs), 3)
-    ax.plot(mean_fpr, mean_tpr, color='b',
-            label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),
+    ci_auc = round(np.std(aucs)*1.96/sqrt(folds), 3)
+    ax.plot(mean_fpr, mean_tpr, color='tab:blue',
+            label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, ci_auc),
             lw=2, alpha=.8)
     # Calculate upper and lower std_dev band around mean and add to plot
     std_tpr = np.std(tprs, axis=0)
@@ -200,27 +201,27 @@ def roc_per_clf(tprs, aucs, ax, name, clf):
     ax.legend(loc="lower right", fontsize=6) # Leave it at  6 until we agree on how to move forward
     ax.grid(True)
     # Plot chance curve
-    ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
+    ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='tab:red',
             label='Chance', alpha=.8)
     print(f'\nINFO: Classifier = {clf}')
-    print('\tAUC = %0.2f \u00B1 %0.2f' % (mean_auc, std_auc))
+    print('\tAUC = %0.2f \u00B1 %0.2f' % (mean_auc, ci_auc))
 
-    return mean_tpr, mean_auc, std_auc
+    return mean_tpr, mean_auc, ci_auc
 
 def metrics_per_clf(sensitivity, specificity, f1):
-    """Calculates metrics for each classifier"""
+    """Calculates metrics and confidence interval for each classifier"""
     mean_sensitivity = round(mean(sensitivity), 3)
-    std_sensitivity = round(stdev(sensitivity), 3)
+    ci_sensitivity = round(stdev(sensitivity)*1.96/sqrt(folds), 3)
     mean_specificity = round(mean(specificity), 3)
-    std_specificity = round(stdev(specificity), 3)
+    ci_specificity = round(stdev(specificity)*1.96/sqrt(folds), 3)
 #    mean_f1 = round(mean(f1), 3)
     #std_f1 = round(stdev(f1), 3)
 
-    print('\tSensitivity = %0.2f \u00B1 %0.2f' % (mean_sensitivity, std_sensitivity))
-    print('\tSpecificity = %0.2f \u00B1 %0.2f' % (mean_specificity, std_specificity))
+    print('\tSensitivity = %0.2f \u00B1 %0.2f' % (mean_sensitivity, ci_sensitivity))
+    print('\tSpecificity = %0.2f \u00B1 %0.2f' % (mean_specificity, ci_specificity))
     #print('\tF1 = %0.2f \u00B1 %0.2f' % (mean_f1, std_f1))
 
-    return mean_sensitivity, std_sensitivity, mean_specificity, std_specificity
+    return mean_sensitivity, ci_sensitivity, mean_specificity, ci_specificity
 
 def initialize_cv(dataframe, metadata):
     """Initialize Cross Validation and gets data splits as a list """
@@ -274,14 +275,14 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
     """
     tpr_per_classifier = []
     auc_per_classifier = []
-    std_auc_clf = []
+    ci_auc_clf = []
     sensitivity_per_classifier = []
-    std_sens_clf = []
+    ci_sens_clf = []
     specificity_per_classifier = []
-    std_spec_clf = []
+    ci_spec_clf = []
 #    f1_per_classifier = []
     # Initialize the subplots
-    axs, metadata = initialize_subplots(metadata)
+    fig_roc, axs, metadata = initialize_subplots(metadata)
     # Iterate over the classifiers to populate each subplot
     for ax, (name, clf) in zip(axs.flat, classifiers):
         tprs = []
@@ -329,33 +330,78 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
                 print(f"INFO: F1 score in training set: {f1_train:.2f}")
             
         # Execute the functions that calculate means & metrics per classifier
-        mean_tpr, mean_auc, std_auc = roc_per_clf(tprs, aucs, ax, name, clf)
-        mean_sensitivity, std_sens, mean_specificity, std_spec = metrics_per_clf(sensitivity, specificity, f1)
+        mean_tpr, mean_auc, ci_auc = roc_per_clf(tprs, aucs, ax, name, clf)
+        mean_sensitivity, ci_sens, mean_specificity, ci_spec = metrics_per_clf(sensitivity, specificity, f1)
 
         tpr_per_classifier.append(mean_tpr.T)
         auc_per_classifier.append(mean_auc)
-        std_auc_clf.append(std_auc)
+        ci_auc_clf.append(ci_auc)
         sensitivity_per_classifier.append(mean_sensitivity)
-        std_sens_clf.append(std_sens)
+        ci_sens_clf.append(ci_sens)
         specificity_per_classifier.append(mean_specificity)
-        std_spec_clf.append(std_spec)
+        ci_spec_clf.append(ci_spec)
 #        f1_per_classifier.append(mean_f1)
-
+        
     metrics = pd.DataFrame({
                     'Classifiers': [pair[0] for pair in classifiers],
                     'AUC':auc_per_classifier,
-                    'AUC_STD':std_auc_clf,
+                    'AUC_CI': ci_auc_clf,
                     'Sensitivity': sensitivity_per_classifier,
-                    'Sens_STD':std_sens_clf,
+                    'Sensitivity_CI': ci_sens_clf,
                     'Specificity': specificity_per_classifier,
-                    'Spec_STD':std_spec_clf,
+                    'Specificity_CI':ci_spec_clf,
 #                    'F1': f1_per_classifier,
                     'TPR': tpr_per_classifier
                     })
     metadata["metrics"] = metrics
-    return metadata
+    return fig_roc, metadata
 
-def save_figure(metadata):
+def plot_boxplot(metadata):
+    """Plot boxplot of mean AUC, Sensitivity and Specificity and their 95% confidence intervals"""
+    df = metadata["metrics"]
+   # Set up marker shapes and colors for each classifier
+    markers = ["o", "^", "s", "d"]
+    colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
+    
+    # Create subplots for each metric
+    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(15,5))
+    
+    # Iterate over each metric
+    for i, metric in enumerate(['AUC', 'Sensitivity', 'Specificity']):
+        ax = axs[i]
+            
+        # Iterate over each classifier
+        for j, clf in enumerate(df.index):
+            # Get the mean value and CI of the current metric for the current classifier
+            mean_val = df.loc[clf, metric]
+            ci = df.loc[clf, metric+'_CI']           
+            # Plot the mean value as a marker with the corresponding shape and color
+            ax.plot(j, mean_val, marker=markers[j], markersize=10, color=colors[j])
+            # Plot the CI as a vertical error bar
+            ax.vlines(j, mean_val - ci, mean_val + ci, color=colors[j], linewidth=2)
+            
+        # Set the x-axis tick labels to be the classifier names
+        ax.set_xticks(np.arange(len(df.index)))
+        ax.set_xticklabels([])
+        ax.set_ylim(0,1)
+        # Set the y-axis label to be the current metric name
+        ax.set_ylabel(metric)
+        ax.axhline(y=0.5, color='grey', linestyle='--')
+    # Add a legend for the marker shapes and the corresponding classifiers
+    handles = []
+    for j, clf in enumerate(df["Classifiers"]):
+        handle = plt.Line2D([0], [0], marker=markers[j], color='w', label=clf, markerfacecolor=colors[j], markersize=10)
+        handles.append(handle)
+    fig.legend(handles=handles, loc='center', bbox_to_anchor=(0.5, 0.05), ncol=len(classifiers))
+    
+    # Adjust spacing between subplots
+    fig.subplots_adjust(wspace=0.3)
+    fig.suptitle("Classification metrics")
+    plt.show()
+    return fig
+
+
+def save_figures(metadata):
     """Saves active  figure to disk"""
     # Define filename
     if metadata["normalization"] and not metadata["scaling"]:
@@ -367,9 +413,12 @@ def save_figure(metadata):
 
     # Save the figure
     metadata["roc-plots-filename"] = figure_filename
-    plt.savefig(os.path.join(figures_dir, figure_filename))
-    print(f'INFO: Figure "{figure_filename}" has been saved to folder {figures_dir}')
-
+    fig_roc.savefig(os.path.join(figures_dir, figure_filename))
+    boxplot_filename = f'{metadata["roc-plots-filename"][:-4]}_boxplot.png'
+    fig_boxplot.savefig(os.path.join(figures_dir, boxplot_filename))
+    
+    print(f'INFO: Figures "{figure_filename}" and "{boxplot_filename}" have been saved to folder {figures_dir}')
+    
 def save_csv(metadata):
     """Saves the classification metrics as a csv"""
     csv_filename = f'{metadata["roc-plots-filename"][:-4]}.csv'
@@ -406,16 +455,18 @@ if __name__ == "__main__":
     X, y, data_split = initialize_cv(dataframe, metadata)
 
     # 4 - Fit classifiers and plot
-    metadata = fit_and_plot(X, y, classifiers, data_split, metadata)
-
+    fig_roc, metadata = fit_and_plot(X, y, classifiers, data_split, metadata)
+    # 4.5 - Plot  boxplot
+    fig_boxplot = plot_boxplot(metadata)
+    
     # 5 -  Add timestamp
     metadata["timestamp"] = datetime.now()
 
     # 6 - Save the figure to disk
     if args.dont_save_fig:
-        print('INFO: Figure will not be saved to disk.')
+        print('INFO: Figures will not be saved to disk.')
     else:
-        save_figure(metadata)
+        save_figures(metadata)
     
     # 7 - Save CSV data to reports dir
     save_csv(metadata)
