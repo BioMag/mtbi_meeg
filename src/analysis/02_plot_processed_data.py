@@ -123,10 +123,13 @@ def plot_control_figures(plot_df, metadata):
     f, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
     #plt.style.use('seaborn-darkgrid')
     figure_title = f'Average PSD over all channels vs frequency. \nTask: {metadata["task"]}, Freq band: {metadata["freq_band_type"]}, Channel data normalization: {metadata["normalization"]} \nUsing segment {metadata["control_plot_segment"]} out of {metadata["segments"]}, Region of interest: {metadata["roi"]}.'
-    f.suptitle(figure_title)
+    f.suptitle('PSD data - Subjects and group averages')
     ax1.set_xlim(0, freqs[-1]+2)
     # Subplot 1
     ax1.set_ylabel('PSD (dB)')
+    ax1.set_xticks(range(0, 40, 5))
+    ax2.set_xticks(range(0, 40, 5))
+
     for _, row in plot_df.iterrows():
         if row['Group'] == 1:
             col = 'tab:red'
@@ -135,13 +138,16 @@ def plot_control_figures(plot_df, metadata):
         data = row[2:]
         data = np.array(data)
         ax1.plot(freqs, data.T, color=col, alpha=0.2)
-        ax1.text(x=freqs[-1], y=data[-1], s=row['Subject'], horizontalalignment='left', size='small', color=col)
-
+        legend_elements = [plt.Line2D([0], [0], color='g', lw=1, label='Controls'),
+                   plt.Line2D([0], [0], color='r', lw=1, label='Patients')]
+        ax1.legend(handles=legend_elements)
+        #ax1.text(x=freqs[-1], y=data[-1], s=row['Subject'], horizontalalignment='left', size='small', color=col)
+    
     # Subplot 2
     #Calculate means of each group & plot
     group_means = plot_df.groupby('Group').mean(numeric_only=True)
-    ax2.plot(freqs, group_means.iloc[0, :], 'tab:green', linestyle='--', linewidth=1, label='Controls')
-    ax2.plot(freqs, group_means.iloc[1, :], color='tab:red', linestyle='-.', linewidth=1, label='Patients')
+    ax2.plot(freqs, group_means.iloc[0, :], 'tab:green', linestyle='--', linewidth=1, label='Mean controls')
+    ax2.plot(freqs, group_means.iloc[1, :], color='tab:red', linestyle='-.', linewidth=1, label='Mean patients')
 
     ax2.set_xlabel('Frequency (Hz)')
     ax2.set_ylabel('PSD (dB)') #only if no channel scaling

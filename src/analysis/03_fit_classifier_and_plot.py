@@ -55,14 +55,14 @@ import argparse
 import time
 from math import sqrt
 from datetime import datetime
-#import seaborn as sns
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_curve, auc, confusion_matrix, f1_score
+from sklearn.metrics import roc_curve, auc, confusion_matrix, f1_score, accuracy_score
 from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
@@ -76,7 +76,6 @@ from pickle_data_handler import PickleDataHandler
 # Create directory if it doesn't exist
 if not os.path.isdir(figures_dir):
     os.makedirs(figures_dir)
-sns.set_style('white')
 
 def initialize_argparser(metadata):
     """ Initialize argparser and add args to metadata."""
@@ -107,6 +106,30 @@ def initialize_argparser(metadata):
     metadata["display_fig"] = args.display_fig
 
     return metadata, args
+
+def initialize_cv(dataframe, metadata):
+    """Initialize Cross Validation and gets data splits as a list """
+    # Define features, classes and groups
+    X = dataframe.iloc[:, 2:]
+    y = dataframe.loc[:, 'Group']
+    groups = dataframe.loc[:, 'Subject']
+
+    # Slice data
+    if metadata["one_segment_per_task"]:
+        # Removes (segments-1) rows out of the dataframe
+        X = X[metadata["which_segment"]:len(X):metadata["segments"]]
+        y = y[metadata["which_segment"]:len(y):metadata["segments"]]
+        groups = groups[metadata["which_segment"]:len(groups):metadata["segments"]]
+
+        # Initialize Stratified K Fold
+        skf = StratifiedKFold(n_splits=metadata["folds"], shuffle=True, random_state=seed)
+        data_split = list(skf.split(X, y, groups))
+    else:
+        # Initialize Stratified Group K Fold
+        sgkf = StratifiedGroupKFold(n_splits=metadata["folds"], shuffle=True, random_state=seed)
+        data_split = list(sgkf.split(X, y, groups))
+
+    return X, y, data_split
 
 def initialize_subplots(metadata):
     """Creates figure with 2x2 subplots, sets axes and fig title"""
@@ -208,51 +231,26 @@ def roc_per_clf(tprs, aucs, ax, name, clf):
     print(f'\nINFO: Classifier = {clf}')
     print('\tAUC = %0.2f \u00B1 %0.2f' % (mean_auc, ci_auc))
 
-    return mean_tpr, mean_auc, ci_auc
+    return mean_tpr
 
-def metrics_per_clf(sensitivity, specificity, f1):
+def metrics_per_clf(sensitivity, specificity, accuracy):
     """Calculates metrics and confidence interval for each classifier"""
-    mean_sensitivity = round(mean(sensitivity), 3)
-    ci_sensitivity = round(stdev(sensitivity)*1.96/sqrt(folds), 3)
-    mean_specificity = round(mean(specificity), 3)
-    ci_specificity = round(stdev(specificity)*1.96/sqrt(folds), 3)
-#    mean_f1 = round(mean(f1), 3)
-    #std_f1 = round(stdev(f1), 3)
+    mean_sens = round(mean(sensitivity), 2)
+    ci_sens = round(stdev(sensitivity)*1.96/sqrt(folds), 2)
+    mean_spec = round(mean(specificity), 2)
+    ci_spec = round(stdev(specificity)*1.96/sqrt(folds), 2)
+    mean_acc = round(mean(accuracy), 2)
+    ci_acc = round(stdev(accuracy)*1.96/sqrt(folds), 2)
 
-    print('\tSensitivity = %0.2f \u00B1 %0.2f' % (mean_sensitivity, ci_sensitivity))
-    print('\tSpecificity = %0.2f \u00B1 %0.2f' % (mean_specificity, ci_specificity))
-    #print('\tF1 = %0.2f \u00B1 %0.2f' % (mean_f1, std_f1))
-
-    return mean_sensitivity, ci_sensitivity, mean_specificity, ci_specificity
-
-def initialize_cv(dataframe, metadata):
-    """Initialize Cross Validation and gets data splits as a list """
-    # Define features, classes and groups
-    X = dataframe.iloc[:, 2:]
-    y = dataframe.loc[:, 'Group']
-    groups = dataframe.loc[:, 'Subject']
-
-    # Slice data
-    if metadata["one_segment_per_task"]:
-        # Removes (segments-1) rows out of the dataframe
-        X = X[metadata["which_segment"]:len(X):metadata["segments"]]
-        y = y[metadata["which_segment"]:len(y):metadata["segments"]]
-        groups = groups[metadata["which_segment"]:len(groups):metadata["segments"]]
-
-        # Initialize Stratified K Fold
-        skf = StratifiedKFold(n_splits=metadata["folds"], shuffle=True, random_state=seed)
-        data_split = list(skf.split(X, y, groups))
-    else:
-        # Initialize Stratified Group K Fold
-        sgkf = StratifiedGroupKFold(n_splits=metadata["folds"], shuffle=True, random_state=seed)
-        data_split = list(sgkf.split(X, y, groups))
-
-    return X, y, data_split
+    print('\tSensitivity = %0.2f \u00B1 %0.2f' % (mean_sens, ci_sens))
+    print('\tSpecificity = %0.2f \u00B1 %0.2f' % (mean_spec, ci_spec))
+    print('\tAccuracy = %0.2f \u00B1 %0.2f' % (mean_acc, ci_acc))
+    return mean_sens, ci_sens, mean_spec, ci_spec, mean_acc, ci_acc
 
 def fit_and_plot(X, y, classifiers, data_split, metadata):
     """
     Loops over all classifiers according to the data split of the CV.
-    Plots the results in subplots
+    Plots the split ROCs in subplots
     Arguments
     ---------
         - X : list
@@ -275,87 +273,85 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
                 - specificity_per_classifier : list
                 - f1_per_classifier : list
     """
+    # Initialize dataframe where the metrics will be stored
     tpr_per_classifier = []
-    auc_per_classifier = []
-    ci_auc_clf = []
+    accuracy_per_classifier = []
+    ci_acc_clf = []
     sensitivity_per_classifier = []
     ci_sens_clf = []
     specificity_per_classifier = []
     ci_spec_clf = []
-#    f1_per_classifier = []
-    # Initialize the subplots
+    # Submethod 4.1 - Initialize the subplots
     fig_roc, axs, metadata = initialize_subplots(metadata)
     # Iterate over the classifiers to populate each subplot
     for ax, (name, clf) in zip(axs.flat, classifiers):
         tprs = []
         aucs = []
-        f1 = []
+        accuracy = []
         sensitivity = []
         specificity = []
         mean_fpr = np.linspace(0, 1, 100)
-
         # Fit the classifiers to the split
         for split, (train_index, test_index) in enumerate(data_split):
-            # Slice the X and y data according to the data_split
+            # Submethod 4.2 - Slice the X and y data according to CV's data_split
             X_train, X_test, y_train, y_test, skip_split = \
                 perform_data_split(X, y, split, train_index, test_index)
-
+            # Skip this split if class balance is bad
             if skip_split:
                 continue
 
-            # Fit classifier
+            # Fit classifier and predict outcomes
             clf.fit(X_train, y_train)
-            # Predict outcomes
             probas_ = clf.predict_proba(X_test)
             y_pred = clf.predict(X_test)
-            # Compare predicted and compute ROC curve
+            # Compute ROC curve
             fpr, tpr, _ = roc_curve(y_test, probas_[:, 1])
             # Append the (tpr vs fpr) values interpolated over mean_fpr
             tprs.append(np.interp(mean_fpr, fpr, tpr))
             tprs[-1][0] = 0.0
+            # Calculate the AUC for this ROC
             roc_auc = auc(fpr, tpr)
             aucs.append(roc_auc)
             # Plot the ROC for this split
-            #ax.plot(fpr, tpr, lw=1, alpha=0.3,
-            #        label=f'Split {split+1} (AUC = {roc_auc:.2f})')
+            ax.plot(fpr, tpr, lw=1, alpha=0.3,
+                    label=f'Split {split+1} (AUC = {roc_auc:.2f})')
             # To not add the split AUC to legend, uncomment this: 
-            ax.plot(fpr, tpr, lw=1, alpha=0.3)
+            #ax.plot(fpr, tpr, lw=1, alpha=0.3)
             
-            # Append the sensitivity, specificity and F1 values
+            # Get the sensitivity, specificity and accuracy values
             tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel() 
             sensitivity.append(tp / (tp + fn))
             specificity.append(tn / (tn + fp))
-            f1_test = f1_score(y_test, y_pred)
-            f1.append(f1_test)
-            # Print out set's F1 score to evaluate overfitting:
-            if metadata["verbosity"]:
-                print(f"INFO: F1 score in test set: {f1_test:.2f}")
-                y_train_pred = clf.predict(X_train)
-                f1_train = f1_score(y_train, y_train_pred)
-                print(f"INFO: F1 score in training set: {f1_train:.2f}")
+            accuracy_test = accuracy_score(y_test, y_pred)
+            accuracy.append(accuracy_test)
             
-        # Execute the functions that calculate means & metrics per classifier
-        mean_tpr, mean_auc, ci_auc = roc_per_clf(tprs, aucs, ax, name, clf)
-        mean_sensitivity, ci_sens, mean_specificity, ci_spec = metrics_per_clf(sensitivity, specificity, f1)
-
+            # Print out set's accuracy score to evaluate overfitting:
+            if metadata["verbosity"]:
+                print(f"INFO: Accuracy score in test set: {accuracy:.2f}")
+                y_train_pred = clf.predict(X_train)
+                accuracy_train = accuracy_score(y_train, y_train_pred)
+                print(f"INFO: Accuracy score in training set: {accuracy_train:.2f}")
+            
+        # Submethods 4.3 & 4.4 - Calculate means & metrics per classifier
+        mean_tpr = roc_per_clf(tprs, aucs, ax, name, clf)
+        mean_sensitivity, ci_sens, mean_specificity, ci_spec, mean_accuracy, ci_acc = metrics_per_clf(sensitivity, specificity, accuracy)
+        
         tpr_per_classifier.append(mean_tpr.T)
-        auc_per_classifier.append(mean_auc)
-        ci_auc_clf.append(ci_auc)
+        accuracy_per_classifier.append(mean_accuracy)
+        ci_acc_clf.append(ci_acc)
         sensitivity_per_classifier.append(mean_sensitivity)
         ci_sens_clf.append(ci_sens)
         specificity_per_classifier.append(mean_specificity)
         ci_spec_clf.append(ci_spec)
-#        f1_per_classifier.append(mean_f1)
-        
+
     metrics = pd.DataFrame({
                     'Classifiers': [pair[0] for pair in classifiers],
-                    'AUC':auc_per_classifier,
-                    'AUC_CI': ci_auc_clf,
+                    'Accuracy': accuracy_per_classifier,
+                    'Accuracy_CI': ci_acc_clf,
                     'Sensitivity': sensitivity_per_classifier,
                     'Sensitivity_CI': ci_sens_clf,
                     'Specificity': specificity_per_classifier,
-                    'Specificity_CI':ci_spec_clf,
-#                    'F1': f1_per_classifier,
+                    'Specificity_CI': ci_spec_clf,
                     'TPR': tpr_per_classifier
                     })
     metadata["metrics"] = metrics
@@ -372,7 +368,7 @@ def plot_boxplot(metadata):
     fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(15,5))
     
     # Iterate over each metric
-    for i, metric in enumerate(['AUC', 'Sensitivity', 'Specificity']):
+    for i, metric in enumerate(['Accuracy', 'Sensitivity', 'Specificity']):
         ax = axs[i]
             
         # Iterate over each classifier
