@@ -79,7 +79,7 @@ or a [conda environment](https://docs.conda.io/en/latest/)
 ```bash
 $ git clone https://github.com/BioMag/mtbi_meeg
 $ cd mtbi_meeg
-$ conda create -f environment.yml # Note: this step may take 20+ minutes
+$ conda env create -f environment.yml # Note: this step may take 20+ minutes
 $ conda activate mtbi_meeg_conda
 $ python3 -m pip install .
 ```
