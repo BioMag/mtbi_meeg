@@ -67,23 +67,25 @@ $ python3 -m pip install .
 ```
 This will install all the necessary dependencies for the package to work. 
 
-In the case that freely installing dependencies in the local computer is not possible or not desirable, an option is to create a conda environment or start a Docker container. Instructions using these two alternative methods are descibed below. 
+Instead of installing the package system-wide, it is instead recommended to use a [virtual environment](https://docs.python.org/3/library/venv.html)
+```bash
+$ git clone https://github.com/BioMag/mtbi_meeg
+$ cd mtbi_meeg
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ python3 -m pip install .
+```
+or a [conda environment](https://docs.conda.io/en/latest/)
+```bash
+$ git clone https://github.com/BioMag/mtbi_meeg
+$ cd mtbi_meeg
+$ conda create -f environment.yml
+$ conda activate mtbi_meeg_conda
+$ python3 -m pip install .
+```
 
-## Installing in a Conda enviornment
-1. After cloning the repository, navigate to the root directory.
-2. Create the conda environment by running,
-    ```
-    $ conda env create --file environment.yml
-    # Note: this step might take 20+ minutes
-    ```
-3. Activate the created environment,
-    ```
-    $ conda activate mtbi_meeg_conda
-    ```
-4. Install the package and its dependencies,
-    ```
-    $ python3 -m pip install .
-    ```
+
+
 ## Installing using Docker
 This Dockerfile specifies a base image (`continuumio/miniconda3:latest`), updates conda, installs the necessary dependencies, and copies the `mtbi_meeg` package code into the container. It also sets the working directory and specifies the default command to run when the container starts.
 
