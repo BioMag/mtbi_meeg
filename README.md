@@ -67,7 +67,7 @@ $ python3 -m pip install .
 ```
 This will install all the necessary dependencies for the package to work. 
 
-Instead of installing the package system-wide, it is instead recommended to use a [virtual environment](https://docs.python.org/3/library/venv.html)
+Instead of making a system-wide installation, it is instead recommended to use a [virtual environment](https://docs.python.org/3/library/venv.html)
 ```bash
 $ git clone https://github.com/BioMag/mtbi_meeg
 $ cd mtbi_meeg
@@ -79,10 +79,11 @@ or a [conda environment](https://docs.conda.io/en/latest/)
 ```bash
 $ git clone https://github.com/BioMag/mtbi_meeg
 $ cd mtbi_meeg
-$ conda create -f environment.yml
+$ conda create -f environment.yml # Note: this step may take 20+ minutes
 $ conda activate mtbi_meeg_conda
 $ python3 -m pip install .
 ```
+
 
 
 
