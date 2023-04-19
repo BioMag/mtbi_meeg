@@ -1,24 +1,34 @@
-FROM continuumio/miniconda3:latest
+# Dockerfile
 
-RUN conda update conda
-RUN conda install -y -c conda-forge \
-    python=3.8 \
-    doit \
-    scipy \
-    mne>=1.3 \
-    h5py>=3.8.0 \
-    numpy>=1.20.3 \
-    pandas>=1.5.2 \
-    scikit-learn>=1.1.2 \
-    matplotlib>=3.1.2 \
-    weasyprint>=58.1
+FROM python:3.8-slim
 
-COPY . /app
-WORKDIR /app
+# update & upgrade apt packages
+RUN apt-get update -y && apt-get upgrade -y
 
-CMD ["python", "my_package.py"]
+# don't write .pyc files into image to reduce image size 
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
-# to run it:
-#    Build the Docker image: Run the command docker build -t mtbi_meeg . to build the Docker image. This will create a new image named my_package based on the Dockerfile.
+# run the container as a non-root user
+ENV USER=mtbi_meeg
+RUN groupadd -r $USER && useradd -r -g $USER $USER
 
-#    Run the Docker container: Run the command docker run -it mtbi_meeg to start the container and run your package. This will start a new container based on the my_package image and run the default command specified in the Dockerfile.
+# install Python packages to venv
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+COPY requirements.txt /
+RUN python3 -m pip install -U pip
+RUN python3 -m pip install -r requirements.txt
+
+# copy application contents and install from source
+COPY . .
+RUN python3 -m pip install .
+
+# switch to a non-root user
+USER $USER
+
+# change work directory
+WORKDIR / 
+
+# run bash
+CMD ["/bin/bash"]

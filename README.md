@@ -84,12 +84,22 @@ In the case that freely installing dependencies in the local computer is not pos
     ```
     $ python3 -m pip install .
     ```
-## Installing using Docker
-This Dockerfile specifies a base image (`continuumio/miniconda3:latest`), updates conda, installs the necessary dependencies, and copies the `mtbi_meeg` package code into the container. It also sets the working directory and specifies the default command to run when the container starts.
+## Build and run using Docker
 
-1. Build the Docker image: Run the command `docker build -t mtbi_meeg . ` to build the Docker image. This will create a new image named `mtbi_meeg` based on the Dockerfile.
+Requirements: [docker](https://docs.docker.com/get-docker/)
 
-2. Run the Docker container: Run the command `docker run -it mtbi_meeg` to start the container and run your package. This will start a new container based on the my_package image and run the default command specified in the Dockerfile.
+Build the Docker image
+```bash
+docker build -t mtbi_meeg .
+``` 
+This will create a new image named `mtbi_meeg` based on the `Dockerfile` in the project root folder.
+
+Run Docker container in an interactive mode with
+```bash
+docker run -it mtbi_meeg
+``` 
+
+TODO: Volume to persist configs and data?
 
 ## Getting started: config_common and system_check
 
