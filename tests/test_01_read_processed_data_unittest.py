@@ -20,7 +20,7 @@ import numpy as np
 
 src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.append(src_dir)
-from config_eeg import channels
+from config_eeg import channels, thin_bands
 
 analysis_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'analysis'))
 sys.path.append(analysis_dir)
@@ -68,14 +68,23 @@ class TestReadData(unittest.TestCase):
         result = read_processed_data.read_data(subjects_and_tasks, freq_bands, normalization, processed_data_dir)
     
         # Check that the output has the expected shape
-        expected_shape = (len(subjects_and_tasks), channels*38)
+        expected_shape = (len(subjects_and_tasks), channels * len(thin_bands))
         assert np.shape(result) == expected_shape, f"Output has shape {np.shape(result)}, but expected shape is {expected_shape}"
     
         # Remove the temporary directory
         shutil.rmtree(tmp_dir)
 
-class TestCreateDataFrame(self):
-    create_data_frame
+class TestCreateDataFrame(unittest.TestCase):
+    def test_create_data_frame(self):
+        subjects_and_tasks = [("01P", "ec_1"), ("01C", "ec_1")]
+        all_bands_vectors = np.ones((2, channels * 38))
+
+        dataframe = read_processed_data.create_data_frame(
+            subjects_and_tasks, all_bands_vectors
+        )
+
+        self.assertEqual(dataframe.shape, (2, channels * 38 + 2))
+        self.assertEqual(dataframe["Group"].tolist(), [1, 0])
 
 if __name__ == '__main__':
     unittest.main()

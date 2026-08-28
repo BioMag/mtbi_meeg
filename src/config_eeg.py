@@ -44,19 +44,25 @@ wide_bands =  [(1,3), (3,5.2), (5.2,7.6), (7.6,10.2), (10.2,13), (13,16), (16,19
 ###############################################################################
 # Parameters pertaining to the subjects
 
-## All subjects for which there is some form of data available
-all_subjects = os.listdir(raw_data_dir)
-# Filter in directories-only
-all_subjects = [s for s in all_subjects if os.path.isdir(os.path.join(raw_data_dir, s))] # filter out non-directories
-# Remove file 'participants.tsv' if it exists
-if 'participants.tsv' in all_subjects:
-    all_subjects.remove('participants.tsv')
-# Remove the 'sub-' prefix from the list
-all_subjects = [x.replace('sub-', '') for x in all_subjects]
+def discover_subjects(data_dir=raw_data_dir):
+    """Return BIDS subject identifiers without importing or requiring data.
+
+    Missing directories yield an empty list so configuration and analysis
+    helpers remain importable on development and continuous-integration hosts.
+    ``check_system.py`` still reports a missing raw-data directory before a
+    processing run starts.
+    """
+    if not os.path.isdir(data_dir):
+        return []
+    return sorted(
+        entry.removeprefix("sub-")
+        for entry in os.listdir(data_dir)
+        if entry.startswith("sub-") and os.path.isdir(os.path.join(data_dir, entry))
+    )
 
 
-bad_subjects= []
-# Analysis is performed on these subjects
+all_subjects = discover_subjects()
+bad_subjects = []
 subjects = [subject for subject in all_subjects if subject not in bad_subjects]
 
 ecg_channel = 'ECG002'

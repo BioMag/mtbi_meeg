@@ -1,24 +1,14 @@
 FROM continuumio/miniconda3:latest
 
-RUN conda update conda
-RUN conda install -y -c conda-forge \
-    python=3.8 \
-    doit \
-    scipy \
-    mne>=1.3 \
-    h5py>=3.8.0 \
-    numpy>=1.20.3 \
-    pandas>=1.5.2 \
-    scikit-learn>=1.1.2 \
-    matplotlib>=3.1.2 \
-    weasyprint>=58.1
-
-COPY . /app
 WORKDIR /app
+COPY environment.yml requirements.txt setup.py ./
+COPY src ./src
+COPY tests ./tests
 
-CMD ["python", "my_package.py"]
+RUN conda env create --file environment.yml && conda clean --all --yes
+SHELL ["conda", "run", "-n", "mtbi_meeg_conda", "/bin/bash", "-c"]
+RUN python -m pip install --no-deps .
 
-# to run it:
-#    Build the Docker image: Run the command docker build -t mtbi_meeg . to build the Docker image. This will create a new image named my_package based on the Dockerfile.
-
-#    Run the Docker container: Run the command docker run -it mtbi_meeg to start the container and run your package. This will start a new container based on the my_package image and run the default command specified in the Dockerfile.
+ENV MTBI_MPL_BACKEND=Agg
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "mtbi_meeg_conda"]
+CMD ["python", "-m", "pytest", "-q"]

@@ -168,7 +168,7 @@ def initialize_subplots(metadata):
         print('INFO: Figure will not be displayed.')
     return fig_roc, axs, metadata
 
-def perform_data_split(X, y, split, train_index, test_index):
+def perform_data_split(X, y, split, train_index, test_index, metadata):
     """Splits X and y data into training and testing according to the data split indexes"""
     skip_split = False
     # Generate train and test sets for this split
@@ -295,7 +295,7 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
         for split, (train_index, test_index) in enumerate(data_split):
             # Submethod 4.2 - Slice the X and y data according to CV's data_split
             X_train, X_test, y_train, y_test, skip_split = \
-                perform_data_split(X, y, split, train_index, test_index)
+                perform_data_split(X, y, split, train_index, test_index, metadata)
             # Skip this split if class balance is bad
             if skip_split:
                 continue
@@ -327,7 +327,7 @@ def fit_and_plot(X, y, classifiers, data_split, metadata):
             
             # Print out set's accuracy score to evaluate overfitting:
             if metadata["verbosity"]:
-                print(f"INFO: Accuracy score in test set: {accuracy:.2f}")
+                print(f"INFO: Accuracy score in test set: {accuracy_test:.2f}")
                 y_train_pred = clf.predict(X_train)
                 accuracy_train = accuracy_score(y_train, y_train_pred)
                 print(f"INFO: Accuracy score in training set: {accuracy_train:.2f}")
@@ -372,10 +372,10 @@ def plot_boxplot(metadata):
         ax = axs[i]
             
         # Iterate over each classifier
-        for j, clf in enumerate(df.index):
+        for j, (_, row) in enumerate(df.iterrows()):
             # Get the mean value and CI of the current metric for the current classifier
-            mean_val = df.loc[clf, metric]
-            ci = df.loc[clf, metric+'_CI']           
+            mean_val = row[metric]
+            ci = row[metric+'_CI']           
             # Plot the mean value as a marker with the corresponding shape and color
             ax.plot(j, mean_val, marker=markers[j], markersize=10, color=colors[j])
             # Plot the CI as a vertical error bar
@@ -393,7 +393,7 @@ def plot_boxplot(metadata):
     for j, clf in enumerate(df["Classifiers"]):
         handle = plt.Line2D([0], [0], marker=markers[j], color='w', label=clf, markerfacecolor=colors[j], markersize=10)
         handles.append(handle)
-    fig.legend(handles=handles, loc='center', bbox_to_anchor=(0.5, 0.05), ncol=len(classifiers))
+    fig.legend(handles=handles, loc='center', bbox_to_anchor=(0.5, 0.05), ncol=len(handles))
     
     # Adjust spacing between subplots
     fig.subplots_adjust(wspace=0.3)
@@ -408,12 +408,11 @@ def plot_boxplot(metadata):
 def save_figures(metadata):
     """Saves active  figure to disk"""
     # Define filename
-    if metadata["normalization"] and not metadata["scaling"]:
-        figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_normalized_not-scaled.png'
-    elif not metadata["normalization"] and metadata["scaling"]:
-        figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_not-normalized_scaled.png'
-    elif not metadata["normalization"] and not metadata["scaling"]:
-        figure_filename = f'{metadata["task"]}_{metadata["freq_band_type"]}_not-normalized_not-scaled.png'
+    normalization = "normalized" if metadata["normalization"] else "not-normalized"
+    scaling = "scaled" if metadata["scaling"] else "not-scaled"
+    figure_filename = (
+        f'{metadata["task"]}_{metadata["freq_band_type"]}_{normalization}_{scaling}.png'
+    )
 
     # Save the figure
     metadata["roc-plots-filename"] = figure_filename

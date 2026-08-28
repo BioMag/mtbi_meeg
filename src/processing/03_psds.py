@@ -10,7 +10,6 @@ subprocess.run('/net/tera2/home/aino/work/mtbi-eeg/python/processing/eeg/runall.
 import argparse
 
 from mne.io import read_raw_fif
-from mne.time_frequency import psd_array_welch
 from h5io import write_hdf5
 from mne.viz import iter_topography
 from mne import open_report, find_layout, pick_info, pick_types, set_log_level
@@ -23,6 +22,7 @@ import sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
 from config_eeg import fname, n_fft, get_all_fnames, task_from_fname, freq_max
+from psd_utils import compute_welch_psd
 
 # Save time of beginning of the execution to measure running time
 start_time = time.time()
@@ -63,23 +63,19 @@ for psds_fname, clean_fname in all_fnames:
     set_log_level(verbose='Warning')
     
     raw.info['bads']=[]
-    sfreq=raw.info['sfreq']
     
     if 'eo' in task or 'ec' in task:
         clean_1 = raw.copy().crop(tmin=30, tmax=90)
         clean_2 = raw.copy().crop(tmin=120, tmax=180)
         clean_3 = raw.copy().crop(tmin=210, tmax=260)
-        psds[task+'_3'], freqs = psd_array_welch(clean_3.get_data(picks=['eeg']), sfreq=sfreq, 
-                                                 fmax=freq_max, n_fft=n_fft)
+        psds[task+'_3'], freqs = compute_welch_psd(clean_3, fmax=freq_max, n_fft=n_fft)
 
     elif 'PASAT' in task:
         clean_1 = raw.copy().crop(tmin=2, tmax=62)
         clean_2 = raw.copy().crop(tmin=62, tmax=122)
     
-    psds[task+'_1'], freqs = psd_array_welch(clean_1.get_data(picks=['eeg']), sfreq=sfreq,
-                                             fmax=freq_max, n_fft=n_fft)
-    psds[task+'_2'], freqs = psd_array_welch(clean_2.get_data(picks=['eeg']), sfreq=sfreq,
-                                             fmax=freq_max, n_fft=n_fft)
+    psds[task+'_1'], freqs = compute_welch_psd(clean_1, fmax=freq_max, n_fft=n_fft)
+    psds[task+'_2'], freqs = compute_welch_psd(clean_2, fmax=freq_max, n_fft=n_fft)
     
     
     # Add some metadata to the file we are writing
