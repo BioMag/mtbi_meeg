@@ -1,96 +1,100 @@
-"""
-===========
-Config file
-===========
+"""Portable runtime configuration for the mTBI EEG/MEG pipeline.
 
-Configuration parameters related to the users
-
+Site-specific defaults are retained for existing BioMag/Aalto installations.
+Every setting can be overridden without editing source code by using the
+``MTBI_*`` environment variables documented in the README.
 """
 
 import os
 from getpass import getuser
+from pathlib import Path
 from socket import gethostname
 
-###############################################################################
-# Determine which user is running the scripts on which machine and set the path
-# where the data is stored and how many CPU cores to use.
-##############################################################################
+user = getuser()
+host = gethostname()
 
-user = getuser()  # Username of the user running the scripts
-host = gethostname()  # Hostname of the machine running the scripts
+# Existing site profiles. Environment variables below always take precedence.
+_profile = None
+if host == "nbe-077" and user == "heikkiv7":
+    _profile = {
+        "raw": "/m/nbe/scratch/tbi-meg/verna/BIDS",
+        "processed": "/m/nbe/scratch/tbi-meg/verna/k22_processed",
+        "reports": "/m/nbe/scratch/tbi-meg/verna/reports",
+        "figures": "/m/nbe/scratch/tbi-meg/verna/k22_processedfigures",
+        "jobs": 4,
+        "backend": "Qt5Agg",
+    }
+elif host.endswith("triton.aalto.fi"):
+    _profile = {
+        "raw": "/m/nbe/scratch/brrr_fingerprinting/biomagtbi_bids/bids",
+        "processed": "/m/nbe/scratch/brrr_fingerprinting/biomagtbi_bids/bids/derivatives/biomag-tbi",
+        "reports": "/home/vanvlm1/data/biomag-tbi/reports",
+        "figures": "/home/vanvlm1/data/biomag-tbi/figures",
+        "jobs": 1,
+        "backend": "Agg",
+    }
+elif host in {"sirius", "ypsilon.biomag.hus.fi"} and user == "heikkiv":
+    _profile = {
+        "raw": "/net/theta/fishpool/projects/tbi_meg/BIDS",
+        "processed": "/net/theta/fishpool/projects/tbi_meg/k22_processed",
+        "reports": f"/net/tera2/home/heikkiv/work_s2022/mtbi_meeg/output/reports/{user}",
+        "figures": f"/net/tera2/home/heikkiv/work_s2022/mtbi_meeg/output/figures/{user}",
+        "jobs": 4,
+        "backend": "Qt5Agg",
+    }
+elif host == "psi" and user == "aino":
+    _profile = {
+        "raw": "/net/theta/fishpool/projects/tbi_meg/BIDS",
+        "processed": "/net/theta/fishpool/projects/tbi_meg/k22_processed",
+        "reports": f"/net/tera2/home/aino/work/mtbi-eeg/src/reports/{user}",
+        "figures": f"/net/tera2/home/aino/work/mtbi-eeg/src/figures/{user}",
+        "jobs": 4,
+        "backend": "Qt5Agg",
+    }
+elif host == "rho" and user == "portae1":
+    _profile = {
+        "raw": "/net/theta/fishpool/projects/tbi_meg/BIDS",
+        "processed": "/net/theta/fishpool/projects/tbi_meg/k22_processed",
+        "reports": f"/net/tera2/home/portae1/biomag/mtbi_meeg/output/reports/{user}",
+        "figures": f"/net/tera2/home/portae1/biomag/mtbi_meeg/output/figures/{user}",
+        "jobs": 4,
+        "backend": "Qt5Agg",
+    }
+elif "vdiubuntu" in host and user == "portae1":
+    _profile = {
+        "raw": "/m/home/home2/20/portae1/unix/biomag/k22_processed",
+        "processed": "/m/home/home2/20/portae1/unix/biomag/k22_processed",
+        "reports": "/m/home/home2/20/portae1/unix/biomag/mtbi_meeg/output/reports",
+        "figures": "/m/home/home2/20/portae1/unix/biomag/mtbi_meeg/output/figures",
+        "jobs": 4,
+        "backend": "Qt5Agg",
+    }
 
-# You want to add your machine to this list
-if host == 'nbe-077' and user == 'heikkiv7':
-    # Verna's workstation in Aalto
-    raw_data_dir = '/m/nbe/scratch/tbi-meg/verna/BIDS'
-    processed_data_dir = '/m/nbe/scratch/tbi-meg/verna/k22_processed'
-    reports_dir = '/m/nbe/scratch/tbi-meg/verna/reports'
-    figures_dir = '/m/nbe/scratch/tbi-meg/verna/k22_processedfigures'
-    n_jobs = 4
-    matplotlib_backend = 'Qt5Agg'
-elif host.endswith('triton.aalto.fi'):
-    # Triton cluster
-    raw_data_dir = '/m/nbe/scratch/brrr_fingerprinting/biomagtbi_bids/bids'
-    processed_data_dir = '/m/nbe/scratch/brrr_fingerprinting/biomagtbi_bids/bids/derivatives/biomag-tbi'
-    reports_dir = '/home/vanvlm1/data/biomag-tbi/reports'
-    figures_dir = '/home/vanvlm1/data/biomag-tbi/figures'
-    n_jobs = 1
-    matplotlib_backend = 'Agg'  # No graphics on triton
-elif host == 'sirius' and user == 'heikkiv' : 
-    # Verna's workstation in BioMag
-    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS'
-    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed'
-    reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi_meeg/output/reports',user)
-    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi_meeg/output/figures',user)
-    n_jobs = 4
-    matplotlib_backend = 'Qt5Agg'
-elif host == 'ypsilon.biomag.hus.fi' and user == 'heikkiv':
-    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS'
-    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed'
-    reports_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi_meeg/output/reports',user)
-    figures_dir = os.path.join('/net/tera2/home/heikkiv/work_s2022/mtbi_meeg/output/reports',user)
-    n_jobs = 4
-    matplotlib_backend = 'Qt5Agg'
-elif host == 'psi' and user == 'aino' :
-    # Ainos's workstation in BioMag
-    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS'
-    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed'
-    reports_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/src/reports', user)
-    figures_dir = os.path.join('/net/tera2/home/aino/work/mtbi-eeg/src/figures',user)
-    n_jobs = 4
-    matplotlib_backend = 'Qt5Agg'
-elif host == 'rho' and user == 'portae1' :
-    # Estanislao's workstation in BioMag
-    raw_data_dir = '/net/theta/fishpool/projects/tbi_meg/BIDS'
-    processed_data_dir = '/net/theta/fishpool/projects/tbi_meg/k22_processed'
-    reports_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi_meeg/output/reports', user)
-    figures_dir = os.path.join('/net/tera2/home/portae1/biomag/mtbi_meeg/output/figures', user)
-    n_jobs = 4
-    matplotlib_backend = 'Qt5Agg' 
-elif 'vdiubuntu' in host and user == 'portae1' :
-    # Estanislao's workstation in VirtualMachine Aalto
-    raw_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed' #This is not in use actually
-    processed_data_dir = '/m/home/home2/20/portae1/unix/biomag/k22_processed'
-    reports_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi_meeg/output/reports'
-    figures_dir = '/m/home/home2/20/portae1/unix/biomag/mtbi_meeg/output/figures'
-    n_jobs = 4
-    matplotlib_backend = 'Qt5Agg' 
-## Add new users below
-# elif host == '<WORKSTATION>' and user == '<USER>' :
-#    # <USER>'s workstation in <WORKPLACE>
-#    raw_data_dir = ''
-#    processed_data_dir = ''
-#    reports_dir = ''
-#    figures_dir = ''
-#    n_jobs = 4
-#    matplotlib_backend = '' 
+_profile = _profile or {}
+_project_root = Path(__file__).resolve().parents[1]
+_default_output = _project_root / "output"
 
-else:
-    raise ValueError(f'User or host not recognized. \nPlease enter the details of your system ({user}@{host}) in config_common.py')
 
-# For BLAS to use the right amount of cores
-os.environ['OMP_NUM_THREADS'] = str(n_jobs)
+def _path_setting(variable, profile_key, default):
+    """Resolve a path from environment, site profile, then portable default."""
+    return str(Path(os.getenv(variable, _profile.get(profile_key, default))).expanduser())
 
-# Configure the graphics backend
+
+raw_data_dir = _path_setting("MTBI_RAW_DATA_DIR", "raw", _project_root / "data")
+processed_data_dir = _path_setting(
+    "MTBI_PROCESSED_DATA_DIR", "processed", _default_output / "derivatives"
+)
+reports_dir = _path_setting("MTBI_REPORTS_DIR", "reports", _default_output / "reports")
+figures_dir = _path_setting("MTBI_FIGURES_DIR", "figures", _default_output / "figures")
+n_jobs = int(os.getenv("MTBI_N_JOBS", _profile.get("jobs", 1)))
+matplotlib_backend = os.getenv(
+    "MTBI_MPL_BACKEND", _profile.get("backend", "Agg" if not os.getenv("DISPLAY") else "Qt5Agg")
+)
+
+if n_jobs < 1:
+    raise ValueError("MTBI_N_JOBS must be a positive integer")
+
+os.environ["OMP_NUM_THREADS"] = str(n_jobs)
+
 import matplotlib
 matplotlib.use(matplotlib_backend)

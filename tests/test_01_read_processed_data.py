@@ -21,7 +21,7 @@ import pandas as pd
 
 src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.append(src_dir)
-from config_eeg import channels
+from config_eeg import channels, thin_bands
 
 analysis_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'analysis'))
 sys.path.append(analysis_dir)
@@ -69,7 +69,7 @@ def test_read_data():
     result = read_processed_data.read_data(subjects_and_tasks, freq_bands, normalization, processed_data_dir)
 
     # Check that the output has the expected shape
-    expected_shape = (len(subjects_and_tasks), channels*38)
+    expected_shape = (len(subjects_and_tasks), channels * len(thin_bands))
     assert np.shape(result) == expected_shape, f"Output has shape {np.shape(result)}, but expected shape is {expected_shape}"
 
     # Remove the temporary directory
@@ -79,23 +79,23 @@ def test_create_data_frame():
     # define subjects_and_tasks: list of 2-uples (same as above?)
     subjects_and_tasks = [('01P', 'ec_1'), ('01P', 'ec_2'), ('01C', 'ec_1'), ('01C', 'ec_2'),]
     # define all_bands_vectors
-    all_bands_vectors = np.random.rand(len(subjects_and_tasks), channels*38)
+    all_bands_vectors = np.random.rand(len(subjects_and_tasks), channels * len(thin_bands))
     
     dataframe = read_processed_data.create_data_frame(subjects_and_tasks, all_bands_vectors)
     assert isinstance(dataframe, pd.DataFrame), "Output is not a Pandas DataFrame"
-    assert dataframe.shape == (len(subjects_and_tasks), channels*38 + 2), "Dimensions of DataFrame are wrong"
+    assert dataframe.shape == (len(subjects_and_tasks), channels * len(thin_bands) + 2), "Dimensions of DataFrame are wrong"
     assert dataframe["Subject"].dtype == 'object', "Some subjects are not strings"
     assert dataframe["Group"].dtype == 'int64', "Some groups are not integers"
 
 def test_create_data_frame_empty_subjects_and_tasks():
-    all_bands_vectors = np.random.rand(4, channels*38)
+    all_bands_vectors = np.random.rand(4, channels * len(thin_bands))
     subjects_and_tasks = []
     with pytest.raises(ValueError) as e:
        read_processed_data.create_data_frame(subjects_and_tasks, all_bands_vectors)
     assert str(e.value) == "The list of subject-task combinations cannot be empty."
 
 def test_create_data_frame_empty_bands_vectors():
-    #all_bands_vectors = np.random.rand(len(subjects_and_tasks), channels*38)
+    #all_bands_vectors = np.random.rand(len(subjects_and_tasks), channels * len(thin_bands))
 
     subjects_and_tasks = [('01P', 'ec_1'), ('01P', 'ec_2'), ('01C', 'ec_1'), ('01C', 'ec_2'),]
     all_bands_vectors = []

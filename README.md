@@ -89,28 +89,47 @@ This Dockerfile specifies a base image (`continuumio/miniconda3:latest`), update
 
 1. Build the Docker image: Run the command `docker build -t mtbi_meeg . ` to build the Docker image. This will create a new image named `mtbi_meeg` based on the Dockerfile.
 
-2. Run the Docker container: Run the command `docker run -it mtbi_meeg` to start the container and run your package. This will start a new container based on the my_package image and run the default command specified in the Dockerfile.
+2. Run the Docker container: Run the command `docker run -it mtbi_meeg` to start the container and run your package. The default container command runs the data-free pytest suite. Override the command to run an individual pipeline script after mounting the required data directories.
 
-## Getting started: config_common and system_check
+## Getting started: portable configuration and system check
 
-Before the first time you execute the scripts in this repository, you must edit the file `src/config_common.py` and include a new block with information about your user, workstation, data directories, and matplotlib backend:
+Existing BioMag and Aalto workstation profiles continue to work. New users no
+longer need to edit Python source: set the runtime paths with environment
+variables before running the pipeline.
 
-1. Go to folder `src` and open the file `config_common.py` for editing. From terminal,
-    ```bash
-    $ cd src
-    $ nano config_common.py
-    # Note: you can also use other editors. For using VS Code, type `code config_common.py`
-    ```
-2. Edit the file: add your `user` and `host` to the list. There's a commented block you can use as example [here](https://version.aalto.fi/gitlab/heikkiv7/mtbi-eeg/-/blob/main/python/processing/config_common.py#L78). Copy the block and edit it.
-3. Add the path where `raw_data_dir` is expected ('/net/theta/fishpool/projects/tbi_meg/BIDS' in BioMag)
-4. Add the path where `processed_data_dir` is expected (Be mindful which folder you choose, as you may overwrite other people's data)
-5. Add the paths where figures and reports will be created into (you can use the directories in this repository or other)
-6. Add the matplotlib backend (TBC)
-7. Check that your system has the required dependencies by running the script `check_system.py`. From terminal, 
-    ```bash
-    $ python3 check_system.py
-    ```
-If there's no problems, you should see a message saying that 'System requirements are ok' and you should be ok to run the pipeline now.
+```bash
+export MTBI_RAW_DATA_DIR=/path/to/bids
+export MTBI_PROCESSED_DATA_DIR=/path/to/derivatives
+export MTBI_REPORTS_DIR=/path/to/reports
+export MTBI_FIGURES_DIR=/path/to/figures
+export MTBI_N_JOBS=4
+export MTBI_MPL_BACKEND=Agg  # use Qt5Agg for an interactive desktop
+
+cd src
+python check_system.py
+```
+
+All variables are optional. On a recognized BioMag/Aalto host, existing site
+values are used. Elsewhere the defaults are `data/` and `output/` inside the
+repository, one worker, and a headless-safe Matplotlib backend. The system check
+still requires the raw-data directory to exist before preprocessing and creates
+the output directories when needed.
+
+The raw directory is expected to follow BIDS subject naming (`sub-01C`,
+`sub-01P`, etc.). Subject discovery is lazy and therefore importing analysis
+helpers or running unit tests does not require access to clinical data.
+
+### Running tests without clinical data
+
+The test suite uses generated arrays and temporary directories only:
+
+```bash
+python -m pip install . pytest
+python -m pytest -q
+```
+
+Pull requests run the same suite on Python 3.10, 3.11, and 3.12 through GitHub
+Actions.
 
 #### Version Conflict errors
 If there is an issue with packages or versions, you will see a message indicating the library with a Version Conflict. Please update the package

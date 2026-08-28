@@ -105,7 +105,7 @@ for raw_fname, filt_fname in all_fnames:
 
     # Add a plot of the power spectrum of the filtered data to the list of
     # figures to be placed in the HTML report.
-    filt_plot = filt.plot_psd(fmin=freq_min, fmax=filt_freq_max, show=False)
+    filt_plot = filt.compute_psd(fmin=freq_min, fmax=filt_freq_max).plot(show=False)
     figures['after filt'].append(filt_plot)
     
     raw.close()
